@@ -24,7 +24,7 @@ export function presetSwitchPlan({ started = false, confirm = false, viewOnly = 
   return 'switch';
 }
 
-export const PRESET_VIEW_SAFE = ['setPreset', 'endPresetView', 'exportPreset', 'previewPreset', 'importPreset', 'deletePreset', 'exportState', 'testApi', 'listModels', 'refresh'];
+export const PRESET_VIEW_SAFE = ['setPreset', 'endPresetView', 'exportPreset', 'exportState', 'testApi', 'listModels', 'refresh'];
 export const keepsPresetView = (name) => PRESET_VIEW_SAFE.includes(name);
 
 export const DEFAULT_BASE = 'koldovstvorets';

@@ -47,8 +47,7 @@ import { manualTime, resolveHeldJump, skipToDayEnd } from './core/engine.mjs';
 import { alignToGrid, weekdayShiftOf, shiftYears, termAnchor } from './core/time.mjs';
 import { addEvent, removeEvent, updateEventDates, armHolidayHooks, alreadyPlanned, carryEvents } from './core/holidays.mjs';
 import {
-  BUILTIN_PRESETS, DEFAULT_BASE, USER_PRESETS_MAX, freeId, freeName, normalizePreset,
-  presetEnvelope, presetFilename, presetSummary, presetSwitchPlan, keepsPresetView, readPresetFile,
+  BUILTIN_PRESETS, DEFAULT_BASE, presetEnvelope, presetFilename, presetSwitchPlan, keepsPresetView,
 } from './core/preset.mjs';
 import {
   extraLabels, fill, formatDate, formatDateOn, setDateShift, gradebookView, hookJournal, hookNow, hookSummary, hookToday, playChime,
@@ -147,18 +146,6 @@ async function loadBuiltin(id) {
   return p;
 }
 
-async function ensureBuiltins() {
-  for (const id of PRESET_IDS) {
-    if (live.builtins[id]) continue;
-    try {
-      await loadBuiltin(id);
-    } catch (err) {
-      console.warn(`[${MODULE}] пресет ${id} не прочитан:`, err);
-    }
-  }
-  return live.builtins;
-}
-
 async function readData(file) {
   const res = await fetch(new URL(`./data/${file}`, import.meta.url), { cache: 'no-cache' });
   if (!res.ok) throw new Error(`данные ${file} не читаются: HTTP ${res.status}`);
@@ -184,26 +171,15 @@ function liveRoster(mode) {
   return live.rosterCache.value;
 }
 
-const PRESET_PROBES = [
-  function statusLine(state, preset) { buildPrompt(state, preset, { injects: [], withMarker: true }); },
-  function today(state, preset) { todayView(state, preset); },
-  function gradebook(state, preset) { gradebookView(state, preset); },
-];
-
 function missingPreset(id) {
-  const err = new Error(`пресета «${id}» нет ни среди встроенных, ни среди своих`);
+  const err = new Error(`пресета «${id}» нет среди встроенных`);
   err.code = 'missing';
   return err;
 }
 
 async function loadPreset(id = DEFAULT_BASE) {
   if (PRESET_IDS.includes(id)) return loadBuiltin(id);
-  const raw = storage.getUserPreset(ctx(), id);
-  if (!raw) throw missingPreset(id);
-  const builtins = await ensureBuiltins();
-  const res = normalizePreset(raw, { builtins, basedOn: raw.basedOn, probe: PRESET_PROBES });
-  if (!res.ok) throw new Error(res.message);
-  return { ...res.preset, id };
+  throw missingPreset(id);
 }
 
 async function loadPresetList(active) {
@@ -221,16 +197,6 @@ async function loadPresetList(active) {
       out.push({ id, name: id, broken: true });
     }
   }
-  let own = [];
-  try {
-    own = storage.listUserPresets(ctx());
-  } catch (err) {
-    console.warn(`[${MODULE}] свои пресеты не прочитаны:`, err);
-  }
-  for (const p of own) {
-    if (PRESET_IDS.includes(p.id)) continue;
-    out.push({ id: p.id, name: p.name, user: true, basedOn: p.basedOn });
-  }
   return out;
 }
 
@@ -238,10 +204,6 @@ function toast(kind, text, title = 'Колдовстворец') {
   try {
     if (globalThis.toastr && typeof globalThis.toastr[kind] === 'function') globalThis.toastr[kind](text, title);
   } catch {}
-}
-
-function safeUserPreset(c, id) {
-  try { return storage.getUserPreset(c, id); } catch { return null; }
 }
 
 function presetName(id) {
@@ -267,7 +229,7 @@ function checkStatePreset() {
 async function adoptChatPreset() {
   const wanted = (String((live.state && live.state.presetId) || storage.loadSettings(ctx()).preset || DEFAULT_BASE));
   if (!live.preset || wanted === live.preset.id) return false;
-  if (!PRESET_IDS.includes(wanted) && !safeUserPreset(ctx(), wanted)) return false;
+  if (!PRESET_IDS.includes(wanted)) return false;
   const epoch = live.epoch;
   let next;
   try {
@@ -281,20 +243,6 @@ async function adoptChatPreset() {
   live.presets = await loadPresetList(next);
   reloadState();
   return true;
-}
-
-async function readAndNormalize(source) {
-  const file = readPresetFile(source);
-  if (!file.ok) return { ok: false, code: file.code, error: file.message, errors: file.errors };
-  const builtins = await ensureBuiltins();
-  const res = normalizePreset(file.raw, { builtins, basedOn: file.basedOn, probe: PRESET_PROBES });
-  const warnings = [...file.warnings, ...(res.warnings || [])];
-  if (!res.ok) return { ok: false, code: res.code, error: res.message, errors: res.errors, warnings };
-  const own = storage.listUserPresets(ctx());
-  const id = freeId(res.preset.id, [...PRESET_IDS, ...own.map((p) => p.id)]);
-  const takenNames = [...PRESET_IDS.map((b) => presetName(b)), ...own.map((p) => p.name)];
-  const name = freeName(res.preset.displayName, takenNames);
-  return { ok: true, preset: res.preset, id, name, renamed: id !== res.preset.id, warnings };
 }
 
 function endPresetView() {
@@ -1993,6 +1941,11 @@ async function handleDeleted() {
   let k = last;
   while (k > 0 && at[k - 1] < 0) k -= 1;
   const target = live.turns[k];
+  if (!target.before) {
+    live.turns = live.turns.slice(0, k);
+    storage.saveTurns(ctx(), live.turns);
+    return;
+  }
   const kept = [];
   for (let i = 0; i < k; i += 1) {
     if (at[i] < 0) continue;
@@ -2294,7 +2247,6 @@ const host = {
     active: String((live.preset && live.preset.id) || ''),
     list: live.presets.map((p) => ({ ...p })),
     notice: live.presetNotice,
-    max: USER_PRESETS_MAX,
     viewing: Boolean(live.view),
   }),
   getPresetView: () => (live.view && live.preset ? { id: live.preset.id, name: presetName(live.preset.id) } : null),
@@ -3017,81 +2969,6 @@ const host = {
       return { ok: true, json: JSON.stringify(envelope, null, 2), filename: presetFilename(preset) };
     },
 
-    async previewPreset(source) {
-      const res = await readAndNormalize(source);
-      if (!res.ok) return res;
-      return {
-        ok: true,
-        summary: { ...presetSummary(res.preset), id: res.id, name: res.name },
-        renamed: res.renamed,
-        warnings: res.warnings,
-        full: storage.listUserPresets(ctx()).length >= USER_PRESETS_MAX,
-        max: USER_PRESETS_MAX,
-      };
-    },
-
-    async importPreset(source, opts = {}) {
-      const res = await readAndNormalize(source);
-      if (!res.ok) return res;
-      const c = ctx();
-      if (storage.listUserPresets(c).length >= USER_PRESETS_MAX) {
-        return { ok: false, code: 'full', error: fill(PRESET_TEXT.full, { max: USER_PRESETS_MAX }) };
-      }
-      storage.putUserPreset(c, { ...res.preset, id: res.id, displayName: res.name });
-      live.presets = await loadPresetList(live.preset);
-      if (opts.apply !== true) {
-        refreshPanel();
-        return { ok: true, added: res.id, name: res.name, warnings: res.warnings };
-      }
-      const applied = await host.actions.setPreset(res.id, { confirm: opts.confirm === true });
-      return { ...applied, added: res.id, name: res.name, warnings: res.warnings };
-    },
-
-    async deletePreset(id, opts = {}) {
-      const wanted = String(id || '').trim();
-      if (!wanted) return { ok: false, error: 'не сказано, какой пресет удалять' };
-      if (PRESET_IDS.includes(wanted)) return { ok: false, code: 'builtin', error: PRESET_TEXT.deleteBuiltin };
-      const c = ctx();
-      const raw = storage.getUserPreset(c, wanted);
-      if (!raw) return { ok: false, code: 'missing', error: fill(PRESET_TEXT.deleteMissing, { id: wanted }) };
-
-      const active = String((live.preset && live.preset.id) || '');
-      const fallback = PRESET_IDS.includes(raw.basedOn) ? raw.basedOn : DEFAULT_BASE;
-      const started = Boolean(live.state && live.state.started);
-      if (wanted === active && started && opts.confirm !== true) {
-        const text = fill(PRESET_TEXT.deleteActive, { name: presetName(wanted), fallback: presetName(fallback) });
-        return {
-          ok: false,
-          code: 'needs-confirm',
-          needsConfirm: true,
-          error: text,
-          reasons: [text],
-          current: storage.stateSummary(live.state),
-          incoming: null,
-        };
-      }
-
-      const name = presetName(wanted);
-      storage.removeUserPreset(c, wanted);
-      live.presets = await loadPresetList(wanted === active ? null : live.preset);
-      if (wanted !== active) {
-        refreshPanel();
-        return { ok: true, removed: wanted };
-      }
-      const op = captureOperation();
-      let next;
-      try {
-        next = await loadPreset(fallback);
-      } catch (err) {
-        return { ok: false, error: `пресет удалён, но ${fallback} не загрузился: ${(err && err.message) || err}` };
-      }
-      if (!isCurrent(op)) return chatChanged('загружался пресет');
-      await switchPreset(fallback, next);
-      announce(fill(PRESET_TEXT.deletedFallback, { name, fallback: presetName(fallback) }));
-      refreshPanel();
-      return { ok: true, removed: wanted, fallback };
-    },
-
     async refresh() { reloadState(); refreshPanel(); },
 
     async endPresetView() { endPresetView(); return { ok: true }; },
@@ -3129,8 +3006,7 @@ async function init() {
       console.error(`[${MODULE}] расширение молчит целиком`);
       return;
     }
-    const raw = safeUserPreset(c, wanted);
-    const fallback = raw && PRESET_IDS.includes(raw.basedOn) ? raw.basedOn : DEFAULT_BASE;
+    const fallback = DEFAULT_BASE;
     try {
       live.preset = await loadPreset(fallback);
       storage.saveSettings({ preset: fallback }, c);

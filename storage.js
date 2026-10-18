@@ -24,7 +24,6 @@ export const DEFAULT_SETTINGS = {
     model: '',
   },
   preset: 'koldovstvorets',
-  presets: {},
   feed: {
     hooks: true,
     auto: false,
@@ -164,30 +163,96 @@ export function clearState(ctx) {
 
 export const TURNS_KEY = `${KEY}_turns`;
 
-export const TURNS_FORMAT = 1;
+export const TURNS_FORMAT = 2;
 
 export const TURN_HISTORY = 5;
 
+const POOL_MIN = 400;
+const LAZY = Symbol('koldo.lazyBefore');
+
+const clone = (v) => JSON.parse(JSON.stringify(v));
+
+function packBefore(before, pool, index) {
+  const put = (v) => {
+    const key = JSON.stringify(v);
+    if (!index.has(key)) { index.set(key, pool.length); pool.push(v); }
+    return index.get(key);
+  };
+  const out = {};
+  const refs = {};
+  for (const [k, v] of Object.entries(before)) {
+    if (k === 'feed' && v && Array.isArray(v.items)) out.feed = { ...v, items: v.items.map(put) };
+    else if (v && typeof v === 'object' && JSON.stringify(v).length >= POOL_MIN) refs[k] = put(v);
+    else out[k] = v;
+  }
+  if (Object.keys(refs).length) out.$refs = refs;
+  return out;
+}
+
+function unpackBefore(enc, pool) {
+  if (!pool) return enc;
+  const out = { ...enc };
+  delete out.$refs;
+  const at = (i) => {
+    if (!Number.isInteger(i) || i < 0 || i >= pool.length) throw new Error('снимок хода: нет записи в пуле');
+    return clone(pool[i]);
+  };
+  if (enc.feed && Array.isArray(enc.feed.items)) out.feed = { ...enc.feed, items: enc.feed.items.map(at) };
+  for (const [k, i] of Object.entries(enc.$refs || {})) out[k] = at(i);
+  return out;
+}
+
+function lazyBefore(turn, make, raw) {
+  const lz = { done: false, value: null, raw };
+  Object.defineProperty(turn, LAZY, { value: lz });
+  Object.defineProperty(turn, 'before', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      if (!lz.done) { lz.done = true; try { lz.value = make(); } catch { lz.value = null; } }
+      return lz.value;
+    },
+    set(v) { lz.done = true; lz.value = v; },
+  });
+}
+
 export function readTurns(raw, preset) {
-  if (!raw || typeof raw !== 'object' || raw.v !== TURNS_FORMAT || !Array.isArray(raw.list)) return [];
+  const packed = Boolean(raw) && raw.v === TURNS_FORMAT;
+  if (!raw || typeof raw !== 'object' || (raw.v !== 1 && !packed) || !Array.isArray(raw.list)) return [];
+  const pool = packed ? raw.pool : null;
+  if (packed && !Array.isArray(pool)) return [];
+  const decode = (t) => unpackBefore(t.before, pool);
+  const valid = (t) => {
+    const report = readState(decode(t), preset);
+    return report.status === 'ok' || report.status === 'migrated' ? report.state : null;
+  };
   const out = [];
-  for (const t of raw.list) {
-    if (!t || typeof t !== 'object' || !Number.isInteger(t.mesId) || t.mesId < 0) continue;
-    const report = readState(t.before, preset);
-    if (report.status !== 'ok' && report.status !== 'migrated') continue;
-    out.push({
+  let eager = true;
+  for (let i = raw.list.length - 1; i >= 0 && out.length < TURN_HISTORY; i -= 1) {
+    const t = raw.list[i];
+    if (!t || typeof t !== 'object' || !Number.isInteger(t.mesId) || t.mesId < 0 || !t.before || typeof t.before !== 'object') continue;
+    const turn = {
       mesId: t.mesId,
       stamp: typeof t.stamp === 'string' ? t.stamp : null,
-      before: report.state,
       oneShotBefore: typeof t.oneShotBefore === 'string' ? t.oneShotBefore : '',
       oneShot: typeof t.oneShot === 'string' ? t.oneShot : '',
       analysis: typeof t.analysis === 'string' ? t.analysis : null,
       marks: readMarks(t.marks),
       molva: readDeltas(t.molva),
       ...jumpAnswerOf(t.jumpAnswer),
-    });
+    };
+    if (eager) {
+      let state = null;
+      try { state = valid(t); } catch {}
+      if (!state) continue;
+      eager = false;
+      turn.before = state;
+    } else {
+      lazyBefore(turn, () => valid(t), () => decode(t));
+    }
+    out.push(turn);
   }
-  return out.slice(-TURN_HISTORY);
+  return out.reverse();
 }
 
 function jumpAnswerOf(raw) {
@@ -216,18 +281,27 @@ export function saveTurns(ctx, list) {
   const c = context(ctx);
   const md = c.chatMetadata;
   if (!md) throw new Error('koldo/storage: у чата нет метаданных');
-  const turns = (Array.isArray(list) ? list : []).slice(-TURN_HISTORY).map((t) => ({
-    mesId: t.mesId,
-    stamp: t.stamp,
-    before: stripSecrets(t.before),
-    oneShotBefore: t.oneShotBefore || '',
-    oneShot: t.oneShot || '',
-    analysis: typeof t.analysis === 'string' ? t.analysis : null,
-    marks: readMarks(t.marks),
-    molva: readDeltas(t.molva),
-    ...jumpAnswerOf(t.jumpAnswer),
-  }));
-  md[TURNS_KEY] = { v: TURNS_FORMAT, list: turns };
+  const pool = [];
+  const index = new Map();
+  const turns = [];
+  for (const t of (Array.isArray(list) ? list : []).slice(-TURN_HISTORY)) {
+    const lz = t[LAZY];
+    let before = null;
+    try { before = stripSecrets(lz && !lz.done ? lz.raw() : t.before); } catch {}
+    if (!before || typeof before !== 'object') continue;
+    turns.push({
+      mesId: t.mesId,
+      stamp: t.stamp,
+      before: packBefore(before, pool, index),
+      oneShotBefore: t.oneShotBefore || '',
+      oneShot: t.oneShot || '',
+      analysis: typeof t.analysis === 'string' ? t.analysis : null,
+      marks: readMarks(t.marks),
+      molva: readDeltas(t.molva),
+      ...jumpAnswerOf(t.jumpAnswer),
+    });
+  }
+  md[TURNS_KEY] = { v: TURNS_FORMAT, pool, list: turns };
   c.saveMetadataDebounced();
   return turns;
 }
@@ -608,10 +682,11 @@ export function loadSettings(ctx) {
 let tidyDone = false;
 
 export function tidySettings(s) {
-  const before = JSON.stringify([s.achievementTally, s.cardCasts]);
+  const before = JSON.stringify([s.achievementTally, s.cardCasts, s.presets]);
   delete s.achievementTally;
   delete s.cardCasts;
-  return before !== JSON.stringify([s.achievementTally, s.cardCasts]);
+  delete s.presets;
+  return before !== JSON.stringify([s.achievementTally, s.cardCasts, s.presets]);
 }
 
 export function dropDrafts(ctx, chatId) {
@@ -660,41 +735,6 @@ export function deepAssign(target, patch) {
     }
   }
   return target;
-}
-
-export function userPresetMap(ctx) {
-  const s = loadSettings(ctx);
-  if (!s.presets || typeof s.presets !== 'object' || Array.isArray(s.presets)) s.presets = {};
-  return s.presets;
-}
-
-export function listUserPresets(ctx) {
-  return Object.entries(userPresetMap(ctx))
-    .filter(([, p]) => p && typeof p === 'object')
-    .map(([id, p]) => ({ id, name: String(p.displayName || p.name || id), basedOn: String(p.basedOn || '') }));
-}
-
-export function getUserPreset(ctx, id) {
-  const p = userPresetMap(ctx)[String(id || '')];
-  return p && typeof p === 'object' ? p : null;
-}
-
-export function putUserPreset(ctx, preset) {
-  const c = context(ctx);
-  const map = userPresetMap(c);
-  map[String(preset.id)] = preset;
-  c.saveSettingsDebounced();
-  return preset;
-}
-
-export function removeUserPreset(ctx, id) {
-  const c = context(ctx);
-  const map = userPresetMap(c);
-  const key = String(id || '');
-  if (!(key in map)) return false;
-  delete map[key];
-  c.saveSettingsDebounced();
-  return true;
 }
 
 export function apiSettings(ctx) {

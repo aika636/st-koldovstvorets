@@ -1,5 +1,5 @@
 import {
-  fill, PRESET_TEXT, extraLabels, uiLabels, mounted, el, clear, runAction, setStatus, section, sectionScope, sectionOpen, formatDate,
+  fill, KEY_NOTE, PRESET_TEXT, extraLabels, uiLabels, mounted, el, clear, runAction, setStatus, section, sectionScope, sectionOpen, formatDate,
   call, safe, renderPanel, renderSettingsBlock,
 } from './common.js';
 import { DEBUG_TEXT } from './debug.js';
@@ -150,8 +150,7 @@ export function renderApiBlock(host, view) {
     el('p', {
       class: 'koldo-note',
       text: own
-        ? 'Ключ хранится только в этом браузере: в настройки таверны и их экспорт он не попадает, на другом устройстве его нужно ввести заново.'
-          + ' Надёжнее — «Подключение таверны» с профилем: там ключ держит сама таверна. Если адрес не пускает запросы из браузера, список моделей за вас спросит сервер самой таверны — тем же адресом и ключом.'
+        ? 'Если адрес не пускает запросы из браузера, список моделей за вас спросит сервер самой таверны — тем же адресом и ключом.'
         : 'Генерация пойдёт тем же подключением, которым таверна отвечает в чате. Ключ здесь вводить не нужно и никуда он не уезжает: запрос делает сама таверна.',
     }),
     sourceBox,
@@ -164,6 +163,7 @@ export function renderApiBlock(host, view) {
     profileRow,
     own ? el('label', { class: 'koldo-field' }, [el('span', { text: 'Адрес' }), endpoint]) : null,
     own ? el('label', { class: 'koldo-field' }, [el('span', { text: 'Ключ' }), key]) : null,
+    own ? el('p', { class: 'koldo-note koldo-key-note', text: KEY_NOTE }) : null,
     own ? el('label', { class: 'koldo-field' }, [el('span', { text: 'Модель' }), model]) : null,
     own ? el('div', { class: 'koldo-field' }, [models]) : null,
     !own ? el('p', { class: 'koldo-note', text: 'Своего списка моделей у подключения таверны нет: модель задаёт сама таверна (или пресет выбранного профиля).' }) : null,
