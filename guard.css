@@ -275,7 +275,7 @@
   .ad-strip { border: var(--ad-card-border) !important; border-left: var(--ad-strip-w) solid var(--ad-stripe-bad) !important; background: var(--ad-field) !important; }
   .ad-doc { background: var(--ad-doc) !important; color: var(--ad-doc-ink) !important; border: var(--ad-rule-w) var(--ad-rule-style) var(--ad-doc-line) !important; box-shadow: var(--ad-shadow-doc) !important; }
   .ad-doc-sub { color: var(--ad-doc-soft) !important; }
-  .ad-doc-mark { color: var(--ad-stamp) !important; }
+  .ad-doc-mark { color: var(--ad-seal-ink, var(--ad-stamp)) !important; }
   .ad-doc-sum { border-top: var(--ad-sum-border, var(--ad-rule-w) var(--ad-rule-style) var(--ad-doc-line)) !important; border-bottom: var(--ad-sum-border, var(--ad-rule-w) var(--ad-rule-style) var(--ad-doc-line)) !important; }
   .ad-doc-sum .ad-lab { color: var(--ad-lab-ink, var(--ad-doc-soft)) !important; background: var(--ad-lab-bg, none) !important; }
   .ad-doc-sum .ad-alarm { color: var(--ad-bad) !important; border: 1px solid var(--ad-bad) !important; }

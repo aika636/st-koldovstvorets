@@ -55,6 +55,7 @@ export function applyLook(panel, settings, preset) {
       for (const [prop, name] of Object.entries(ART)) {
         panel.style.setProperty(prop, `url("${new URL(`../assets/diary/${name}.webp`, import.meta.url).href}")`);
       }
+      panel.style.setProperty('--ad-stamp-ink', `url("${new URL('../assets/diary/stamp-ink.svg', import.meta.url).href}")`);
     }
   }
   return mat;

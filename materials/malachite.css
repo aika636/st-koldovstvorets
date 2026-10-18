@@ -17,7 +17,7 @@
   --ad-now-bg: rgba(36, 104, 84, .12); --ad-now-line: #246854;
   --ad-note: #FFF4DB; --ad-note-line: #CBB48A;
   --ad-sticker: #FFF4DB; --ad-sticker-ink: #2C3028; --ad-sticker-line: #BDA17B; --ad-sticker-bg-even: #E4EEDD; --ad-sticker-bg-3n: #F7E1C2;
-  --ad-doc: #FFF4DB; --ad-doc-ink: #2C3028; --ad-doc-soft: #565345; --ad-doc-line: #CBB48A; --ad-stamp: #814323;
+  --ad-doc: #FFF4DB; --ad-doc-ink: #2C3028; --ad-doc-soft: #565345; --ad-doc-line: #CBB48A; --ad-stamp: #814323; --ad-seal-ink: #8C3A2B; --ad-seal-opacity: .9; --ad-seal-rotate: -7deg;
   --ad-inner: #F4E7CA; --ad-inner-ink: #2C3028; --ad-inner-line: #CBB48A;
   --ad-fam-study: #1D5A46; --ad-fam-people: #8C3A2B; --ad-fam-attend: #8A5412; --ad-fam-secret: #5E4B73;
   --ad-good: #246049; --ad-bad: #933E32;

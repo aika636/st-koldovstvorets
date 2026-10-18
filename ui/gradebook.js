@@ -162,20 +162,27 @@ export function awaitingView(state, preset) {
     });
 }
 
+let sealSeq = 0;
+const SEAL_BIRD = 'M15 33Q16 25 27 24Q32 23 34 18Q35 14 32 11Q43 11 41 21Q47 19 49 14Q53 24 40 29Q47 35 42 43Q39 49 43 51C56 45 61 27 66 17Q70 10 70 6C81 20 76 34 66 45Q77 38 85 29C88 45 78 56 65 60Q78 57 89 49C85 66 71 73 57 69C66 79 81 77 77 70C75 67 72 69 73 72C66 72 66 64 73 62C86 58 93 76 82 85C74 92 62 88 56 83C61 98 39 100 38 89C42 92 47 92 47 87C47 82 40 79 34 77C14 71 13 60 22 49C27 42 33 37 30 33Q24 28 15 33Z';
+const SEAL_ORNAMENT = 'M11 37.5 13.5 40 11 42.5 8.5 40ZM69 37.5 71.5 40 69 42.5 66.5 40ZM40 66 43 69 40 72 37 69ZM25.5 62.6 27.9 65 25.5 67.4 23.1 65ZM54.5 62.6 56.9 65 54.5 67.4 52.1 65Z';
+
 function sealMark(text) {
   const mark = svgIcon('tick', 'ad-doc-mark');
   if (typeof document.createElementNS !== 'function') return mark;
   const name = String(text || '').trim().toUpperCase();
-  const size = name.length > 18 ? Math.max(5, (9 * 18) / name.length) : 9;
+  const size = name.length > 13 ? Math.max(4.5, (7 * 13) / name.length) : 7;
+  const id = `adSealArc${++sealSeq}`;
   mark.setAttribute('viewBox', '0 0 80 80');
   mark.setAttribute('stroke', 'none');
-  mark.innerHTML = '<defs><path id="adSealArc" d="M40 40 m-27 0 a27 27 0 1 1 54 0 a27 27 0 1 1 -54 0"/></defs>'
-    + '<circle cx="40" cy="40" r="37" fill="none" stroke="currentColor" stroke-width="2"/>'
-    + '<circle cx="40" cy="40" r="19" fill="none" stroke="currentColor" stroke-width="1.2"/>'
-    + `<text font-size="${size.toFixed(2)}" font-weight="700" letter-spacing="1.2" fill="currentColor" font-family="inherit">`
-    + '<textPath href="#adSealArc" startOffset="2"></textPath></text>'
-    + '<g fill="currentColor" stroke="none" transform="translate(25 25) scale(.75)">'
-    + '<path d="M3 8h9.5c.8 0 1.5.6 1.5 1.4V28c-2-1.4-5-1.8-11-1.8zM29 8h-9.5c-.8 0-1.5.6-1.5 1.4V28c2-1.4 5-1.8 11-1.8z" opacity=".85"/></g>';
+  mark.innerHTML = `<defs><path id="${id}" d="M13 40A27 27 0 0 1 67 40"/></defs>`
+    + '<circle cx="40" cy="40" r="37" fill="none" stroke="currentColor" stroke-width="1.35"/>'
+    + '<circle cx="40" cy="40" r="21" fill="none" stroke="currentColor" stroke-width="1"/>'
+    + `<path fill="currentColor" d="${SEAL_ORNAMENT}"/>`
+    + '<circle cx="17" cy="56.5" r="1.1" fill="currentColor"/><circle cx="63" cy="56.5" r="1.1" fill="currentColor"/>'
+    + '<circle cx="32.5" cy="68" r=".9" fill="currentColor"/><circle cx="47.5" cy="68" r=".9" fill="currentColor"/>'
+    + `<text font-size="${size.toFixed(2)}" font-weight="700" letter-spacing=".9" fill="currentColor" font-family="inherit" text-anchor="middle">`
+    + `<textPath href="#${id}" startOffset="50%"></textPath></text>`
+    + `<path fill="currentColor" transform="translate(25 25) scale(.3)" d="${SEAL_BIRD}"/>`;
   const path = mark.querySelector('textPath');
   if (path) path.textContent = name;
   return mark;
