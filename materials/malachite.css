@@ -201,14 +201,14 @@
 }
 .ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated[data-side],
 .ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated ~ .ad-page { --ad-ml-liz: none; }
-.ad-diary[data-mat="malachite"] .ad-spread[data-tab="settings"] > .ad-page[data-side],
-.ad-diary[data-mat="malachite"] .ad-spread[data-tab="debug"] > .ad-page[data-side] {
+.ad-diary[data-mat="malachite"] [data-tab="settings"][data-tab] > .ad-page[data-side],
+.ad-diary[data-mat="malachite"] [data-tab="debug"][data-tab] > .ad-page[data-side] {
   --ad-ml-liz: var(--ad-art-lizard, none);
   --ad-ml-liz-w: 76px;
   --ad-ml-liz-h: 76px;
   --ad-ml-liz-pos: right 24px top 12px;
 }
-.ad-diary[data-mat="malachite"] .ad-spread[data-tab="debug"] > .ad-page[data-side] { padding-block-start: 96px; }
+.ad-diary[data-mat="malachite"] [data-tab="debug"][data-tab] > .ad-page[data-side] { padding-block-start: 96px; }
 .ad-diary[data-mat="malachite"] .ad-art {
   display: block;
   width: min(100%, var(--ad-art-width, 280px));
