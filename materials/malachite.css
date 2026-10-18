@@ -1,0 +1,219 @@
+.ad-diary[data-mat="malachite"], .ad-mat-scope[data-mat="malachite"] {
+  --ad-cover: #123F35; --ad-cover-edge: #0A2A23;
+  --ad-page: #F4E7CA; --ad-grid: transparent; --ad-margin: #B66B3E;
+  --ad-ink: #2C3028; --ad-ink-soft: #565345;
+  --ad-pen: #1D5A46; --ad-pen-2: #814323; --ad-accent: #814323;
+  --ad-rule: #CBB48A; --ad-rumor: #8C3A2B; --ad-today: #8A5412;
+  --ad-tab: #1D6A52; --ad-tab-ink: #FFF4DB; --ad-tab-on: #1D6A52; --ad-tab-on-ink: #FFFFFF; --ad-tab-on-line: #FFD686;
+  --ad-field: #FFF4DB; --ad-field-line: #947754;
+  --ad-f-head: "Kurale", Georgia, serif; --ad-f-body: "PT Serif", Georgia, serif; --ad-f-ui: "PT Sans", system-ui, sans-serif;
+  --ad-f-card: "Kurale", Georgia, serif; --ad-f-subj: "Kurale", Georgia, serif; --ad-f-pname: "Kurale", Georgia, serif; --ad-f-sect: "Kurale", Georgia, serif;
+  --ad-f-hand: "Marck Script", "Segoe Script", cursive; --ad-f-note: "Marck Script", "Segoe Script", cursive; --ad-hand-size: 1.2rem;
+  --ad-f-hand-long: "PT Serif", Georgia, serif; --ad-hand-long-style: italic; --ad-hand-long-size: .98rem; --ad-hand-long-lh: 1.45;
+  --ad-f-doc: "PT Serif", Georgia, serif; --ad-f-date: "PT Sans", system-ui, sans-serif; --ad-f-digits: "PT Sans", system-ui, sans-serif; --ad-num-variant: lining-nums tabular-nums;
+  --ad-gr-th-size: 1.7rem; --ad-gr-th-rule: 3px double var(--ad-pen-2); --ad-gr-big-size: 3rem; --ad-gr-big-ink: var(--ad-pen); --ad-gr-legend-bg: #FADFC0; --ad-gr-legend-shadow: 1px 2px 4px rgba(60, 40, 20, .2);
+  --ad-f-pers: "Marck Script", cursive;
+
+  --ad-now-bg: rgba(36, 104, 84, .12); --ad-now-line: #246854;
+  --ad-note: #FFF4DB; --ad-note-line: #CBB48A;
+  --ad-sticker: #FFF4DB; --ad-sticker-ink: #2C3028; --ad-sticker-line: #BDA17B; --ad-sticker-bg-even: #E4EEDD; --ad-sticker-bg-3n: #F7E1C2;
+  --ad-doc: #FFF4DB; --ad-doc-ink: #2C3028; --ad-doc-soft: #565345; --ad-doc-line: #CBB48A; --ad-stamp: #814323;
+  --ad-inner: #F4E7CA; --ad-inner-ink: #2C3028; --ad-inner-line: #CBB48A;
+  --ad-fam-study: #1D5A46; --ad-fam-people: #8C3A2B; --ad-fam-attend: #8A5412; --ad-fam-secret: #5E4B73;
+  --ad-good: #246049; --ad-bad: #933E32;
+  --ad-badge-bg: #8C3A2B; --ad-badge-ink: #FFF4DB;
+  --ad-emb-fg: #123F35; --ad-emb-bg: #FFF4DB; --ad-emb-ac: #B66B3E; --ad-scheme: light;
+
+  --ad-r-cover: 8px 14px 14px 8px; --ad-r-page: 3px; --ad-r-card: 3px; --ad-r-note: 2px; --ad-r-btn: 4px; --ad-r-field: 3px; --ad-r-chip: 4px;
+  --ad-r-tab: 0; --ad-r-ph: 1px;
+  --ad-shadow-surface: 0 12px 28px rgba(0, 0, 0, .4); --ad-shadow-pop: 0 0 0 1px #B66B3E, 0 6px 14px rgba(0, 0, 0, .3);
+  --ad-shadow-attached: 1px 2px 3px rgba(56, 44, 35, .28); --ad-shadow-doc: 0 2px 0 rgba(97, 64, 43, .18); --ad-shadow-sticker: 1px 2px 3px rgba(56, 44, 35, .3);
+  --ad-focus-ring: 2px solid #814323; --ad-sel-bg: rgba(36, 104, 84, .16);
+  --ad-case-border: 3px solid #61402B; --ad-case-glow: 0 0 0 2px #B66B3E; --ad-spine-w: 12px;
+
+  --ad-cover-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='110' viewBox='0 0 180 110'%3E%3Cdefs%3E%3Cg id='c0'%3E%3Cellipse cx='44' cy='30' rx='5.0' ry='3.1' fill='none' stroke='%231A5A47' stroke-width='3.2'/%3E%3Cellipse cx='44' cy='30' rx='11.0' ry='6.8' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='44' cy='30' rx='17.0' ry='10.5' fill='none' stroke='%23246854' stroke-width='3.2'/%3E%3Cellipse cx='44' cy='30' rx='23.0' ry='14.3' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='44' cy='30' rx='29.0' ry='18.0' fill='none' stroke='%232C7A60' stroke-width='3.2'/%3E%3Cellipse cx='44' cy='30' rx='35.0' ry='21.7' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='44' cy='30' rx='41.0' ry='25.4' fill='none' stroke='%231A5A47' stroke-width='3.2'/%3E%3Cellipse cx='44' cy='30' rx='47.0' ry='29.1' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='44' cy='30' rx='53.0' ry='32.9' fill='none' stroke='%23246854' stroke-width='3.2'/%3E%3Cellipse cx='44' cy='30' rx='59.0' ry='36.6' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3C/g%3E%3Cg id='c1'%3E%3Cellipse cx='128' cy='78' rx='5.0' ry='3.1' fill='none' stroke='%231A5A47' stroke-width='3.2'/%3E%3Cellipse cx='128' cy='78' rx='11.9' ry='7.4' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='128' cy='78' rx='18.8' ry='11.7' fill='none' stroke='%23246854' stroke-width='3.2'/%3E%3Cellipse cx='128' cy='78' rx='25.7' ry='15.9' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='128' cy='78' rx='32.6' ry='20.2' fill='none' stroke='%232C7A60' stroke-width='3.2'/%3E%3Cellipse cx='128' cy='78' rx='39.5' ry='24.5' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='128' cy='78' rx='46.4' ry='28.8' fill='none' stroke='%231A5A47' stroke-width='3.2'/%3E%3Cellipse cx='128' cy='78' rx='53.3' ry='33.0' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='128' cy='78' rx='60.2' ry='37.3' fill='none' stroke='%23246854' stroke-width='3.2'/%3E%3Cellipse cx='128' cy='78' rx='67.1' ry='41.6' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3C/g%3E%3Cg id='c2'%3E%3Cellipse cx='150' cy='18' rx='5.0' ry='3.1' fill='none' stroke='%231A5A47' stroke-width='3.2'/%3E%3Cellipse cx='150' cy='18' rx='9.2' ry='5.7' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='150' cy='18' rx='13.4' ry='8.3' fill='none' stroke='%23246854' stroke-width='3.2'/%3E%3Cellipse cx='150' cy='18' rx='17.6' ry='10.9' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='150' cy='18' rx='21.8' ry='13.5' fill='none' stroke='%232C7A60' stroke-width='3.2'/%3E%3Cellipse cx='150' cy='18' rx='26.0' ry='16.1' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='150' cy='18' rx='30.2' ry='18.7' fill='none' stroke='%231A5A47' stroke-width='3.2'/%3E%3Cellipse cx='150' cy='18' rx='34.4' ry='21.3' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3Cellipse cx='150' cy='18' rx='38.6' ry='23.9' fill='none' stroke='%23246854' stroke-width='3.2'/%3E%3Cellipse cx='150' cy='18' rx='42.8' ry='26.5' fill='none' stroke='%230E3A30' stroke-width='2'/%3E%3C/g%3E%3C/defs%3E%3Crect width='180' height='110' fill='%23123F35'/%3E%3Cuse href='%23c0' x='-180' y='-110'/%3E%3Cuse href='%23c0' x='-180' y='0'/%3E%3Cuse href='%23c0' x='-180' y='110'/%3E%3Cuse href='%23c0' x='0' y='-110'/%3E%3Cuse href='%23c0' x='0' y='0'/%3E%3Cuse href='%23c0' x='0' y='110'/%3E%3Cuse href='%23c0' x='180' y='-110'/%3E%3Cuse href='%23c0' x='180' y='0'/%3E%3Cuse href='%23c0' x='180' y='110'/%3E%3Cuse href='%23c1' x='-180' y='-110'/%3E%3Cuse href='%23c1' x='-180' y='0'/%3E%3Cuse href='%23c1' x='-180' y='110'/%3E%3Cuse href='%23c1' x='0' y='-110'/%3E%3Cuse href='%23c1' x='0' y='0'/%3E%3Cuse href='%23c1' x='0' y='110'/%3E%3Cuse href='%23c1' x='180' y='-110'/%3E%3Cuse href='%23c1' x='180' y='0'/%3E%3Cuse href='%23c1' x='180' y='110'/%3E%3Cuse href='%23c2' x='-180' y='-110'/%3E%3Cuse href='%23c2' x='-180' y='0'/%3E%3Cuse href='%23c2' x='-180' y='110'/%3E%3Cuse href='%23c2' x='0' y='-110'/%3E%3Cuse href='%23c2' x='0' y='0'/%3E%3Cuse href='%23c2' x='0' y='110'/%3E%3Cuse href='%23c2' x='180' y='-110'/%3E%3Cuse href='%23c2' x='180' y='0'/%3E%3Cuse href='%23c2' x='180' y='110'/%3E%3C/svg%3E");
+  --ad-surface-img: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27200%27%20height%3D%27200%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%27.8%27%20numOctaves%3D%272%27%20stitchTiles%3D%27stitch%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%20.45%200%200%200%200%20.32%200%200%200%200%20.18%20.07%200%200%200%20-.015%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27200%27%20height%3D%27200%27%20filter%3D%27url(%23n)%27%2F%3E%3C%2Fsvg%3E"); --ad-surface-size: 200px 200px;
+  --ad-surface-edge: inset 0 0 0 1px #BDA17B, inset 0 0 24px rgba(165, 119, 73, .13);
+  --ad-margin-w: 0px; --ad-pad-left: 38px; --ad-pad-left-desk: 48px; --ad-pad-left-r: 34px; --ad-plain-pad-left: 38px; --ad-tabs-clear: 30px;
+  --ad-plain-img: none;
+
+  --ad-head-case: uppercase; --ad-head-track: .06em; --ad-h2-size: 2rem; --ad-h2-weight: 400;
+  --ad-sec-h-size: .78rem; --ad-sec-h-weight: 700; --ad-sec-h-ink: #814323; --ad-name-weight: 400; --ad-subj-weight: 400;
+  --ad-c-name-size: 1.6rem; --ad-doc-title-weight: 400; --ad-doc-title-size: 1.5rem;
+  --ad-date-size: 3.1rem; --ad-date-ink: #123F35; --ad-date-weight: 700; --ad-cd-ink: #814323; --ad-cd-size: 1.7rem;
+  --ad-head-ink: #F4E7CA; --ad-head-title-font: 400 1.3rem/1.15 "Kurale", Georgia, serif; --ad-head-title-track: .02em; --ad-head-title-case: none;
+  --ad-head-rule-display: block; --ad-head-rule: #D59A61; --ad-emblem-size: 38px;
+  --ad-h2-pad: 12px; --ad-h2-rule-display: block; --ad-h2-rule-w: 100%; --ad-h2-rule-h: 6px; --ad-h2-rule-bottom: 0px;
+  --ad-h2-rule: linear-gradient(#B66B3E, #B66B3E) 0 0 / 100% 1.5px no-repeat, linear-gradient(#B66B3E, #B66B3E) 0 4.5px / 100% 1.5px no-repeat;
+  --ad-dropcap-font: "Kurale", Georgia, serif; --ad-dropcap-size: 1.3em; --ad-dropcap-ink: #1D5A46;
+  --ad-marker-w: 9px; --ad-marker-h: 13px; --ad-marker-r: 0; --ad-marker-x: -26px;
+  --ad-ph-bg: #FFF4DB; --ad-ph-border: 1px solid #61402B; --ad-ph-inset: 3px; --ad-ph-box-shadow: 0 0 0 2px #B66B3E, 1px 3px 4px rgba(56, 44, 35, .3);
+  --ad-ph-filter: sepia(.18) saturate(.9); --ad-ph-rot-a: -1.5deg; --ad-ph-rot-b: 1.2deg;
+  --ad-was-deco: line-through; --ad-rel-why-prefix: "приписано: "; --ad-said-prefix: "по слухам"; --ad-said-bar: 3px; --ad-prefix-ink: #814323;
+  --ad-card-border: 1px solid #BDA17B; --ad-next-border: 1px dashed #814323; --ad-post-line: #CBB48A; --ad-strip-w: 4px;
+  --ad-stripe-info: #246854; --ad-stripe-good: #246854;
+  --ad-mark-gap: 8px; --ad-sticker-rotate: -1deg; --ad-sticker-rotate-even: .8deg; --ad-sticker-pad: 12px 14px 11px;
+  --ad-stamp-display: block; --ad-stamp-font: 400 .9rem/1.5 "Kurale", Georgia, serif; --ad-stamp-case: none; --ad-stamp-rotate: -3deg;
+  --ad-mp-font: "PT Sans", system-ui, sans-serif; --ad-mp-border: #B66B3E;
+
+  --ad-tc-today: #1D6A52; --ad-tc-grades: #46603A; --ad-tc-people: #2F5F66; --ad-tc-feed: #6B4426; --ad-tc-ach: #7A3A3A; --ad-tc-settings: #4C5148;
+  --ad-bookmark-bg: #246854; --ad-ribbon-bg: #246854;
+  --ad-gutter-w: 34px;
+  --ad-gutter-bg: linear-gradient(90deg, transparent, rgba(97, 64, 43, .14) 38%, rgba(56, 44, 35, .34) 50%, rgba(97, 64, 43, .14) 62%, transparent);
+
+  --ad-sign-c: #246854; --ad-sign-line: #814323; --ad-sign-c2: #FFD686; --ad-sign-c3: #123F35;
+
+  --ad-ml-u1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='240' viewBox='0 0 28 240' preserveAspectRatio='none'%3E%3Cpath fill='%23123F35' d='M0 0h28v240H0z'/%3E%3Cg fill='none' stroke='%230A2A23' stroke-width='9'%3E%3Cpath d='M6.4 -120C6.9 -116.0 7.3 -104.0 9.3 -96C11.4 -88.0 16.7 -80.0 18.7 -72C20.8 -64.0 22.4 -56.0 21.6 -48C20.8 -40.0 16.5 -32.0 14.0 -24C11.4 -16.0 7.2 -8.0 6.4 0C5.6 8.0 7.3 16.0 9.3 24C11.4 32.0 16.7 40.0 18.7 48C20.8 56.0 22.4 64.0 21.6 72C20.8 80.0 16.5 88.0 14.0 96C11.4 104.0 7.2 112.0 6.4 120C5.6 128.0 7.3 136.0 9.3 144C11.4 152.0 16.7 160.0 18.7 168C20.8 176.0 22.4 184.0 21.6 192C20.8 200.0 16.5 208.0 14.0 216C11.4 224.0 7.2 232.0 6.4 240C5.6 248.0 7.3 256.0 9.3 264C11.4 272.0 16.7 280.0 18.7 288C20.8 296.0 22.4 304.0 21.6 312C20.8 320.0 16.5 328.0 14.0 336C11.4 344.0 7.7 356.0 6.4 360'/%3E%3C/g%3E%3Cg fill='none' stroke='%23246854' stroke-width='8'%3E%3Cpath d='M12.0 -240C13.1 -236.0 16.7 -224.0 18.5 -216C20.2 -208.0 21.8 -200.0 22.5 -192C23.1 -184.0 23.1 -176.0 22.5 -168C21.8 -160.0 20.2 -152.0 18.5 -144C16.7 -136.0 14.2 -128.0 12.0 -120C9.8 -112.0 7.3 -104.0 5.5 -96C3.8 -88.0 2.2 -80.0 1.5 -72C0.9 -64.0 0.9 -56.0 1.5 -48C2.2 -40.0 3.8 -32.0 5.5 -24C7.3 -16.0 9.8 -8.0 12.0 0C14.2 8.0 16.7 16.0 18.5 24C20.2 32.0 21.8 40.0 22.5 48C23.1 56.0 23.1 64.0 22.5 72C21.8 80.0 20.2 88.0 18.5 96C16.7 104.0 14.2 112.0 12.0 120C9.8 128.0 7.3 136.0 5.5 144C3.8 152.0 2.2 160.0 1.5 168C0.9 176.0 0.9 184.0 1.5 192C2.2 200.0 3.8 208.0 5.5 216C7.3 224.0 9.8 232.0 12.0 240C14.2 248.0 16.7 256.0 18.5 264C20.2 272.0 21.8 280.0 22.5 288C23.1 296.0 23.1 304.0 22.5 312C21.8 320.0 20.2 328.0 18.5 336C16.7 344.0 14.2 352.0 12.0 360C9.8 368.0 7.3 376.0 5.5 384C3.8 392.0 2.2 400.0 1.5 408C0.9 416.0 0.9 424.0 1.5 432C2.2 440.0 3.8 448.0 5.5 456C7.3 464.0 10.9 476.0 12.0 480'/%3E%3Cpath d='M18.1 -240C17.0 -236.0 13.7 -224.0 11.4 -216C9.0 -208.0 6.1 -200.0 4.1 -192C2.0 -184.0 0.1 -176.0 -0.9 -168C-1.9 -160.0 -2.2 -152.0 -1.8 -144C-1.3 -136.0 0.2 -128.0 1.9 -120C3.6 -112.0 6.3 -104.0 8.6 -96C11.0 -88.0 13.9 -80.0 15.9 -72C18.0 -64.0 19.9 -56.0 20.9 -48C21.9 -40.0 22.2 -32.0 21.8 -24C21.3 -16.0 19.8 -8.0 18.1 0C16.4 8.0 13.7 16.0 11.4 24C9.0 32.0 6.1 40.0 4.1 48C2.0 56.0 0.1 64.0 -0.9 72C-1.9 80.0 -2.2 88.0 -1.8 96C-1.3 104.0 0.2 112.0 1.9 120C3.6 128.0 6.3 136.0 8.6 144C11.0 152.0 13.9 160.0 15.9 168C18.0 176.0 19.9 184.0 20.9 192C21.9 200.0 22.2 208.0 21.8 216C21.3 224.0 19.8 232.0 18.1 240C16.4 248.0 13.7 256.0 11.4 264C9.0 272.0 6.1 280.0 4.1 288C2.0 296.0 0.1 304.0 -0.9 312C-1.9 320.0 -2.2 328.0 -1.8 336C-1.3 344.0 0.2 352.0 1.9 360C3.6 368.0 6.3 376.0 8.6 384C11.0 392.0 13.9 400.0 15.9 408C18.0 416.0 19.9 424.0 20.9 432C21.9 440.0 22.2 448.0 21.8 456C21.3 464.0 18.7 476.0 18.1 480'/%3E%3C/g%3E%3Cg fill='none' stroke='%238FC4A5' stroke-width='2'%3E%3Cpath transform='translate(2.5 0)' d='M12.0 -240C13.1 -236.0 16.7 -224.0 18.5 -216C20.2 -208.0 21.8 -200.0 22.5 -192C23.1 -184.0 23.1 -176.0 22.5 -168C21.8 -160.0 20.2 -152.0 18.5 -144C16.7 -136.0 14.2 -128.0 12.0 -120C9.8 -112.0 7.3 -104.0 5.5 -96C3.8 -88.0 2.2 -80.0 1.5 -72C0.9 -64.0 0.9 -56.0 1.5 -48C2.2 -40.0 3.8 -32.0 5.5 -24C7.3 -16.0 9.8 -8.0 12.0 0C14.2 8.0 16.7 16.0 18.5 24C20.2 32.0 21.8 40.0 22.5 48C23.1 56.0 23.1 64.0 22.5 72C21.8 80.0 20.2 88.0 18.5 96C16.7 104.0 14.2 112.0 12.0 120C9.8 128.0 7.3 136.0 5.5 144C3.8 152.0 2.2 160.0 1.5 168C0.9 176.0 0.9 184.0 1.5 192C2.2 200.0 3.8 208.0 5.5 216C7.3 224.0 9.8 232.0 12.0 240C14.2 248.0 16.7 256.0 18.5 264C20.2 272.0 21.8 280.0 22.5 288C23.1 296.0 23.1 304.0 22.5 312C21.8 320.0 20.2 328.0 18.5 336C16.7 344.0 14.2 352.0 12.0 360C9.8 368.0 7.3 376.0 5.5 384C3.8 392.0 2.2 400.0 1.5 408C0.9 416.0 0.9 424.0 1.5 432C2.2 440.0 3.8 448.0 5.5 456C7.3 464.0 10.9 476.0 12.0 480'/%3E%3Cpath transform='translate(-2.5 0)' d='M18.1 -240C17.0 -236.0 13.7 -224.0 11.4 -216C9.0 -208.0 6.1 -200.0 4.1 -192C2.0 -184.0 0.1 -176.0 -0.9 -168C-1.9 -160.0 -2.2 -152.0 -1.8 -144C-1.3 -136.0 0.2 -128.0 1.9 -120C3.6 -112.0 6.3 -104.0 8.6 -96C11.0 -88.0 13.9 -80.0 15.9 -72C18.0 -64.0 19.9 -56.0 20.9 -48C21.9 -40.0 22.2 -32.0 21.8 -24C21.3 -16.0 19.8 -8.0 18.1 0C16.4 8.0 13.7 16.0 11.4 24C9.0 32.0 6.1 40.0 4.1 48C2.0 56.0 0.1 64.0 -0.9 72C-1.9 80.0 -2.2 88.0 -1.8 96C-1.3 104.0 0.2 112.0 1.9 120C3.6 128.0 6.3 136.0 8.6 144C11.0 152.0 13.9 160.0 15.9 168C18.0 176.0 19.9 184.0 20.9 192C21.9 200.0 22.2 208.0 21.8 216C21.3 224.0 19.8 232.0 18.1 240C16.4 248.0 13.7 256.0 11.4 264C9.0 272.0 6.1 280.0 4.1 288C2.0 296.0 0.1 304.0 -0.9 312C-1.9 320.0 -2.2 328.0 -1.8 336C-1.3 344.0 0.2 352.0 1.9 360C3.6 368.0 6.3 376.0 8.6 384C11.0 392.0 13.9 400.0 15.9 408C18.0 416.0 19.9 424.0 20.9 432C21.9 440.0 22.2 448.0 21.8 456C21.3 464.0 18.7 476.0 18.1 480'/%3E%3C/g%3E%3Cpath fill='%23B66B3E' d='M25 0h3v240h-3z'/%3E%3C/svg%3E");
+  --ad-ml-u1r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='240' viewBox='0 0 28 240' preserveAspectRatio='none'%3E%3Cg transform='translate(28 0) scale(-1 1)'%3E%3Cpath fill='%23123F35' d='M0 0h28v240H0z'/%3E%3Cg fill='none' stroke='%230A2A23' stroke-width='9'%3E%3Cpath d='M6.4 -120C6.9 -116.0 7.3 -104.0 9.3 -96C11.4 -88.0 16.7 -80.0 18.7 -72C20.8 -64.0 22.4 -56.0 21.6 -48C20.8 -40.0 16.5 -32.0 14.0 -24C11.4 -16.0 7.2 -8.0 6.4 0C5.6 8.0 7.3 16.0 9.3 24C11.4 32.0 16.7 40.0 18.7 48C20.8 56.0 22.4 64.0 21.6 72C20.8 80.0 16.5 88.0 14.0 96C11.4 104.0 7.2 112.0 6.4 120C5.6 128.0 7.3 136.0 9.3 144C11.4 152.0 16.7 160.0 18.7 168C20.8 176.0 22.4 184.0 21.6 192C20.8 200.0 16.5 208.0 14.0 216C11.4 224.0 7.2 232.0 6.4 240C5.6 248.0 7.3 256.0 9.3 264C11.4 272.0 16.7 280.0 18.7 288C20.8 296.0 22.4 304.0 21.6 312C20.8 320.0 16.5 328.0 14.0 336C11.4 344.0 7.7 356.0 6.4 360'/%3E%3C/g%3E%3Cg fill='none' stroke='%23246854' stroke-width='8'%3E%3Cpath d='M12.0 -240C13.1 -236.0 16.7 -224.0 18.5 -216C20.2 -208.0 21.8 -200.0 22.5 -192C23.1 -184.0 23.1 -176.0 22.5 -168C21.8 -160.0 20.2 -152.0 18.5 -144C16.7 -136.0 14.2 -128.0 12.0 -120C9.8 -112.0 7.3 -104.0 5.5 -96C3.8 -88.0 2.2 -80.0 1.5 -72C0.9 -64.0 0.9 -56.0 1.5 -48C2.2 -40.0 3.8 -32.0 5.5 -24C7.3 -16.0 9.8 -8.0 12.0 0C14.2 8.0 16.7 16.0 18.5 24C20.2 32.0 21.8 40.0 22.5 48C23.1 56.0 23.1 64.0 22.5 72C21.8 80.0 20.2 88.0 18.5 96C16.7 104.0 14.2 112.0 12.0 120C9.8 128.0 7.3 136.0 5.5 144C3.8 152.0 2.2 160.0 1.5 168C0.9 176.0 0.9 184.0 1.5 192C2.2 200.0 3.8 208.0 5.5 216C7.3 224.0 9.8 232.0 12.0 240C14.2 248.0 16.7 256.0 18.5 264C20.2 272.0 21.8 280.0 22.5 288C23.1 296.0 23.1 304.0 22.5 312C21.8 320.0 20.2 328.0 18.5 336C16.7 344.0 14.2 352.0 12.0 360C9.8 368.0 7.3 376.0 5.5 384C3.8 392.0 2.2 400.0 1.5 408C0.9 416.0 0.9 424.0 1.5 432C2.2 440.0 3.8 448.0 5.5 456C7.3 464.0 10.9 476.0 12.0 480'/%3E%3Cpath d='M18.1 -240C17.0 -236.0 13.7 -224.0 11.4 -216C9.0 -208.0 6.1 -200.0 4.1 -192C2.0 -184.0 0.1 -176.0 -0.9 -168C-1.9 -160.0 -2.2 -152.0 -1.8 -144C-1.3 -136.0 0.2 -128.0 1.9 -120C3.6 -112.0 6.3 -104.0 8.6 -96C11.0 -88.0 13.9 -80.0 15.9 -72C18.0 -64.0 19.9 -56.0 20.9 -48C21.9 -40.0 22.2 -32.0 21.8 -24C21.3 -16.0 19.8 -8.0 18.1 0C16.4 8.0 13.7 16.0 11.4 24C9.0 32.0 6.1 40.0 4.1 48C2.0 56.0 0.1 64.0 -0.9 72C-1.9 80.0 -2.2 88.0 -1.8 96C-1.3 104.0 0.2 112.0 1.9 120C3.6 128.0 6.3 136.0 8.6 144C11.0 152.0 13.9 160.0 15.9 168C18.0 176.0 19.9 184.0 20.9 192C21.9 200.0 22.2 208.0 21.8 216C21.3 224.0 19.8 232.0 18.1 240C16.4 248.0 13.7 256.0 11.4 264C9.0 272.0 6.1 280.0 4.1 288C2.0 296.0 0.1 304.0 -0.9 312C-1.9 320.0 -2.2 328.0 -1.8 336C-1.3 344.0 0.2 352.0 1.9 360C3.6 368.0 6.3 376.0 8.6 384C11.0 392.0 13.9 400.0 15.9 408C18.0 416.0 19.9 424.0 20.9 432C21.9 440.0 22.2 448.0 21.8 456C21.3 464.0 18.7 476.0 18.1 480'/%3E%3C/g%3E%3Cg fill='none' stroke='%238FC4A5' stroke-width='2'%3E%3Cpath transform='translate(2.5 0)' d='M12.0 -240C13.1 -236.0 16.7 -224.0 18.5 -216C20.2 -208.0 21.8 -200.0 22.5 -192C23.1 -184.0 23.1 -176.0 22.5 -168C21.8 -160.0 20.2 -152.0 18.5 -144C16.7 -136.0 14.2 -128.0 12.0 -120C9.8 -112.0 7.3 -104.0 5.5 -96C3.8 -88.0 2.2 -80.0 1.5 -72C0.9 -64.0 0.9 -56.0 1.5 -48C2.2 -40.0 3.8 -32.0 5.5 -24C7.3 -16.0 9.8 -8.0 12.0 0C14.2 8.0 16.7 16.0 18.5 24C20.2 32.0 21.8 40.0 22.5 48C23.1 56.0 23.1 64.0 22.5 72C21.8 80.0 20.2 88.0 18.5 96C16.7 104.0 14.2 112.0 12.0 120C9.8 128.0 7.3 136.0 5.5 144C3.8 152.0 2.2 160.0 1.5 168C0.9 176.0 0.9 184.0 1.5 192C2.2 200.0 3.8 208.0 5.5 216C7.3 224.0 9.8 232.0 12.0 240C14.2 248.0 16.7 256.0 18.5 264C20.2 272.0 21.8 280.0 22.5 288C23.1 296.0 23.1 304.0 22.5 312C21.8 320.0 20.2 328.0 18.5 336C16.7 344.0 14.2 352.0 12.0 360C9.8 368.0 7.3 376.0 5.5 384C3.8 392.0 2.2 400.0 1.5 408C0.9 416.0 0.9 424.0 1.5 432C2.2 440.0 3.8 448.0 5.5 456C7.3 464.0 10.9 476.0 12.0 480'/%3E%3Cpath transform='translate(-2.5 0)' d='M18.1 -240C17.0 -236.0 13.7 -224.0 11.4 -216C9.0 -208.0 6.1 -200.0 4.1 -192C2.0 -184.0 0.1 -176.0 -0.9 -168C-1.9 -160.0 -2.2 -152.0 -1.8 -144C-1.3 -136.0 0.2 -128.0 1.9 -120C3.6 -112.0 6.3 -104.0 8.6 -96C11.0 -88.0 13.9 -80.0 15.9 -72C18.0 -64.0 19.9 -56.0 20.9 -48C21.9 -40.0 22.2 -32.0 21.8 -24C21.3 -16.0 19.8 -8.0 18.1 0C16.4 8.0 13.7 16.0 11.4 24C9.0 32.0 6.1 40.0 4.1 48C2.0 56.0 0.1 64.0 -0.9 72C-1.9 80.0 -2.2 88.0 -1.8 96C-1.3 104.0 0.2 112.0 1.9 120C3.6 128.0 6.3 136.0 8.6 144C11.0 152.0 13.9 160.0 15.9 168C18.0 176.0 19.9 184.0 20.9 192C21.9 200.0 22.2 208.0 21.8 216C21.3 224.0 19.8 232.0 18.1 240C16.4 248.0 13.7 256.0 11.4 264C9.0 272.0 6.1 280.0 4.1 288C2.0 296.0 0.1 304.0 -0.9 312C-1.9 320.0 -2.2 328.0 -1.8 336C-1.3 344.0 0.2 352.0 1.9 360C3.6 368.0 6.3 376.0 8.6 384C11.0 392.0 13.9 400.0 15.9 408C18.0 416.0 19.9 424.0 20.9 432C21.9 440.0 22.2 448.0 21.8 456C21.3 464.0 18.7 476.0 18.1 480'/%3E%3C/g%3E%3Cpath fill='%23B66B3E' d='M25 0h3v240h-3z'/%3E%3C/g%3E%3C/svg%3E");
+  --ad-ml-u2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cpath fill='%2361402B' stroke='%23382C23' stroke-width='3' stroke-linejoin='round' d='M7 112V30L30 7h82v21H39L28 39v73z'/%3E%3Cpath fill='%23A57749' d='M13 106V33L33 13h73v8H36L21 36v70z'/%3E%3Cpath fill='%23B66B3E' stroke='%23382C23' stroke-width='2' d='M19 29l10-10 10 10-10 10z'/%3E%3Cpath fill='%23246854' d='M23 29l6-6 6 6-6 6z'/%3E%3Cpath fill='%23382C23' d='M49 15h20v4H49zM79 15h20v4H79z M15 49h4v20h-4zM15 79h4v20h-4z'/%3E%3Cpath fill='%23D0AA70' d='M49 15h20v2H49zM79 15h20v2H79z M15 49h2v20h-2zM15 79h2v20h-2z'/%3E%3C/svg%3E");
+  --ad-ml-u2r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg transform='translate(120 0) scale(-1 1)'%3E%3Cpath fill='%2361402B' stroke='%23382C23' stroke-width='3' stroke-linejoin='round' d='M7 112V30L30 7h82v21H39L28 39v73z'/%3E%3Cpath fill='%23A57749' d='M13 106V33L33 13h73v8H36L21 36v70z'/%3E%3Cpath fill='%23B66B3E' stroke='%23382C23' stroke-width='2' d='M19 29l10-10 10 10-10 10z'/%3E%3Cpath fill='%23246854' d='M23 29l6-6 6 6-6 6z'/%3E%3Cpath fill='%23382C23' d='M49 15h20v4H49zM79 15h20v4H79z M15 49h4v20h-4zM15 79h4v20h-4z'/%3E%3Cpath fill='%23D0AA70' d='M49 15h20v2H49zM79 15h20v2H79z M15 49h2v20h-2zM15 79h2v20h-2z'/%3E%3C/g%3E%3C/svg%3E");
+  --ad-ml-u4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 70'%3E%3Cpath fill='%23B66B3E' stroke='%2361402B' stroke-width='1.5' stroke-linejoin='round' d='M50 3 C54 5 58 10 58 14 L55 22 L65 18 68 10 L71 8 72 12 76 10 77 13 72 16 L70 23 58 29 C60 33 60 36 58 39 L68 39 73 42 L78 42 79 45 75 46 75 49 72 49 71 46 L66 44 55 44 C56 54 68 60 78 54 C88 48 88 38 79 36 C90 31 98 44 89 56 C78 70 54 64 49 53 L45 47 35 50 30 54 L30 58 27 59 26 55 22 56 21 53 26 52 L31 45 42 41 C40 37 40 33 42 29 L30 23 28 16 L23 13 24 10 28 12 29 8 32 10 35 18 L45 22 42 14 C42 10 46 5 50 3z'/%3E%3Cpath fill='%23246854' d='M50 22 C58 29 57 39 50 45 C43 39 42 29 50 22z'/%3E%3Cpath fill='%2371A889' d='M50 27l3 7-3 6-3-6z'/%3E%3Ccircle fill='%23382C23' cx='46' cy='12' r='1.6'/%3E%3Ccircle fill='%23382C23' cx='54' cy='12' r='1.6'/%3E%3C/svg%3E");
+  --ad-ml-u4l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 70'%3E%3Cg transform='translate(100 0) scale(-1 1)'%3E%3Cpath fill='%23B66B3E' stroke='%2361402B' stroke-width='1.5' stroke-linejoin='round' d='M50 3 C54 5 58 10 58 14 L55 22 L65 18 68 10 L71 8 72 12 76 10 77 13 72 16 L70 23 58 29 C60 33 60 36 58 39 L68 39 73 42 L78 42 79 45 75 46 75 49 72 49 71 46 L66 44 55 44 C56 54 68 60 78 54 C88 48 88 38 79 36 C90 31 98 44 89 56 C78 70 54 64 49 53 L45 47 35 50 30 54 L30 58 27 59 26 55 22 56 21 53 26 52 L31 45 42 41 C40 37 40 33 42 29 L30 23 28 16 L23 13 24 10 28 12 29 8 32 10 35 18 L45 22 42 14 C42 10 46 5 50 3z'/%3E%3Cpath fill='%23246854' d='M50 22 C58 29 57 39 50 45 C43 39 42 29 50 22z'/%3E%3Cpath fill='%2371A889' d='M50 27l3 7-3 6-3-6z'/%3E%3Ccircle fill='%23382C23' cx='46' cy='12' r='1.6'/%3E%3Ccircle fill='%23382C23' cx='54' cy='12' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
+  --ad-ml-u5: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 200'%3E%3Cpath fill='none' stroke='%2361402B' stroke-width='2.5' d='M23 195Q37 105 25 10'/%3E%3Cg fill='%23246854'%3E%3Cpath d='M26 29Q9 29 12 12q13 4 14 17zM27 45Q43 38 38 24q-12 7-11 21z'/%3E%3Cpath d='M28 62Q5 59 7 40q18 4 21 22zM29 78Q49 66 44 48q-16 8-15 30z'/%3E%3Cpath d='M30 97Q2 94 3 71q22 5 27 26zM30 114Q52 99 46 77q-18 11-16 37z'/%3E%3Cpath d='M29 134Q1 128 1 105q22 6 28 29zM28 151Q51 136 46 112q-20 12-18 39z'/%3E%3Cpath d='M26 171Q2 163 3 141q19 7 23 30zM24 190Q45 175 43 151q-18 12-19 39z'/%3E%3C/g%3E%3Cpath fill='%2371A889' d='M25 27Q17 13 24 2q9 11 1 25z'/%3E%3C/svg%3E");
+  --ad-ml-u6: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='35' fill='%2361402B' stroke='%23B66B3E' stroke-width='3'/%3E%3Ccircle cx='40' cy='40' r='29' fill='%23F4E7CA' stroke='%23D59A61' stroke-width='2'/%3E%3Cpath fill='%23246854' stroke='%23814323' stroke-width='2' stroke-linejoin='round' d='M40 10l9 17 19-5-6 19 9 12-22 2-9 16-9-16-22-2 9-12-6-19 19 5z'/%3E%3Cpath fill='%23123F35' d='M40 20l5 17 15-8-9 15 12 5-19 1-4 13-4-13-19-1 12-5-9-15 15 8z'/%3E%3Cpath fill='none' stroke='%2371A889' stroke-width='2' d='M40 25v12m-16-7 10 10m22-10L46 40M23 49l11-3m23 3-11-3m-6 8v-8'/%3E%3Cpath fill='%23B66B3E' stroke='%23814323' stroke-width='2' d='M40 32l9 8-9 9-9-9z'/%3E%3Ccircle cx='40' cy='40' r='3' fill='%23FFD686'/%3E%3C/svg%3E");
+  --ad-ml-u7: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 44' preserveAspectRatio='none'%3E%3Cpath fill='none' stroke='%23B66B3E' stroke-width='3' d='M3 3h103l11 19-11 19H3z'/%3E%3Cpath fill='none' stroke='%23D59A61' d='M7 7h96l9 15-9 15H7z'/%3E%3Cpath fill='none' stroke='%23A9CAB2' stroke-width='2' d='M99 8q-8 7 0 14t0 14m6-23q-7 9 0 18'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%23D59A61'/%3E%3Ccircle cx='12' cy='32' r='2' fill='%23D59A61'/%3E%3C/svg%3E");
+}
+
+/* Бумага чистая; малахит, дерево и медь живут по краю, в углах и на закладках. */
+.ad-diary[data-mat="malachite"] .ad-page {
+  --ad-ml-scene: none; --ad-ml-scene-size: auto;
+  --ad-ml-fern: none;
+  --ad-ml-strip: var(--ad-ml-u1); --ad-ml-strip-pos: left top;
+  --ad-ml-corner: var(--ad-ml-u2); --ad-ml-corner-pos: left 20px top 10px;
+  --ad-ml-liz: var(--ad-ml-u4l); --ad-ml-liz-pos: right 14px top 14px;
+  --ad-ml-strip-w: 16px; --ad-ml-corner-s: 56px; --ad-ml-liz-w: 52px; --ad-ml-liz-h: 36px; --ad-ml-fern-w: 23px; --ad-ml-fern-h: 124px;
+  padding-block-start: 54px;
+  background-image: var(--ad-ml-scene), var(--ad-ml-liz), var(--ad-ml-corner), var(--ad-ml-fern), var(--ad-ml-strip), var(--ad-surface-img);
+  background-size: var(--ad-ml-scene-size), var(--ad-ml-liz-w) var(--ad-ml-liz-h), var(--ad-ml-corner-s) var(--ad-ml-corner-s), var(--ad-ml-fern-w) var(--ad-ml-fern-h), var(--ad-ml-strip-w) 240px, var(--ad-surface-size);
+  background-position: center top 16px, var(--ad-ml-liz-pos), var(--ad-ml-corner-pos), right 22px bottom 28px, var(--ad-ml-strip-pos), 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y, repeat;
+}
+.ad-diary[data-mat="malachite"] .ad-page[data-side="right"] {
+  --ad-ml-fern: var(--ad-ml-u5);
+  --ad-ml-strip: var(--ad-ml-u1r); --ad-ml-strip-pos: right top;
+  --ad-ml-corner: var(--ad-ml-u2r); --ad-ml-corner-pos: right 20px top 10px;
+  --ad-ml-liz: var(--ad-ml-u4); --ad-ml-liz-pos: left 18px top 14px;
+  padding-inline: 24px 46px;
+}
+@container koldo-panel (min-width: 760px) {
+  .ad-diary[data-mat="malachite"] .ad-page {
+    --ad-ml-strip-w: 22px; --ad-ml-corner-s: 72px; --ad-ml-liz-w: 62px; --ad-ml-liz-h: 44px; --ad-ml-fern-w: 30px; --ad-ml-fern-h: 145px;
+    --ad-ml-corner-pos: left 26px top 10px; --ad-ml-liz-pos: right 18px top 16px;
+    padding-block-start: 62px;
+  }
+  .ad-diary[data-mat="malachite"] .ad-page[data-side="right"] {
+    --ad-ml-corner-pos: right 26px top 10px; --ad-ml-liz-pos: left 22px top 16px;
+    padding-inline: 34px 60px;
+  }
+}
+
+.ad-diary[data-mat="malachite"] .ad-marker { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #246854; }
+.ad-diary[data-mat="malachite"] .ad-marker[data-kind="today"] { background: #B66B3E; }
+
+/* Закладки-самоцветы в медной оправе. */
+.ad-diary[data-mat="malachite"] .ad-tab {
+  position: relative; border: 0; border-radius: 0; padding: 12px 12px 14px 8px; margin-top: 6px;
+  clip-path: polygon(0 0, 88.3% 0, 99% 50%, 88.3% 100%, 0 100%);
+  color: #FFF4DB; font-weight: 700; text-shadow: none;
+  background-color: var(--ad-tc, #1D6A52); background-image: var(--ad-ml-u7); background-size: 100% 100%; background-repeat: no-repeat;
+  box-shadow: none;
+}
+.ad-diary[data-mat="malachite"] .ad-tab:hover { filter: brightness(1.12); }
+.ad-diary[data-mat="malachite"] .ad-tab[aria-current="page"] {
+  color: #FFFFFF; filter: brightness(1.22); box-shadow: inset 0 -4px 0 #FFD686;
+  background-color: var(--ad-tc, #1D6A52); background-image: var(--ad-ml-u7);
+}
+.ad-diary[data-mat="malachite"] .ad-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 3px #FFF4DB; }
+
+/* Закладка в плашке сообщения. */
+.ad-mat-scope[data-mat="malachite"] .ad-bookmark {
+  display: block; top: -6px; left: 14px; width: 14px; height: 18px;
+  background: linear-gradient(#B66B3E 0 3px, #246854 3px);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+}
+.ad-mat-scope[data-mat="malachite"] { border-left: 5px solid #246854; }
+
+/* Медные заклёпки вместо скрепок. */
+.ad-diary[data-mat="malachite"] .ad-attach[data-for] {
+  display: block; width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #F0C089, #B66B3E 55%, #814323); box-shadow: 0 1px 1px rgba(56, 44, 35, .5);
+}
+.ad-diary[data-mat="malachite"] .ad-attach[data-for="doc"] { top: 5px; }
+.ad-diary[data-mat="malachite"] .ad-attach[data-for="doc"][data-pos="l"] { left: 7px; }
+.ad-diary[data-mat="malachite"] .ad-attach[data-for="doc"][data-pos="r"] { right: 7px; }
+.ad-diary[data-mat="malachite"] .ad-attach[data-for="sticker"] { top: -5px; left: 50%; margin-left: -5px; }
+.ad-diary[data-mat="malachite"] .ad-attach[data-for="photo"] { top: -5px; left: -5px; }
+
+/* Каменный цветок вместо значка достижения. */
+.ad-diary[data-mat="malachite"] .ad-award .ad-sign {
+  width: 36px; height: 36px; margin: -6px -6px -6px -6px;
+  background: var(--ad-ml-u6) center / contain no-repeat;
+}
+.ad-diary[data-mat="malachite"] .ad-award .ad-sign::before,
+.ad-diary[data-mat="malachite"] .ad-award .ad-sign::after,
+.ad-diary[data-mat="malachite"] .ad-award .ad-sign > i { display: none; }
+
+.ad-diary[data-mat="malachite"] .ad-hand { font-weight: 400; }
+.ad-diary[data-mat="malachite"] input::placeholder, .ad-diary[data-mat="malachite"] textarea::placeholder { color: color-mix(in srgb, var(--ad-ink) 68%, transparent) !important; }
+
+@media (forced-colors: active) {
+  .ad-diary[data-mat="malachite"] .ad-page { background-image: none !important; }
+}
+
+/* Иллюстрации: «Сегодня» — замок слоем фона левой страницы, ящерка в правом углу (на телефоне — в потоке после записей). */
+.ad-diary[data-mat="malachite"] [data-tab="today"] > .ad-page[data-side="left"] {
+  --ad-ml-scene: var(--ad-art-castle, none);
+  --ad-ml-scene-size: min(300px, calc(100% - 44px)) auto;
+  --ad-ml-liz: none;
+  padding-block-start: 226px;
+}
+@container koldo-panel (min-width: 760px) {
+  .ad-diary[data-mat="malachite"] [data-tab="today"] > .ad-page[data-side="left"] {
+    --ad-ml-scene-size: min(340px, calc(100% - 44px)) auto;
+    padding-block-start: 250px;
+  }
+}
+.ad-diary[data-mat="malachite"] [data-tab="today"] > .ad-page[data-side="right"] {
+  --ad-ml-corner: none;
+  --ad-ml-liz: var(--ad-art-lizard, none);
+  --ad-ml-liz-w: 76px;
+  --ad-ml-liz-h: 76px;
+  --ad-ml-liz-pos: right 24px top 12px;
+  padding-block-start: 100px;
+}
+.ad-diary[data-mat="malachite"] .ad-lizard-margin {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 4px 2px;
+}
+.ad-diary[data-mat="malachite"] .ad-lizard-margin img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Остальные вкладки: картинка в потоке над заголовком, фоновая сцена гаснет. */
+.ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated[data-side] {
+  --ad-ml-scene: none;
+  padding-block-start: 48px;
+}
+.ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated[data-side],
+.ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated ~ .ad-page { --ad-ml-liz: none; }
+.ad-diary[data-mat="malachite"] .ad-art {
+  display: block;
+  width: min(100%, var(--ad-art-width, 280px));
+  height: var(--ad-art-height, 175px);
+  object-fit: contain;
+  margin: 0 auto 12px;
+  pointer-events: none;
+  user-select: none;
+}
+.ad-diary[data-mat="malachite"] .ad-art[data-art="start"],
+.ad-diary[data-mat="malachite"] .ad-art[data-art="people"] { --ad-art-width: 300px; --ad-art-height: 200px; }
+.ad-diary[data-mat="malachite"] .ad-art[data-art="study"],
+.ad-diary[data-mat="malachite"] .ad-art[data-art="magpie"] { --ad-art-width: 280px; --ad-art-height: 187px; }
+.ad-diary[data-mat="malachite"] .ad-art[data-art="holiday"] { --ad-art-width: 190px; --ad-art-height: 127px; margin-bottom: 4px; }
+.ad-diary[data-mat="malachite"] .ad-art[data-art="achievement"] { --ad-art-width: 185px; --ad-art-height: 185px; }
+.ad-diary[data-mat="malachite"] .ad-art[data-art="settings"] { --ad-art-width: 88px; --ad-art-height: 88px; margin-bottom: 8px; }
