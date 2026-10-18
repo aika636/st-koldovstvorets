@@ -76,7 +76,7 @@
   .koldo-panel .koldo-section-title:hover, .koldo-ext-block .koldo-section-title:hover { background: var(--ac-surface) !important; }
   .koldo-panel .koldo-section[open] > .koldo-section-title, .koldo-ext-block .koldo-section[open] > .koldo-section-title { border-bottom: 1px solid var(--ac-line) !important; }
   .koldo-section-icon { color: var(--koldo-accent) !important; }
-  .koldo-section-chevron { color: var(--ac-mute) !important; }
+  .koldo-section-title .koldo-section-chevron { color: var(--ac-mute) !important; }
   .koldo-panel .koldo-btn-main, .koldo-ext-block .koldo-btn-main { color: var(--koldo-ink) !important; border-color: var(--koldo-accent) !important; background: color-mix(in srgb, var(--koldo-accent) 18%, transparent) !important; }
   .koldo-panel .koldo-btn-main:hover, .koldo-ext-block .koldo-btn-main:hover { background: color-mix(in srgb, var(--koldo-accent) 28%, transparent) !important; }
   .koldo-panel .koldo-input:focus { border-color: var(--koldo-accent) !important; outline: none !important; }
@@ -142,7 +142,10 @@
   :is(.ad-diary, .ad-mat-scope) select, :is(.ad-diary, .ad-mat-scope) textarea { background-color: var(--ad-field) !important; color: var(--ad-ink) !important; border-color: var(--ad-field-line) !important; }
   :is(.ad-diary, .ad-mat-scope) select option:not([hidden]) { background-color: var(--ad-field) !important; color: var(--ad-ink) !important; }
   :is(.ad-diary, .ad-mat-scope) input::placeholder, :is(.ad-diary, .ad-mat-scope) textarea::placeholder { color: color-mix(in srgb, var(--ad-ink) 45%, transparent) !important; }
-  :is(.ad-diary, .ad-mat-scope) input:is([type=checkbox], [type=radio]) { appearance: auto !important; background-color: transparent !important; border-color: var(--ad-field-line) !important; accent-color: var(--ad-pen) !important; }
+  :is(.ad-diary, .ad-mat-scope) input[type=radio] { appearance: auto !important; background-color: transparent !important; border-color: var(--ad-field-line) !important; accent-color: var(--ad-pen) !important; }
+  :is(.ad-diary, .ad-mat-scope) input[type=checkbox] { appearance: none !important; border: 1.5px solid var(--ad-field-line) !important; background-color: var(--ad-field) !important; box-shadow: none !important; }
+  :is(.ad-diary, .ad-mat-scope) input[type=checkbox]:checked { background-color: var(--ad-pen) !important; border-color: var(--ad-pen) !important; }
+  :is(.ad-diary, .ad-mat-scope) input[type=checkbox]:checked::after { border: solid var(--ad-field) !important; border-width: 0 2px 2px 0 !important; background: none !important; }
   :is(.ad-diary, .ad-mat-scope) input[type=file] { color: var(--ad-ink) !important; background-color: transparent !important; border: 0 none !important; }
   :is(.ad-diary, .ad-mat-scope) :where(.fa-solid, .fa-regular, .fa-fw, .fa-xs) { color: inherit !important; }
   .ad-diary { background: var(--ad-cover) !important; background-image: var(--ad-cover-img, none) !important; border: var(--ad-case-border, 0 solid transparent) !important; box-shadow: var(--ad-shadow-surface), var(--ad-case-glow, 0 0 0 0 transparent) !important; color: var(--ad-ink) !important; }

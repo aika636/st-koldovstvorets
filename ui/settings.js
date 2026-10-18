@@ -12,23 +12,14 @@ import {
   LOOK_TEXT, lookSummary,
 } from './settings-blocks.js';
 import { renderAffairsParts } from './molva.js';
-import { renderStart } from './start.js';
+import { renderStart, EXAM_RULE_VIEW, PACE_HINTS } from './start.js';
+
+export { EXAM_RULE_VIEW };
 
 export const TIME_MODES = [
   { id: 'auto', label: 'Авто', hint: 'сначала контекст, при неудаче — метка' },
   { id: 'context', label: 'Из контекста', hint: 'время уже печатается в постах, инжекта нет' },
   { id: 'marker', label: 'Своя метка', hint: 'чистые посты, всё идёт служебным блоком' },
-];
-
-const PACE_HINTS = {
-  slow: 'вверх — на шаг за раз и за день; вниз свободнее',
-  normal: 'вверх — шаг за раз, два за день',
-  fast: 'вверх — два шага за раз, три за день',
-};
-
-export const EXAM_RULE_VIEW = [
-  { id: 'story', label: 'Сюжет', hint: 'исход тот, что случился в сцене; не сыгранное к концу недели искусов — остаётся долгом' },
-  { id: 'dice', label: 'Кубик', hint: 'бросок против сложности, если сцена исход не назвала' },
 ];
 
 function apiView(raw, connections) {
@@ -67,10 +58,10 @@ export function settingsView(state, settings, preset, extra = {}) {
     mode: TIME_MODES.some((m) => m.id === s.mode) ? s.mode : 'auto',
     modes: TIME_MODES.map((m) => ({ ...m, active: m.id === (s.mode || 'auto') })),
     secretaryAuto: s.secretaryAuto !== false,
-    examRules: state
+    examRules: started
       ? EXAM_RULE_VIEW.map((r) => ({ ...r, hint: r.id === 'story' ? U.examRuleStoryHint : r.hint, active: r.id === examRule(state) }))
       : [],
-    paces: state ? PACES.map((id) => ({ id, label: PACE_WORDS[id], hint: PACE_HINTS[id], active: id === paceOf(state) })) : [],
+    paces: started ? PACES.map((id) => ({ id, label: PACE_WORDS[id], hint: PACE_HINTS[id], active: id === paceOf(state) })) : [],
     injectMarker: s.mode === 'context' ? false : s.injectMarker !== false,
     injectMarkerLocked: s.mode === 'context',
     markerRisk: Boolean(extra.markerRisk) && s.mode !== 'context',

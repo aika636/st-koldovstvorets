@@ -1246,11 +1246,20 @@
   color: var(--koldo-accent);
 }
 
-.koldo-section-chevron {
+.koldo-section-title .koldo-section-chevron {
   order: 1;
   margin-left: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   font-size: 0.75em;
+  line-height: 1;
+  text-align: center;
   color: var(--ac-mute);
+  transform-origin: 50% 50%;
   transition: transform 0.2s ease;
 }
 

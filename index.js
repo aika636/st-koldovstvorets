@@ -2400,8 +2400,9 @@ const host = {
       state.started = true;
       const first = firstCountedMes(chatOf());
       if (first > 0) state.startMes = first;
-      state.examBy = EXAM_RULES.includes(prev.examBy) ? prev.examBy : 'story';
-      if (PACES.includes(prev.relPace)) state.relPace = prev.relPace;
+      state.examBy = [form.examBy, prev.examBy].find((v) => EXAM_RULES.includes(v)) || 'story';
+      const pace = [form.relPace, prev.relPace].find((v) => PACES.includes(v));
+      if (pace) state.relPace = pace;
       forgetTurns();
       await commit(state, { flush: true });
       setInjects({ oneShot: '' });

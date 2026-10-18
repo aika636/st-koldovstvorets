@@ -182,6 +182,8 @@ export function renderApiBlock(host, view) {
   ]);
 }
 
+const NOT_STARTED = 'Выбирается в «Начале игры».';
+
 export function renderAnalysisBlock(host, view) {
   const ruleGroup = nextId('koldo_exam_rule');
   const status = el('div', { class: 'koldo-status' });
@@ -199,7 +201,7 @@ export function renderAnalysisBlock(host, view) {
         el('span', { class: 'koldo-note', text: r.hint }),
       ]);
     }))
-    : el('p', { class: 'koldo-note', text: 'Правило экзаменов выбирается, когда в чате началась игра.' });
+    : el('p', { class: 'koldo-note', text: NOT_STARTED });
 
   const auto = el('input', { type: 'checkbox', checked: view.secretaryAuto !== false });
   auto.addEventListener('change', () => safe(() => host.setSettings({ secretaryAuto: auto.checked }, { quiet: true }), null));
@@ -207,7 +209,7 @@ export function renderAnalysisBlock(host, view) {
     el('p', { class: 'koldo-note', text: 'Секретарь — отдельный запрос через API Колдовстворца: читает реплику игрока и ответ модели и записывает оценки, прогулы, отношения, поступки и события для слухов. Последний ответ пересчитывается начисто, старый получает поправку датой того ответа. Каждый вывод можно вычеркнуть или разобрать заново кнопкой на плашке под ответом.' }),
     el('label', { class: 'koldo-check' }, [auto, el('span', { text: 'Разбирать каждый новый ответ сам' })]),
     el('p', { class: 'koldo-note', text: 'Выключено — только по кнопке «Разобрать». Включено — запрос на каждый ответ и каждый новый свайп; слухи выходят уже после разбора.' }),
-    el('p', { class: 'koldo-note', text: 'Кто решает исход контрольного в этом чате:' }),
+    view.examRules.length ? el('p', { class: 'koldo-note', text: 'Кто решает исход зачёта или искуса в этом чате:' }) : null,
     rules,
     status,
   ]);
@@ -230,7 +232,7 @@ export function renderPaceBlock(host, view) {
         el('span', { class: 'koldo-note', text: p.hint }),
       ]);
     }))
-    : el('p', { class: 'koldo-note', text: 'Темп выбирается, когда в чате началась игра.' });
+    : el('p', { class: 'koldo-note', text: NOT_STARTED });
   return section('Темп отношений', [
     el('p', { class: 'koldo-note', text: 'Насколько быстро люди меняют отношение к героине (герою). Ссора может быть резкой, дружба копится.' }),
     paces,
