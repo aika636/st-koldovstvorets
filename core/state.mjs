@@ -83,6 +83,9 @@ export function defaultStartDay(preset, today = new Date(), year) {
   if (Number.isInteger(year) && year > 0) today = new Date(year, today.getMonth(), today.getDate());
   const cal = (preset && preset.calendar) || {};
   const terms = Array.isArray(cal.terms) ? cal.terms : [];
+  if (!Number.isInteger(year) && Number.isInteger(cal.year) && cal.year > 0) {
+    return `${String(cal.year).padStart(4, '0')}-${cal.yearStart || (terms[0] && terms[0].start) || '09-01'}`;
+  }
   const todayDay = `${String(today.getFullYear()).padStart(4, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   if (/^\d{2}-\d{2}$/.test(cal.yearStart || '')) {
     const y = todayDay.slice(0, 4);
@@ -102,6 +105,7 @@ export function normalizeSubject(raw) {
     name: String(raw.name || raw.id || '').trim(),
     teacherId: raw.teacherId ? String(raw.teacherId) : null,
     examKind: raw.examKind ? String(raw.examKind) : null,
+    ...(raw.season === 'spring' ? { season: 'spring' } : {}),
     ...(Array.isArray(raw.examKinds) && raw.examKinds.length
       ? { examKinds: raw.examKinds.map(String) }
       : {}),

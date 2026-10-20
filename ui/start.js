@@ -42,6 +42,10 @@ export const START_TEXT = {
   startNewHint: 'Перевелась с домашнего обучения: знает основы волшбы, но не местный быт. Первые сцены: прибытие, декан, заселение.',
   startOld: 'Давняя ученица',
   startOldHint: 'Учится здесь давно: у неё есть близкие, одно напряжение и то, что о прошлом можно упоминать.',
+  startNewM: 'Новенький',
+  startNewHintM: 'Перевёлся с домашнего обучения: знает основы волшбы, но не местный быт. Первые сцены: прибытие, декан, заселение.',
+  startOldM: 'Давний ученик',
+  startOldHintM: 'Учится здесь давно: у него есть близкие, одно напряжение и то, что о прошлом можно упоминать.',
   close: 'Близкие (от трёх до пяти)',
   closeHint: 'Ученики выбранного состава из обоих классов: стартовое отношение тёплое.',
   groupOwn: 'Ваш класс ({grade})',
@@ -54,6 +58,11 @@ export const START_TEXT = {
   pastHint: 'Одна строка: например, «росла у бабушки-знахарки, с отцом не ладится».',
   roster: 'Состав',
   pace: 'Темп отношений',
+  firstDay: 'Первый день игры',
+  firstIntro: 'Ознакомительный',
+  firstIntroHint: 'Уроков нет: заселение, прогулка по терему и двору, знакомства. Занятия начнутся со следующего учебного дня.',
+  firstStudy: 'Учебный',
+  firstStudyHint: 'Уроки по расписанию с первого звонка.',
   examRule: 'Кто решает исход зачёта или искуса',
   rosterBasic: 'Обычный ({n} учеников)',
   rosterExtended: 'Расширенный ({n})',
@@ -76,7 +85,8 @@ export const START_TEXT = {
   dayChatNone: 'В последних сообщениях дату распознать не удалось. Поставьте её вручную: подойдёт любой день учебного года.',
   dayMid: 'Четверть и расписание берутся по календарю школы. Всё, что было раньше этой даты, не пересчитывается: ни праздники, ни прогулы, ни слухи, ни старые сообщения чата.',
   midOldSuggest: 'Старт посреди года: возможно, лучше подойдёт «Давняя ученица», героиня уже освоилась в школе. Выбор за вами.',
-  dayFromPreset: 'Дата — 1 сентября текущего учебного года (летом — ближайшего), по часам компьютера. Если в сюжете называют дату из другого года, календарь переедет в её год сам, пока в игре ещё ничего не произошло.',
+  midOldSuggestM: 'Старт посреди года: возможно, лучше подойдёт «Давний ученик», герой уже освоился в школе. Выбор за вами.',
+  dayFromPreset: 'Дата — 1 сентября 2000 года, начало учебного года в сюжете школы. Если в сюжете называют дату из другого года, календарь переедет в её год сам, пока в игре ещё ничего не произошло.',
   button: 'Начать игру',
   again: 'Начать заново',
   againNote: 'Оценки, отношения и слухи этой игры будут стерты, школа соберётся заново.',
@@ -91,7 +101,7 @@ export const START_TEXT = {
   upgradeNo: 'Нет',
   upgradeOk: 'Состав расширен.',
   extendedOnly: 'Вернуться к обычному составу можно только новой игрой.',
-  stale: 'В этом сохранении расписание и преподаватели составлены не по данным школы. Пересборка заменит их готовыми, оценки по совпавшим предметам и отношения к преподавателям останутся.',
+  stale: 'В этом сохранении расписание, предметы или преподаватели расходятся с данными школы. Пересборка заменит их готовыми, оценки по совпавшим предметам и отношения к преподавателям останутся.',
   rebuild: 'Пересобрать школу из данных',
   rebuildOk: 'Школа пересобрана.',
   noData: 'Данные школы не прочитаны: проверьте папку data у расширения.',
@@ -105,6 +115,7 @@ export function startView(input) {
   const grade = GRADES.includes(draft.grade) ? draft.grade : (GRADES.includes(state && state.grade) ? state.grade : 11);
   const houseId = draft.house !== undefined ? draft.house : (state && state.house) || '';
   const gender = ['f', 'm'].includes(draft.gender) ? draft.gender : (['f', 'm'].includes(hero.gender) ? hero.gender : 'f');
+  const m = gender === 'm' ? 'M' : '';
   const heroStart = draft.heroStart === 'old' ? 'old' : 'new';
   const mode = draft.roster === 'extended' ? 'extended' : 'basic';
   const houses = roster ? roster.houses.map((h) => {
@@ -146,6 +157,7 @@ export function startView(input) {
   if (roster && heroStart === 'old') blockers.push(...oldStartErrors(roster, { heroStart, grade, close, tension }));
 
   const examBy = EXAM_RULES.includes(draft.examBy) ? draft.examBy : (state && EXAM_RULES.includes(state.examBy) ? state.examBy : 'story');
+  const firstDay = ['intro', 'study'].includes(draft.firstDay) ? draft.firstDay : 'intro';
   const pace = PACES.includes(draft.pace) ? draft.pace : (state && PACES.includes(state.relPace) ? state.relPace : DEFAULT_PACE);
   const counts = (input && input.counts) || { basic: 18, extended: 35 };
   const suggested = Boolean(suggest && suggest.suggest);
@@ -161,12 +173,17 @@ export function startView(input) {
     house: houseId,
     heroStart,
     starts: [
-      { id: 'new', label: START_TEXT.startNew, hint: START_TEXT.startNewHint, active: heroStart === 'new' },
-      { id: 'old', label: START_TEXT.startOld, hint: START_TEXT.startOldHint, active: heroStart === 'old' },
+      { id: 'new', label: START_TEXT[`startNew${m}`], hint: START_TEXT[`startNewHint${m}`], active: heroStart === 'new' },
+      { id: 'old', label: START_TEXT[`startOld${m}`], hint: START_TEXT[`startOldHint${m}`], active: heroStart === 'old' },
     ],
     examBy,
     pace,
     examRules: EXAM_RULE_VIEW.map((r) => ({ ...r, active: r.id === examBy })),
+    firstDay,
+    firstDays: [
+      { id: 'intro', label: START_TEXT.firstIntro, hint: START_TEXT.firstIntroHint, active: firstDay === 'intro' },
+      { id: 'study', label: START_TEXT.firstStudy, hint: START_TEXT.firstStudyHint, active: firstDay === 'study' },
+    ],
     paces: PACES.map((id) => ({ id, label: PACE_WORDS[id], hint: PACE_HINTS[id], active: id === pace })),
     close,
     tension,
@@ -194,7 +211,7 @@ export function startView(input) {
     ],
     suggested,
     suggestPending: Boolean(input && input.suggestPending),
-    ...dayView(hint, draft, heroStart),
+    ...dayView(hint, draft, heroStart, gender),
     blockers,
     canStart: blockers.length === 0,
     runningLine: started && state.grade ? fill(START_TEXT.running, { grade: state.grade, house: current || '—' }) : '',
@@ -205,7 +222,8 @@ export function startView(input) {
   };
 }
 
-function dayView(hint, draft, heroStart) {
+function dayView(hint, draft, heroStart, gender) {
+  const m = gender === 'm' ? 'M' : '';
   const h = hint || {};
   const fromChat = h.from === 'chat';
   const chatDay = h.chatDay || (fromChat ? h.day : '') || '';
@@ -228,7 +246,7 @@ function dayView(hint, draft, heroStart) {
     dayNote: note,
     midYear: mid,
     dayMidNote: mid ? START_TEXT.dayMid : '',
-    oldSuggest: mid && heroStart === 'new' ? START_TEXT.midOldSuggest : '',
+    oldSuggest: mid && heroStart === 'new' ? START_TEXT[`midOldSuggest${m}`] : '',
   };
 }
 
@@ -381,6 +399,10 @@ export function renderStart(host, focus = false) {
   form.push(el('div', { class: 'koldo-row' }, [el('label', { class: 'koldo-field' }, [el('span', { text: START_TEXT.day }), day])]));
   form.push(el('p', { class: 'koldo-note', text: view.dayNote }));
   if (view.dayMidNote) form.push(el('p', { class: 'koldo-note', text: view.dayMidNote }));
+  form.push(el('div', { class: 'koldo-field' }, [
+    el('span', { text: START_TEXT.firstDay }),
+    radios(`${key}_f`, view.firstDays, (id) => { draft.firstDay = id; redraw(); }),
+  ]));
 
   const go = el('div', {
     class: view.canStart ? 'menu_button koldo-btn koldo-btn-main' : 'menu_button koldo-btn koldo-btn-main koldo-btn-off',
@@ -393,6 +415,7 @@ export function renderStart(host, focus = false) {
         house: view.house,
         examBy: view.examBy,
         relPace: view.pace,
+        firstDay: view.firstDay,
         ...(view.love ? { love: view.love } : {}),
         ...(view.heroStart === 'old'
           ? { heroStart: 'old', close: view.close, tension: view.tension, past: view.past }

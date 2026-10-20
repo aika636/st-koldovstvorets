@@ -234,7 +234,7 @@ export function renderPaceBlock(host, view) {
     }))
     : el('p', { class: 'koldo-note', text: NOT_STARTED });
   return section('Темп отношений', [
-    el('p', { class: 'koldo-note', text: 'Насколько быстро люди меняют отношение к героине (герою). Ссора может быть резкой, дружба копится.' }),
+    el('p', { class: 'koldo-note', text: 'Насколько быстро люди меняют отношение к вашему персонажу. Ссора может быть резкой, дружба копится.' }),
     paces,
     status,
   ]);
@@ -621,6 +621,7 @@ export function renderFeedBlock(host, preset, settings, extra = null) {
     el('label', { class: 'koldo-check' }, [manual, el('span', { text: X.molvaManual })]),
     el('p', { class: 'koldo-note', text: X.molvaManualNote }),
     el('label', { class: 'koldo-field koldo-field-inline' }, [el('span', { text: X.molvaSwear }), swear]),
+    el('p', { class: 'koldo-note', text: X.molvaSwearNote }),
     el('label', { class: 'koldo-field koldo-field-inline' }, [el('span', { text: X.digestMax }), digest]),
     el('p', { class: 'koldo-note', text: X.digestNote }),
     molvaRefresh(host, preset),

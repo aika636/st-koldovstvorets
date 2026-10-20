@@ -537,7 +537,7 @@ export function manualTime(state, { day, time, shift, count = false } = {}, pres
     const at = {};
     if (day !== undefined) at.day = day;
     if (time !== undefined) at.time = time;
-    const r = setAbsolute(s, at, 'manual', preset, { force: true });
+    const r = setAbsolute(s, at, 'manual', preset, { force: true, eraOk: true });
     s = r.state;
     reasons.push(r.reason);
     applied = applied || r.applied;

@@ -247,7 +247,7 @@ function scheduleSegment(state, preset, L) {
     const item = plan.find((p) => p.index === cur.index);
     if (!item) return '';
     const lead = fill(cur.status === 'now' ? L.now : L.next, {
-      subject: item.name,
+      subject: item.start ? `${cur.status === 'now' && item.end ? `${item.start}–${item.end}` : item.start} ${item.name}` : item.name,
       teacher: teacherTail(state, item.teacherId, L),
     });
     const rest = plan.filter((p) => p.index > item.index);
@@ -265,7 +265,7 @@ function scheduleSegment(state, preset, L) {
 }
 
 function lessonName(state, item, L) {
-  return `${item.name}${teacherTail(state, item.teacherId, L)}`;
+  return `${item.start ? `${item.start} ` : ''}${item.name}${teacherTail(state, item.teacherId, L)}`;
 }
 
 function relationSegment(state, preset, L, mode) {
@@ -456,7 +456,8 @@ export function buildPrompt(state, preset, { injects = [], withMarker = true, fe
 }
 
 export function countNumbers(text) {
-  return (String(text || '').match(/\d+(?:[.,:]\d+)*/g) || []).length;
+  const bare = String(text || '').replace(/\b\d{1,2}:\d{2}(?:–\d{1,2}:\d{2})?\b/g, '');
+  return (bare.match(/\d+(?:[.,:]\d+)*/g) || []).length;
 }
 
 export function fill(template, vars) {

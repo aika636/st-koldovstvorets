@@ -27,9 +27,20 @@ export function subjectsOfGrade(roster, grade) {
   return seen.map((id) => roster.subject(id)).filter(Boolean);
 }
 
+export function sideSubjectsOfGrade(roster, grade) {
+  const school = roster.school || {};
+  const ids = [];
+  for (const t of Object.values(school.afternoonSpring || {})) if (t && t.subject && Number(t.grade) === grade) ids.push(t.subject);
+  const sky = school.evening && school.evening.astronomy;
+  if (sky && sky.subject && sky[grade]) ids.push(sky.subject);
+  for (const x of school.extras || []) if (x.subject && (x.grades || []).includes(grade)) ids.push(x.subject);
+  const main = new Set(subjectsOfGrade(roster, grade).map((s) => s.id));
+  return [...new Set(ids)].filter((id) => !main.has(id)).map((id) => roster.subject(id)).filter(Boolean);
+}
+
 export function planFromRoster(roster, opts = {}) {
   const grade = normalizeGrade(opts.grade);
-  const subjects = subjectsOfGrade(roster, grade).map((s) => ({ id: s.id, name: s.name, teacherId: (s.teachers || [])[0] || null }));
+  const subjects = [...subjectsOfGrade(roster, grade), ...sideSubjectsOfGrade(roster, grade)].map((s) => ({ id: s.id, name: s.name, teacherId: (s.teachers || [])[0] || null, ...(s.term === 'spring' ? { season: 'spring' } : {}) }));
   const teachers = roster.teachers.map(teacherFromRoster);
   const schedule = {};
   DAYS.forEach((d, i) => { schedule[String(i + 1)] = [...((roster.grid[grade] || {})[d] || [])]; });
@@ -40,7 +51,10 @@ export function schoolMismatch(state, roster) {
   if (!state || !roster) return false;
   const ids = new Set(roster.subjects.map((s) => s.id));
   const own = Array.isArray(state.subjects) ? state.subjects : [];
-  return own.length > 0 && !own.every((s) => ids.has(s.id));
+  if (!own.length) return false;
+  if (!own.every((s) => ids.has(s.id))) return true;
+  const have = new Set(own.map((s) => s.id));
+  return sideSubjectsOfGrade(roster, normalizeGrade(state.grade)).some((s) => !have.has(s.id));
 }
 
 const SPRING_TERM = 3;

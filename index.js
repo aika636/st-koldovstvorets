@@ -924,6 +924,12 @@ function announceRollback(reason, mesId) {
 
 const START_HINT_SCAN = 20;
 
+const INTRO_DAY = {
+  name: 'День знакомства',
+  about: 'первый день без уроков: заселение, прогулка по терему и двору, встречи с деканом и соседями',
+  today: 'уроков сегодня нет: заселяются, бродят по терему и двору, знакомятся; занятия начнутся со следующего учебного дня',
+};
+
 function chatGoing(chat) {
   return chat.some((m) => m && m.is_user && !m.is_system) && chat.some((m) => eligible(m));
 }
@@ -2350,6 +2356,10 @@ const host = {
         classmates: startClassmates(roster, { ...form, heroStart: fields.heroStart, grade }, live.preset),
       });
       state.started = true;
+      if (form.firstDay === 'intro') {
+        const intro = addEvent(state, { ...INTRO_DAY, from: state.calendar.day, off: true });
+        if (intro.ok) state.events = intro.state.events;
+      }
       const first = firstCountedMes(chatOf());
       if (first > 0) state.startMes = first;
       state.examBy = [form.examBy, prev.examBy].find((v) => EXAM_RULES.includes(v)) || 'story';

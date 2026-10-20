@@ -92,7 +92,7 @@ export function weekAheadKinds(state, preset) {
     kind: k.id,
     name: String(k.name || k.id),
     subjects: (state.subjects || [])
-      .filter((s, pos) => kindsForSubject(preset, s, pos).some((x) => x.id === k.id) && !items.some((i) => i.id === `${term}:${s.id}:${k.id}`))
+      .filter((s, pos) => (s.season !== 'spring' || isSpringTerm(preset, state)) && kindsForSubject(preset, s, pos).some((x) => x.id === k.id) && !items.some((i) => i.id === `${term}:${s.id}:${k.id}`))
       .map((s) => s.name || s.id),
   })).filter((x) => x.subjects.length);
 }
@@ -145,6 +145,12 @@ export const isPassing = (preset, value) => Boolean(gradeInfo(preset, value) && 
 export const attemptsAllowed = (preset) => 1 + numberOr(examsOf(preset).retakes, DEFAULTS.retakes);
 
 export const retakesLeft = (preset, item) => Math.max(0, attemptsAllowed(preset) - numberOr(item && item.attempts, 0));
+
+function isSpringTerm(preset, state, day) {
+  const terms = termsOf(preset, state);
+  const at = termAt(preset, state, isDay(day) ? day : state.calendar && state.calendar.day);
+  return terms.length > 1 && at.index === terms.length - 1;
+}
 
 export function kindsForSubject(preset, subject, rr = 0) {
   const kinds = examKinds(preset);
@@ -253,12 +259,13 @@ export function scheduleExams(state, preset, opts = {}) {
   const session = opts.session !== false;
   const items = next.exams.items;
   const had = new Set(items.map((i) => i.id));
+  const spring = isSpringTerm(preset, next, day);
 
   let added = 0;
   const byKind = new Map();
   for (let pos = 0; pos < next.subjects.length; pos += 1) {
     const subject = next.subjects[pos];
-    if (!subject.id) continue;
+    if (!subject.id || (subject.season === 'spring' && !spring)) continue;
     for (const kind of kindsForSubject(preset, subject, pos)) {
       if (only && !only.has(kind.id)) continue;
       const id = `${term}:${subject.id}:${kind.id}`;
