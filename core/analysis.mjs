@@ -8,7 +8,7 @@ import { addDays } from './time.mjs';
 import { dayPlan } from './schedule.mjs';
 import { EVENT_HORIZON } from './parse-marker.mjs';
 import { SCENE_KINDS, sceneText, sceneAbout, personWord } from './scene.mjs';
-import { heroGender, heroWords } from './gender.mjs';
+import { heroGender } from './gender.mjs';
 import { subjectWord, upFirst } from './words.mjs';
 import { reactionCap, loudCap, LOUDNESS, hash, postRef } from './feed.mjs';
 import { isPrepToken, prepTokenOf, prepTokenText, prepTokens } from './prep.mjs';
@@ -18,16 +18,13 @@ export const ANALYSIS_KINDS = ['grade', 'completion', 'rel', 'attendance', 'even
 
 export const ANALYSIS_LIMITS = { reply: 6000, user: 5000, reason: 60 };
 
-const systemOf = (gender, preset) => {
-  const sbj = subjectWord(preset, 'genMany');
-  const w = heroWords(gender);
-  return [
-  `Ты — секретарь учебной части. Тебе дают фрагмент ролевой истории про ${gender === 'm' ? 'ученика' : 'ученицу'} выпускного класса, списки ${sbj}, наставников и учеников школы.`,
-  `Ты записываешь в ведомость только то, что в этом фрагменте действительно случилось — с ${w.heroIns} и людьми вокруг ${gender === 'm' ? 'него' : 'неё'}. Ничего не додумываешь.`,
-  'Отвечаешь двумя блоками: «Что было» — строка служебной метки, «Слышно» — насколько громко это и было ли это при людях; затем строка «Кратко:».',
-  'Постов и реплик школы ты не пишешь: молву сочиняет отдельный вызов.',
-  ].join(' ');
-};
+const systemOf = (gender) => [
+  `You are a school registrar. You get a fragment of a role-play about a ${gender === 'm' ? 'male' : 'female'} final-year student, plus lists of subjects, mentors and students.`,
+  `Record only what actually happened in the fragment to ${gender === 'm' ? 'him' : 'her'} and the people around; never invent, omit anything you are unsure of.`,
+  'Answer in two blocks: block 1 is one service-marker line, block 2 is «Слышно:» (how loud it was and who saw); then a «Кратко:» line.',
+  'Write all free-text values (reasons, descriptions, event names, the summary) in Russian.',
+  'Do not write school posts or replies: a separate call composes gossip.',
+].join(' ');
 
 export const SOCIAL_LIMITS = { met: 8, clash: 4, act: 4, rumor: 3, new: 3, looks: 6, deal: 4, prep: 3, feat: 1, moment: 1, fame: 1, open: 1, unmask: 1 };
 
@@ -48,16 +45,18 @@ export function someoneWord(preset) {
 
 export function buildAnalysisPrompt(state, preset, input = {}) {
   const gender = heroGender(state, input.heroine);
-  const w = heroWords(gender);
   const g = (f, m) => (gender === 'm' ? m : f);
-  const heroine = str(input.heroine) || w.hero;
+  const heroine = str(input.heroine) || g('the heroine', 'the hero');
   const subjects = (state.subjects || []).map((s) => {
     const t = teacherOfSubject(state, s.id);
-    return `- ${s.id} — ${s.name || s.id}${t ? ` — ${t.name || t.id} (${t.id})` : ''}`;
+    return `- ${s.id} — ${s.name || s.id}${t ? ` — ${t.id}` : ''}`;
   });
   const alsoLine = (p) => {
-    const list = Array.isArray(p.aliases) ? p.aliases.filter((a) => typeof a === 'string' && a.trim()) : [];
-    return list.length ? ` (ещё пишут: ${list.join(', ')})` : '';
+    const ru = /[а-яё]/i.test(p.name || '');
+    const flat = (s) => String(s).toLowerCase().replace(/ё/g, 'е').replace(/[«»"]/g, '');
+    const words = flat(p.name || '').split(/\s+/);
+    const list = Array.isArray(p.aliases) ? p.aliases.filter((a) => typeof a === 'string' && a.trim() && (!ru || /[а-яё]/i.test(a)) && !words.includes(flat(a))) : [];
+    return list.length ? ` (aka: ${list.join(', ')})` : '';
   };
   const teachers = (state.teachers || []).map((t) => `- ${t.id} — ${t.name || t.id}${alsoLine(t)}`);
   const course = (Array.isArray(state.classmates) ? state.classmates : []).filter((c) => c && c.id).map((c) => {
@@ -67,86 +66,83 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
   const values = ((preset.grades && preset.grades.values) || []).map((g) => g.value);
 
   const lines = [];
-  if (input.statusLine) lines.push(`Где мы в календаре: ${input.statusLine}`);
+  if (input.statusLine) lines.push(`Calendar: ${input.statusLine}`);
   const latinCards = (Array.isArray(input.cardNames) ? input.cardNames : []).filter((n) => typeof n === 'string' && /[a-z]/i.test(n) && !/[а-яё]/i.test(n));
   if (latinCards.length && /[а-яё]/i.test(str(input.reply))) {
-    lines.push(`Персонаж карточки (${latinCards.join(', ')}) называй по-русски, как в тексте ответа, а не латиницей: в ключах (@card/имя) и в «Кратко».`);
+    lines.push(`Name the card character (${latinCards.join(', ')}) in Russian as in the reply, not in Latin: in keys (@card/name) and in «Кратко».`);
   }
-  lines.push(`${upFirst(subjectWord(preset, 'many'))} (id — название — преподаватель):`, ...subjects);
-  lines.push('Преподаватели (id — имя):', ...teachers);
-  lines.push('Ученики школы (id — имя — о человеке):', ...(course.length ? course : ['- пока никого']));
+  lines.push(`${upFirst(subjectWord(preset, 'many'))} (id — name — mentor id):`, ...subjects);
+  lines.push('Mentors (id — name):', ...teachers);
+  lines.push('Students (id — name — about):', ...(course.length ? course : ['- none yet']));
   const bare = [...(state.teachers || []), ...(Array.isArray(state.classmates) ? state.classmates : [])].filter((p) => p && p.id && !str(p.looks));
-  if (bare.length) lines.push(`Без записанной внешности: ${bare.slice(0, 40).map((p) => p.id).join(', ')}.`);
-  if (values.length) lines.push(`Оценки пишутся одним из значений: ${values.join(', ')}.`);
+  if (bare.length) lines.push(`No recorded appearance: ${bare.slice(0, 40).map((p) => p.id).join(', ')}.`);
+  if (values.length) lines.push(`Grade values: ${values.join(', ')}.`);
   const debts = (state.subjects || []).filter((subject) => subject.debt);
-  lines.push(`Текущие хвосты: ${debts.length ? debts.map((subject) => subject.id).join(', ') : 'нет'}.`);
+  lines.push(`Current debts: ${debts.length ? debts.map((subject) => subject.id).join(', ') : 'none'}.`);
   const exams = input.exams === false ? [] : todaysExamLines(state, preset);
   if (exams.length) {
-    lines.push(`Сегодня по расписанию: ${exams.join('; ')}. Если во фрагменте его сдали или провалили — запиши исход как grade по ${subjectWord(preset, 'dat')}.`);
+    lines.push(`Scheduled today: ${exams.join('; ')}. If it was passed or failed in the fragment, record the outcome as grade for that subject.`);
   }
   const lessons = lessonLines(state, preset);
-  if (lessons.length) lines.push(`Уроки сегодня по сетке (id — название — наставник): ${lessons.join('; ')}.`);
+  if (lessons.length) lines.push(`Today's lessons (id — name — mentor id): ${lessons.join('; ')}.`);
   const hooks = (Array.isArray(input.hooks) ? input.hooks : []).filter((h) => h && h.id && h.text).slice(0, 3);
-  if (hooks.length) lines.push('Поводы, которые игрок отдал рассказчику (id — что):', ...hooks.map((h) => `- ${h.id} — ${clip(h.text, 200)}`));
+  if (hooks.length) lines.push('Hooks the player gave the narrator (id — what):', ...hooks.map((h) => `- ${h.id} — ${clip(h.text, 200)}`));
   const preps = (Array.isArray(input.preps) ? input.preps : []).filter((n) => n && n.id && n.text).slice(0, 3);
-  if (preps.length) lines.push('Намерения неписей (id — кто — что):', ...preps.map((n) => `- ${n.id} — ${clip(n.text, 200)}`));
+  if (preps.length) lines.push('NPC intentions (id — who — what):', ...preps.map((n) => `- ${n.id} — ${clip(n.text, 200)}`));
   const known = knownEventLines(state, preset);
-  lines.push(`Уже в планах (не повторяй): ${known.length ? known.join('; ') : 'ничего'}.`);
+  lines.push(`Already planned (do not repeat): ${known.length ? known.join('; ') : 'nothing'}.`);
   const feats = input.feats === false ? { context: [], rules: [] } : featsPromptLines(state, preset, { char: [].concat(input.cardNames || [])[0] || '', heroine, gender, ahead: input.feats && input.feats.ahead ? 1 : 0 });
   lines.push(...feats.context);
   lines.push('');
   const said = clipAnalysisReply(stripForeignMarkup(str(input.userText)), ANALYSIS_LIMITS.user);
   if (said) {
-    lines.push(`Реплика игрока перед ответом — это тоже фрагмент: здесь игрок пишет, что делает ${heroine}.`, '"""', said, '"""', '');
+    lines.push(`The player's line before the reply is also part of the fragment: it says what ${heroine} does.`, '"""', said, '"""', '');
   }
-  lines.push('Ответ рассказчика:', '"""', clipAnalysisReply(stripForeignMarkup(input.reply)), '"""', '');
+  lines.push('Narrator reply:', '"""', clipAnalysisReply(stripForeignMarkup(input.reply)), '"""', '');
   lines.push(
-    'Блок 1. Что было — одной строкой служебной метки:',
-    `<!-- [KOLDO grade=${subjectWord(preset)}:оценка:основание rel=человек:minor+:повод skip=${subjectWord(preset)} late=${subjectWord(preset)} event=+3:название met=ученик clash=кто:с кем:повод act=кто:что:с кем:вид:доступность:охват rumor=о ком:что говорят looks=кто:внешность open=кто unmask=кто deal=кто:кому:что fame=+:основание${feats.rules.length ? ' ach=id:основание' : ''}] -->`,
-    'Правила блока 1:',
-    `- grade — если ${heroine} ${g('получила оценку, сдала или не сдала', 'получил оценку, сдал или не сдал')} зачёт или экзамен, а также если на уроке наставник явно оценил ${w.her} работу: назвал балл, похвалил или отчитал с итогом («хорошо», «переделывай», «зачтено»). Тогда поставь оценку 2–5 по смыслу (разнос — 2, переделывай — 2–3, годно — 3–4, хвалит — 5), ${subjectWord(preset, 'acc')} бери урока, где это случилось (по сетке выше); после второго двоеточия — основание в трёх-пяти словах, например grade=${subjectWord(preset)}:4:похвалил за чёткие знаки. Одна оценка за урок. Нет явной оценки или похвалы-итога (просто шёл урок, наставник молча смотрел) — grade не пиши. Оценки другим людям не пишутся.`,
-    '- Прочитай весь фрагмент: учебный итог может быть фоном, воспоминанием о прошедших днях или репликой собеседника, даже если главная сцена бытовая или романтическая.',
-    ...(said ? [`- Фрагмент — реплика игрока и ответ рассказчика вместе. Что ${heroine} в реплике игрока ${g('сделала', 'сделал')} (действие, сказанное вслух, результат на глазах у других), случилось, если ответ рассказчика этому не противоречит: блестящий ответ на занятии, взорванный котёл, поцелуй, танец, драка — пиши act, fame, grade и остальное и по реплике игрока. Намерение, мысль, мечта, вопрос и «${g('попыталась', 'попытался')}» без результата — не случилось. Свидетели, названные в реплике игрока, — тоже свидетели: доступность считай по обоим текстам. Одно событие, показанное и в реплике, и в ответе, — один ключ.`] : []),
-    `- Явный итог «все экзамены/зачёты сданы» записывай completion=all:оценка; «все хвосты закрыты» — completion=debts:оценка; сдача названной позиции из списка ${subjectWord(preset, 'genMany')} — completion=id:оценка. Обычная оценка за ответ у доски остаётся grade. Не дублируй completion обычными grade по тем же позициям списка.`,
-    `- «Ты все зачёты на отлично ${g('сдала', 'сдал')}», «все хвосты были сданы на высший балл», «${g('сдала', 'сдал')} все хвосты до единого; в зачётке отметки отлично» — состоявшийся учебный итог, а не отсутствие событий. Для «отлично»/«высший балл» возьми высшую оценку из шкалы. Без точной оценки используй проходное «зачёт», если оно есть в шкале; не выдумывай числовой балл.`,
-    `- completion=all допустим только при явно сказанном «все» об экзаменах/зачётах ${w.heroGen}. Желание, будущий план, отрицание («ещё не ${g('сдала', 'сдал')} все») или достижения другого персонажа не означают завершение. Не угадывай ${subjectWord(preset, 'acc')} по неназванному преподавателю; не добавляй оценки остальным из списка за один удачный ответ.`,
-    `- rel — если отношение наставника или ученика к ${heroine} заметно изменилось: minor+ или minor- (немного), major+ или major- (сильно); после второго двоеточия — повод в двух-трёх словах.`,
-    `- skip — ${heroine} ${g('прогуляла', 'прогулял')} урок; late — ${g('опоздала', 'опоздал')} на урок.`,
-    `- Не усиливай сказанное: пиши то, что произошло в тексте, а не его возможные последствия. ${w.hero[0].toUpperCase()}${w.hero.slice(1)} ${g('извинилась', 'извинился')} — это не «помирились», кто-то нахмурился — не «поссорились». Нет слов о примирении, ссоре, обещании — нет и факта.`,
-    `- skip/late только при прямом факте пропуска/опоздания ${w.heroGen}. Переход даты, «прошло четыре дня», выходной, конец зачётной недели, отсутствие описания занятий или домашняя сцена не доказывают прогул. Не выводи прогулы из календаря.`,
-    `- event — праздник, вечеринка, бал, концерт, поход, свидание или другое событие, о котором во фрагменте сказано, что оно будет: event=+дни:название, где дни — через сколько дней от момента сцены (0 — сегодня, 1 — завтра). Несколько дней подряд — event=+5..+6:название. Событий несколько — несколько ключей event. Наказание, отработка или поручение конкретным людям — не event, а deal. Дальше ${EVENT_HORIZON} дней, без понятного срока, прошедшее и уже записанное в планах — не пиши.`,
+    'Block 1. What happened, as one service-marker line:',
+    `<!-- [KOLDO grade=subject:score:reason rel=person:minor+:reason skip=subject late=subject event=+3:name met=student clash=who:with:reason act=who:what:with:kind:access:reach rumor=about:claim looks=who:description open=who unmask=who deal=who:to:what fame=+:reason${feats.rules.length ? ' ach=id:reason' : ''}] -->`,
+    'Block 1 rules. Everywhere: write only what the text states, not its likely consequences (an apology is not a reconciliation, a frown is not a quarrel); read the whole fragment; ids come from the lists above; keys may repeat; no time or date except days in event; nobody outside the lists (except act names, see act); open, unmask and fame at most once per reply.',
+    `- grade: ${heroine} got a grade, passed or failed a test or exam, or a mentor explicitly rated ${g('her', 'his')} work in class (named a score, praised or scolded with a verdict): 2–5 by meaning (scolding 2, redo 2–3, fine 3–4, praise 5) for the subject of that lesson (see today's lessons); reason in 3–5 words, e.g. grade=subject:4:похвалил за чёткие знаки. One grade per lesson, none without an explicit rating, never for others. If the subject is unclear, do not guess it from an unnamed mentor; one good answer gives no grades for other subjects. Results may sit in the background, a memory or someone's line, even in a domestic or romantic scene.`,
+    ...(said ? [`- The player's line counts: what ${heroine} did there (an action, words said aloud, a visible result) happened unless the reply contradicts it — a brilliant answer in class, an exploded cauldron, a kiss, a dance, a fight: write act, fame, grade and the rest from it too. Intention, thought, dream, question and an unfinished attempt (${g('попыталась', 'попытался')}) did not happen. Witnesses named in the player's line are witnesses: judge access from both texts. One event shown in both texts is one key.`] : []),
+    `- completion=all:grade, completion=debts:grade, completion=id:grade: an explicit statement that all exams/tests are passed, all debts closed, or a named listed subject passed. "All" must be said about ${heroine}'s own exams (wish, plan, "not all yet", others' results do not count). Top marks = the highest grade on the scale; no exact grade — «зачёт» if on the scale; never invent a number. An answer at the board stays grade; do not duplicate completion with grade for the same items.`,
+    `- rel: a mentor's or student's attitude to ${heroine} noticeably changed: minor+/minor- (slightly), major+/major- (strongly); reason in 2–3 words.`,
+    `- skip: ${heroine} skipped a lesson; late: was late. Only on a direct statement; a date jump, day off, end of exam week, home scene or no lessons shown prove nothing, never infer from the calendar.`,
+    `- event=+days:name: a holiday, party, ball, concert, trip, date or other event said to be coming; days from the scene (0 today, 1 tomorrow; a run +5..+6). Detention, punishment or an assignment to specific people is deal. Skip it if beyond ${EVENT_HORIZON} days, undated, past or already planned.`,
     ...pauseRules(state),
-    '- met — кто из учеников и наставников был в сцене: говорит, действует или описан находящимся там же. Тот, кого только упомянули, вспомнили, обсуждали или о ком пошёл слух, — не в сцене. id из списков, несколько — через запятую.',
-    `- clash — стычка, ссора или перепалка двоих: clash=кто:с кем:повод в двух-трёх словах. ${heroine} пишется @heroine. Ссору лучше писать как act с видом «конфликт», clash — если это просто стычка учеников.`,
-    `- act — заметное действие главных (${heroine} и персонажа карточки) — вместе или по отдельности — или других учеников, которое со стороны можно увидеть: объятие, поцелуй, держались за руки, ссора, кто-то кого-то защитил, отказал, победил, провалился, ушёл, появился. Только внешне наблюдаемое — без мыслей, чувств и мотивов. act=кто:что:с кем:вид:доступность:охват и, если есть, say="деталь". кто и с кем — id, @heroine или @card/имя персонажа карточки; с кем пусто, если действие одного. Человека, которого нет в списках, пиши по имени как есть (с заглавной), если рядом ${heroine} или персонаж карточки либо он действует один; безымянных («кто-то», «толпа») не пиши. что — коротко, что сделал(а), видимое со стороны, ровно как в тексте: не дописывай продолжение жеста, вещи и подробности, которых там нет (опустился на колени — не «встал на колени и умолял»). вид — одно слово: близость, конфликт, помощь, отказ, достижение, провал, уход, появление. Конфликт — только ссора, ругань, угроза, оскорбление, драка, нападение: тот, кто с кем, — противник. Удержал, прижал к себе или к стене, догнал, взял за руку, утащил за собой, допытывался с тревогой, укрыл, отчитал из страха за человека — в романтической или заботливой сцене это близость или помощь, а не конфликт; сомневаешься — не конфликт. доступность: на людях — были свидетели (кто-то из людей был в той же комнате или рядом, даже двое-трое); наедине — никого рядом; подслушали — двое думают, что одни, а в тексте кто-то стоит за углом, за дверью, подглядывает или прячется и видит или слышит тайком (тогда не наедине и private для этого не пиши). Доступность определяй для каждого действия отдельно: что было при людях (танец на празднике, поцелуй в зале) — «на людях», даже если потом пара осталась наедине; наедине — только то, что случилось без свидетелей; в одном ответе может быть несколько act с разной доступностью. Тайное — подбросили записку, украли или подменили вещь, шантаж — то, что ${g('увидела и узнала', 'увидел и узнал')} только ${heroine}, а не свидетели, — «наедине», даже если вокруг толпа. с кем — второй участник, кем бы он ни был: партнёр, соперник на поединке, тот, кому отказали; при помощи — тот, кому помогли (вылечила зверя — помощь зверю, а не тому, кто стоял рядом). «С кем» — только тот, на кого действие направлено в самом тексте и кто назван там по имени или однозначно по роли. Тот, кого лишь упомянули, кто стоял рядом, был темой разговора или появился в другой строке фрагмента, — не участник. Должность или прозвище («староста», «старик», «новенькая») не сопоставляй с человеком из списка по догадке: не назван прямо — оставь «с кем» пустым. Реплика и поступок принадлежат тому, кто их произнёс или совершил, а не тому, о ком или при ком они сказаны. На одно событие — один act: ответное действие той же пары того же рода («обнял в ответ») отдельно не пиши; ответ другого рода — свой act (оскорбил — в ответ пощёчина или заклятие; напала — защитил). Громкое при людях с одним из главных без второго участника — упал с метлы, ранен, наказан, лишился баллов — тоже act (провал, уход или появление). охват: многие — толпа, зал, коридор полный; несколько — пара свидетелей; неизвестно. say — короткая дословная реплика или видимая деталь из текста; нет — не пиши, не сочиняй.`,
-    `- Примеры act: act=@heroine:${g('обняла', 'обнял')} при всех:@card/Имя:близость:на людях:многие:"Только не отпускай"; act=@heroine:${g('сдала', 'сдал')} зачёт с первого раза::достижение:на людях:несколько.`,
-    `- Какие act брать: читай реплику игрока и ответ рассказчика целиком, от первой строки до последней, — act берётся из обоих текстов, а не только из конца ответа. Сначала новое — то, что в этом фрагменте случилось впервые. Жест, который тянется с прошлого хода (всё ещё держатся за руки, идут вместе, стоят рядом), — продолжение, а не новое событие: пиши его, только если нового нет. Не теряй заметные поступки при свидетелях, даже когда они не про близость пары: публичное оглашение письма, записки или новости, демонстративное неповиновение, вызов, насмешка, отказ подчиниться, вмешательство или наказание преподавателя (остановил, отчитал, снял баллы, вызвал к себе, не стал вмешиваться), появление преподавателя в разгар сцены — каждое отдельным act со своим «кто» (id преподавателя из списка тоже подходит) и своей доступностью. Приватное остаётся наедине, а людное — на людях: сцена, в которой потом пара осталась вдвоём, не делает прошлое при людях тайным, и наоборот. Объём: обычно 1–3 act на фрагмент, не больше четырёх; при нехватке места — сначала поступки при свидетелях, затем поступки пары, затем остальное; мелкие жесты одной сцены (налил, положил, подал) склей в один act.`,
-    '- rumor — кто-то в сцене пустил или пересказал слух: rumor=о ком:что говорят. Только если слух прозвучал во фрагменте; о ком — id или @heroine. «Что» продолжает фразу «говорят, что <он/она> …»: rumor=sokolova:списала контрольную.',
-    `- Людей вне списков (учеников и наставников) не записывай: школа и её жители заданы заранее, новых лиц нет.`,
-    `- looks — внешность человека, если в ответе она описана: looks=id:описание${bare.length ? ' — только для людей из списка «Без записанной внешности»' : ''}. Начни с того, кто это и сколько лет на вид, дальше волосы, глаза, лицо, рост, одежда, приметы — коротко, до 160 символов, только то, что прямо написано, без выдумки. Только устойчивое: рост, сложение, волосы, глаза, лицо, привычная одежда, приметы; не пиши сиюминутное — следы, грязь, кровь, синяки, помаду, позу, мятую одежду, выражение лица. Нет описания в тексте — ключ не пиши. ${heroine} и персонажу карточки внешность не пишется.`,
-    `- deal — между людьми открылось дело: обещание, долг, общий проект, вещь, которую надо вернуть: deal=кто:кому:что. «Кто» — тот, кто должен или кому назначены отработка, наказание, штраф; «кому» — перед кем он должен. Отработку назначили ${w.heroDat} — кто=@heroine, кому=тот, кто назначил. Дело закрыли (вернули, выполнили) — deal-=кто:кому:что.`,
-    `- open — во фрагменте прямо сказано или показано, что тайна человека стала известна другим (скрывавшаяся связь, настоящее лицо, то, что он прятал): open=id этого человека. Намёк, подозрение, догадка и слух — не open. Не больше одного open на ответ.`,
-    `- unmask — ${heroine} ${g('узнала', 'узнал')}, кто пишет безымянные записки «Сороки на хвосте» (подброшенные, прибитые к доске, найденные): unmask=id автора. Догадка без доказательства — не unmask. Не больше одного unmask на ответ.`,
-    `- fame — только если ${heroine} ${g('сама', 'сам')} на людях ${g('сделала', 'сделал')} что-то, за что свидетели стали относиться к ${g('ней', 'нему')} лучше (fame=+:основание) или хуже (fame=-:основание): ${g('защитила, победила, блеснула', 'защитил, победил, блеснул')} на занятии / ${g('сорвалась, опозорилась, нарушила', 'сорвался, опозорился, нарушил')} известное правило. Ссора и близость сами по себе — не fame. Наедине — не fame. Пересказ и воспоминание уже бывшего — не fame. Не больше одного fame на ответ. Не уверен — не пиши.`,
-    ...(hooks.length ? [`- played — повод из списка «Поводы» во фрагменте действительно прозвучал: played=id. Не прозвучал — не пиши. Повод-приглашение прозвучал, только если сам позвавший зовёт ${heroine}; если зовут кого-то другого или он рассказывает, что позвали его самого, — не пиши.`] : []),
-    ...(preps.length ? ['- prep — намерение из списка «Намерения неписей» явно исполнилось или сорвалось в этом фрагменте: prep=id:done (сбылось) или prep=id:failed (сорвалось). Не видно прямо — не пиши; ожидание и планы не считаются.'] : []),
+    '- met: students and mentors present in the scene (speaking, acting or described as there), comma-separated. Only mentioned, recalled, discussed or rumored people are not present.',
+    `- clash=who:with:reason (2–3 words): a plain spat between students; ${heroine} is @heroine. A real quarrel is better an act with kind «конфликт».`,
+    `- act=who:what:with:kind:access:reach, optionally say="detail": one per outwardly observable action (no thoughts, feelings or motives) of the main pair (${heroine} and the card character), together or apart, or of other students.`,
+    '  who/with: id, @heroine or @card/name; with is empty for a solo action. A person outside the lists: write the name as is only if next to the main pair or acting alone; never anonymous («кто-то», a crowd).',
+    '  what: short, in Russian, as in the text, with no added gestures or details.',
+    '  kind, one Russian word: близость, конфликт, помощь, отказ, достижение, провал, уход, появление. конфликт is only quarrel, abuse, threat, insult, fight, attack; holding, pulling close, catching up, anxious questioning, scolding out of fear in a romantic or caring scene is близость or помощь; in doubt, not конфликт.',
+    `  access, one Russian word, per action: на людях — any witness in the room or near (even two or three); наедине — nobody near; подслушали — the two think they are alone but the text has someone hiding, peeping or eavesdropping (then no private for it). Public stays на людях even if the pair was alone afterwards. Secret acts (planted note, theft, blackmail) that only ${heroine} saw are наедине even in a crowd.`,
+    '  reach, one Russian word: многие — a crowd, a hall, a full corridor; несколько — a couple of witnesses; неизвестно.',
+    '  with: whom the action is aimed at, named in the text by name or unambiguous role (healed a beast — the beast); not someone merely mentioned, nearby or from another line. Never match a title or nickname («староста», «старик») to a listed person by guess: leave empty. Words and deeds belong to who said or did them.',
+    '  One act per event: a same-kind reply by the same pair ("hugged back") is not separate, a reply of another kind is (insulted — slapped). A loud public mishap of a main character alone (fell off a broom, punished, lost points) is an act too (провал, уход or появление).',
+    '  say: a short verbatim quote or visible detail from the text; none — omit.',
+    `  Example: act=@heroine:${g('обняла', 'обнял')} при всех:@card/Имя:близость:на людях:многие:"Только не отпускай"; act=@heroine:${g('сдала', 'сдал')} зачёт с первого раза::достижение:на людях:несколько.`,
+    "  Which acts: from the player's line and the reply together; new first (a gesture continued from earlier turns is not new). Do not lose public deeds unrelated to the pair: reading out a letter or news, open defiance, mockery, refusal to obey, a mentor's intervention or punishment (stopped, scolded, took points, summoned) or arrival mid-scene — each its own act (a mentor id fits as who). Usually 1–3, at most four; priority: in front of witnesses, then the pair's, then the rest; merge small gestures of one scene.",
+    '- rumor=about:claim: a rumor spread or retold in the fragment; about = id or @heroine; claim continues «говорят, что <он/она> …»: rumor=sokolova:списала контрольную.',
+    `- looks=id:description${bare.length ? ' (only for people in "No recorded appearance")' : ''}: appearance described in the reply. Start with who it is and apparent age, then hair, eyes, face, height, clothes, marks; up to 160 characters, only what is written, lasting traits only (not traces, dirt, blood, bruises, lipstick, pose, expression). Not described — no key; never for ${heroine} or the card character.`,
+    `- deal=who:to:what: a commitment between people (promise, debt, joint project, item to return). who = the one who owes or is assigned detention, punishment or a fine; to = whom they owe (detention given to ${heroine}: who=@heroine, to=the one who assigned it). Closed: deal-=who:to:what.`,
+    "- open=id: the text says or shows outright that a person's secret became known to others (a hidden relationship, true face, what they hid). A hint, suspicion, guess or rumor is not open.",
+    `- unmask=id: ${heroine} learned who writes the anonymous «Сорока на хвосте» notes (thrown, nailed to the board, found). A guess without proof is not unmask.`,
+    `- fame: only if ${heroine} personally did something in public that made witnesses treat ${g('her', 'him')} better (fame=+:reason) or worse (fame=-:reason): ${g('защитила, победила, блеснула', 'защитил, победил, блеснул')} in class / ${g('сорвалась, опозорилась, нарушила', 'сорвался, опозорился, нарушил')} a known rule. A quarrel or closeness alone, anything in private, a retelling or memory is not fame.`,
+    ...(hooks.length ? [`- played=id: a hook from "Hooks" actually came up in the fragment. An invitation hook came up only if the inviter himself invites ${heroine}; if someone else is invited, or he says he was invited — omit.`] : []),
+    ...(preps.length ? ['- prep=id:done or prep=id:failed: an intention from "NPC intentions" was explicitly fulfilled (done) or fell through (failed) in this fragment; expectations and plans do not count.'] : []),
     ...feats.rules,
-    '- Время и дату не пиши (кроме дней до события в event).',
-    '- Пиши id из списков выше. Каждый ключ — отдельно, ключи можно повторять.',
-    '- Если ничего из этого не случилось — пустая метка <!-- [KOLDO] -->.',
+    '- Nothing happened — the empty marker <!-- [KOLDO] -->.',
     '',
-    'Блок 2. Слышно — насколько громко это дойдёт до школы и было ли при людях. Этот блок ничего в ведомости не меняет. Постов, реплик и ников учеников здесь нет: сплетни пишет отдельный вызов. Строками:',
+    'Block 2. Слышно: how loud this will be at school and whether it was public. It changes nothing in the ledger; no posts, replies or nicknames. Lines:',
     'Слышно:',
     'loud=0..3',
-    'private=номера ключей блока 1',
-    'Правила блока 2:',
-    '- loud — насколько громко то, что было: 0 — тихо (обычная оценка, разговор), школа почти не замечает; 1 — заметно; 2 — громко (прогул при всех, ссора); 3 — на всю школу (скандал, признание со сцены).',
-    '- private — только если было наедине, без свидетелей: разговор вдвоём за закрытой дверью, шёпот, тайная встреча. Номера — порядковые номера ключей метки блока 1, считая с 1, через запятую: private=2,3. Что случилось при людях, не отмечай; нет таких — строку не пиши. «Наедине» не значит «навсегда в тайне»: подслушать могут, но это решит не секретарь.',
-    '- Реплик учеников, ников, строк react= и reply= в ответе не нужно.',
+    'private=marker key numbers',
+    'Block 2 rules. loud: 0 quiet (ordinary grade, chat), 1 noticeable, 2 loud (public skipping, quarrel), 3 the whole school (scandal, confession from the stage). private: only what happened without witnesses (closed-door talk, whisper, secret meeting): 1-based ordinal numbers of block 1 keys, comma-separated, e.g. private=2,3; leave out public ones; none — no line.',
     '',
-    `Последней строкой напиши «Кратко:» и одно предложение: что в этом фрагменте было с учёбой ${w.heroGen} и людьми вокруг (уроки, оценки, наставники, прогулы, одноклассники) — или «к учёбе не относится».`,
+    `Last line: «Кратко:» and one sentence on what happened in the fragment with ${heroine}'s studies and the people around (lessons, grades, mentors, skipping, classmates) — or «к учёбе не относится».`,
   );
-  return { system: systemOf(gender, preset), user: lines.join('\n') };
+  return { system: systemOf(gender), user: lines.join('\n') };
 }
 
 const TEXT_TAGS = 'b|i|u|s|em|strong|del|ins|sub|sup|small|big|mark|span|p|br|hr|div|font|center|blockquote|q|code|pre|a|ul|ol|li|details|summary|h[1-6]';
@@ -175,11 +171,10 @@ function classmateLine(c) {
 
 function pauseRules(state) {
   const day = state && state.calendar && state.calendar.day;
-  const today = /^\d{4}-\d{2}-\d{2}$/.test(String(day)) ? ` День сцены: ${day} (ГГГГ-ММ-ДД).` : '';
+  const today = /^\d{4}-\d{2}-\d{2}$/.test(String(day)) ? ` Scene day: ${day} (YYYY-MM-DD).` : '';
   return [
-    `- pause — занятия ПРЕКРАТИЛИСЬ: во фрагменте прямо сказано, что каникулы уже начались, заведение закрыли или занятий больше нет (карантин, закрытие, отмена всех пар). pause=дни:название, где дни — сколько дней занятий не будет, считая день сцены (на неделю — 7; до 20-го — число дней от дня сцены до 20-го включительно; до конца месяца — так же). Срок не назван — pause=open:название («до отмены»). Занятия возобновились, каникулы кончились — pause=end.${today}`,
-    '- pause: только прямой состоявшийся факт. Желание («хорошо бы каникулы»), предположение («наверное, закроют»), слух, воспоминание о прошлых каникулах и план без решения («обсуждают, не закрыть ли») — не пиши. Отменили один урок или один день — это не pause. Пример да: «С сегодняшнего дня занятий нет до весны» — pause=open:каникулы до весны, а «Школу закрыли на неделю из-за потопа» — pause=7:закрытие из-за потопа. Пример нет: «Скорее бы каникулы», «Прошлой зимой каникулы были долгими», «Говорят, на карантин закроют».',
-    '- pause: пиши в тот ответ, где это объявили, а не при каждом упоминании. Идущий период из «Уже в планах» не повторяй; только если срок изменили или продлили — пиши новый.',
+    `- pause=days:name: classes HAVE STOPPED: the text says outright that holidays began, the school closed or there are no classes (quarantine, all lessons cancelled). days = days without classes counting the scene day (a week — 7; until the 20th — through the 20th inclusive). No end named — pause=open:name. Classes resumed — pause=end.${today}`,
+    '  Only a direct, completed fact; a wish, guess, rumor, memory, undecided plan or one cancelled lesson or day is not pause. Yes: «Школу закрыли на неделю из-за потопа» — pause=7:закрытие из-за потопа; «Занятий нет до весны» — pause=open:каникулы до весны. No: «Скорее бы каникулы». Write it once, in the reply that announced it; do not repeat a running period from "Already planned" unless its term changed.',
   ];
 }
 
@@ -196,9 +191,8 @@ function knownEventLines(state, preset) {
 }
 
 function lessonLines(state, preset) {
-  const teachers = new Map((state.teachers || []).map((t) => [t.id, t.name || t.id]));
   const seen = new Set();
-  return dayPlan(state, preset).filter((p) => !seen.has(p.subjectId) && seen.add(p.subjectId)).map((p) => `${p.subjectId} — ${p.name}${p.teacherId ? ` — ${teachers.get(p.teacherId) || p.teacherId}` : ''}`);
+  return dayPlan(state, preset).filter((p) => !seen.has(p.subjectId) && seen.add(p.subjectId)).map((p) => `${p.subjectId} — ${p.name}${p.teacherId ? ` — ${p.teacherId}` : ''}`);
 }
 
 function todaysExamLines(state, preset) {
