@@ -1,6 +1,6 @@
 import { isPortrait, TEACHER_TEXT_MAX, teacherDetails } from '../core/state.mjs';
 import { NOTE_MAX } from '../core/classmates.mjs';
-import { MEMORY_SIZE, relationLabel, relationMemory, relationOf } from '../core/relations.mjs';
+import { MEMORY_SIZE, relationLabel, relationMemory, relationOf, scaleOff } from '../core/relations.mjs';
 import { reputationLabel } from '../core/reputation.mjs';
 import {
   uiLabels, fill, stateHealth, formatDate, capNumbers, str, extraLabels, mounted, el, runAction,
@@ -77,7 +77,7 @@ export function peopleView(state, preset, opts = {}) {
         shift,
       };
     });
-    const quiet = !memory.length && !relationOf(state, t.id);
+    const quiet = scaleOff(state) || (!memory.length && !relationOf(state, t.id));
     const details = teacherDetails(t);
     return {
       kind: 'teacher',
@@ -95,7 +95,7 @@ export function peopleView(state, preset, opts = {}) {
       relation: quiet ? '' : relationLabel(state, t.id, preset),
       score: quiet ? '' : relationScore(state, t.id),
       memory,
-      memoryText: memory.length ? '' : U.relationNoHistory,
+      memoryText: memory.length ? '' : scaleOff(state) ? U.relationOff : U.relationNoHistory,
       post: details.post || '',
       aliasesText: details.aliases ? fill(X.aliasesLine, { aliases: details.aliases.join(', ') }) : '',
       linkText: loreLinkText(X, details.loreLink),

@@ -1,6 +1,6 @@
 import { presetGender } from './gender.mjs';
 import { labelFor, findTeacher } from './state.mjs';
-import { relationMemory, relationLabel, relationOf, findPerson } from './relations.mjs';
+import { relationMemory, relationLabel, relationOf, findPerson, scaleOff } from './relations.mjs';
 import { tieTarget, classmateStart } from './classmates.mjs';
 import { stableLooks } from './portraits.mjs';
 import { normalizeFeed, openDeals } from './feed.mjs';
@@ -118,7 +118,7 @@ function storyOf(state, p, preset, vars) {
   return {
     memory,
     deals,
-    relation: moved ? relationLabel(state, p.id, preset) : '',
+    relation: moved && !scaleOff(state) ? relationLabel(state, p.id, preset) : '',
   };
 }
 

@@ -11,6 +11,7 @@ export const PACE_HINTS = {
   slow: 'вверх — на шаг за раз и за день; вниз свободнее',
   normal: 'вверх — шаг за раз, два за день',
   fast: 'вверх — два шага за раз, три за день',
+  off: 'отношения не считаются, их ведёт сюжет; набранное вернётся с шкалой',
 };
 
 export const EXAM_RULE_VIEW = [
@@ -139,9 +140,10 @@ export function startView(input) {
     id: p.id, name: p.name, house: houseName(p.house), grade: p.grade || 0,
     label: houseName(p.house) ? `${p.name} (${houseName(p.house)})` : p.name,
   });
+  const byName = (a, b) => a.name.localeCompare(b.name, 'ru') || (a.id < b.id ? -1 : 1);
   const byClass = (list) => [
-    { id: 'own', label: fill(START_TEXT.groupOwn, { grade }), items: list.filter((p) => p.grade === grade).map(person) },
-    { id: 'other', label: fill(START_TEXT.groupOther, { grade: grade === 11 ? 12 : 11 }), items: list.filter((p) => p.grade !== grade).map(person) },
+    { id: 'own', label: fill(START_TEXT.groupOwn, { grade }), items: list.filter((p) => p.grade === grade).map(person).sort(byName) },
+    { id: 'other', label: fill(START_TEXT.groupOther, { grade: grade === 11 ? 12 : 11 }), items: list.filter((p) => p.grade !== grade).map(person).sort(byName) },
   ].filter((g) => g.items.length);
   const closeGroups = byClass(students).map((g) => ({ ...g, items: g.items.map((p) => ({ ...p, on: close.includes(p.id) })) }));
   const mentorLabel = (p) => (p.post ? `${p.name} — ${String(p.post).split(/[:;,—]/)[0].trim().slice(0, 40)}` : p.name);

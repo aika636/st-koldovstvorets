@@ -234,7 +234,7 @@ export function renderPaceBlock(host, view) {
     }))
     : el('p', { class: 'koldo-note', text: NOT_STARTED });
   return section('Темп отношений', [
-    el('p', { class: 'koldo-note', text: 'Насколько быстро люди меняют отношение к вашему персонажу. Ссора может быть резкой, дружба копится.' }),
+    el('p', { class: 'koldo-note', text: 'Насколько быстро люди меняют отношение к вашему персонажу. Ссора может быть резкой, дружба копится. «Без шкалы» — отношения ведёт сюжет.' }),
     paces,
     status,
   ]);

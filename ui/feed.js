@@ -9,7 +9,7 @@ import { heroGender, heroWords } from '../core/gender.mjs';
 import {
   extraLabels, uiLabels, fill, formatDate, el, runAction, setStatus, call, renderPanel, mounted, safe, avatarNode, artImg,
 } from './common.js';
-import { molvaRefresh } from './molva.js';
+import { molvaRefresh, affairsView } from './molva.js';
 
 export const FEED_SHOWN = 40;
 
@@ -124,7 +124,8 @@ export function feedView(state, preset, opts = {}) {
     id: d.id,
     text: dealText({ ...d, closed: false }, people, opts.heroine, heroGender(state, opts.heroine)),
     canTake: hooksOn && !queued.has(d.id),
-  }));
+  })).filter((d) => d.text);
+  const affairs = affairsView(state, preset, opts.roster);
 
   const armedAt = plot.queue.findIndex((h) => h.armed);
   const queue = plot.queue.map((h, i) => ({
@@ -157,6 +158,8 @@ export function feedView(state, preset, opts = {}) {
     emptyText: X.feedEmpty,
     chanEmptyText: chan === 'anon' ? X.feedEmptyAnon : X.feedEmptyChat,
     deals,
+    affairs: affairs.threads,
+    affairsRoom: affairs.room,
     queue,
     hooksOn,
     note: hooksOn ? X.feedMuteHint : X.feedHooksOff,
@@ -230,6 +233,12 @@ export function renderFeed(host, view, preset) {
     d.canTake ? takeButton(host, d.id, X) : null,
     previewFor(host, d.id, X),
   ]));
+  const affairs = view.affairs.map((t) => el('div', { class: 'ad-post ad-deal-row ad-affair', dataset: { affair: t.id } }, [
+    el('div', { class: 'ad-post-text', text: t.topic }),
+    el('div', { class: 'ad-q-state', text: [t.paused ? X.mobThreadPaused : '', t.source, t.who].filter(Boolean).join(' · ') }),
+    t.want ? el('div', { text: t.want }) : null,
+    t.last ? el('div', { text: t.last }) : null,
+  ]));
   const board = view.board.length ? el('dl', { class: 'ad-board' }, [
     el('h3', { class: 'ad-sec-h', text: X.feedBoardTitle }),
     ...view.board.map((b) => el('div', {}, [el('dt', { text: b.label }), el('dd', { text: String(b.n) })])),
@@ -242,9 +251,12 @@ export function renderFeed(host, view, preset) {
   const side = el('div', { class: 'ad-side' }, [
     el('div', { class: 'ad-side-head' }, [el('h2', { text: X.feedSideTitle }), el('p', { text: X.feedSideSub })]),
     queue,
+    affairs.length ? el('h3', { class: 'ad-sec-h', text: X.feedAffairsTitle }) : null,
+    ...affairs,
+    affairs.length ? el('p', { class: 'ad-side-note', text: view.affairsRoom }) : null,
     deals.length ? el('h3', { class: 'ad-sec-h', text: X.feedDealsTitle }) : null,
     ...deals,
-    !queue && !deals.length ? el('p', { class: 'ad-side-empty', text: X.feedSideEmpty }) : null,
+    !queue && !deals.length && !affairs.length ? el('p', { class: 'ad-side-empty', text: X.feedSideEmpty }) : null,
     board,
     note,
     refresh,

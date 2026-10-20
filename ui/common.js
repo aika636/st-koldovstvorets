@@ -34,7 +34,7 @@ export function sectionIcon(title) {
 
 export const WEEKDAYS = ['', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
 const WEEKDAYS_SHORT = ['', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
-const WEEKDAYS_GEN = ['', 'понедельника', 'вторника', 'среды', 'четверга', 'пятницы', 'субботы', 'воскресенья'];
+const WEEKDAYS_FROM = ['', 'с понедельника', 'со вторника', 'со среды', 'с четверга', 'с пятницы', 'с субботы', 'с воскресенья'];
 const MONTHS = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
   'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 
@@ -141,6 +141,7 @@ export const DEFAULT_UI = {
   relationHistoryTitle: 'Запомнилось',
   relationHistoryCount: '{title}: {n} {word}',
   relationNoHistory: 'отношение ещё не менялось',
+  relationOff: 'шкала отношений выключена',
   relationShift: '{from} → {to}',
   orphanSubjectsTitle: 'Предметы без преподавателя',
   teachersTitle: 'Преподаватели',
@@ -339,7 +340,7 @@ export function setDateShift(k) {
 export function formatDate(day, form = 'full', shift = dateShift) {
   if (typeof day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return '';
   const { m, d } = parseDay(day);
-  const names = form === 'short' ? WEEKDAYS_SHORT : form === 'gen' ? WEEKDAYS_GEN : WEEKDAYS;
+  const names = form === 'short' ? WEEKDAYS_SHORT : form === 'from' ? WEEKDAYS_FROM : WEEKDAYS;
   return `${names[dayOfWeek(day, shift)]}, ${d} ${MONTHS[m] || ''}`.trim();
 }
 
@@ -465,7 +466,7 @@ export const EXTRA_UI = {
   holidayTomorrow: 'завтра',
   holidayOwnMark: '✎',
   holidayOwnTitle: 'ваше событие',
-  holidayOffUntil: CORE_LABELS.holidayOffUntil,
+  holidayOffResume: CORE_LABELS.holidayOffResume,
   holidayOffMark: CORE_LABELS.holidayOffMark,
   eventsSummary: 'Своё событие',
   eventsNote: 'Событие вне календаря: матч по лапте, концерт музыкальной группы, посиделки у печи. За несколько дней до него в сцене слышен фон, в сам день модель получает повод. «Занятий нет» делает его каникулами.',
@@ -523,10 +524,10 @@ export const EXTRA_UI = {
   molvaBusyText: 'Пишут…',
 
   mobSection: 'Дела школы',
-  mobNote: 'Дела, о которых сейчас говорят в школе: у каждого есть участники и своё желание. Люди живут своими заботами, героиня им не указ.',
+  mobNote: 'Дела, о которых сейчас говорят в школе: у каждого есть участники и суть. Люди живут своими заботами, героиня им не указ.',
   mobThreadsTitle: 'Дела школы',
   mobThreadsNone: 'Дел пока нет — они заведутся сами, когда молва пойдёт.',
-  mobThreadWant: 'хотят: {text}',
+  mobThreadWant: 'суть: {text}',
   mobThreadLast: 'последнее: {text}',
   mobThreadPaused: 'отложено',
   mobThreadSource: { calendar: 'из календаря', study: 'из учёбы', life: 'из школьной жизни' },
@@ -714,6 +715,7 @@ export const EXTRA_UI = {
   feedDrop: 'Убрать',
   feedDropped: 'Убрано.',
   feedDealsTitle: 'Незакрытые дела',
+  feedAffairsTitle: 'Чем живёт школа',
   feedSideTitle: 'Дела школы',
   feedSideSub: 'что сейчас у школы на уме',
   feedSideEmpty: 'Пока никаких дел: в горницах тихо, никто ни о чём не просит.',
@@ -771,7 +773,7 @@ export const MALE_EXTRA_UI = {
   cmTieHeroine: 'с героем',
   cmRelation: 'К герою',
   achToggle: 'Искать достижения в сюжете: секретарь отмечает поступки героя, приходят всплывашки, работает вкладка',
-  mobNote: 'Дела, о которых сейчас говорят в школе: у каждого есть участники и своё желание. Люди живут своими заботами, герой им не указ.',
+  mobNote: 'Дела, о которых сейчас говорят в школе: у каждого есть участники и суть. Люди живут своими заботами, герой им не указ.',
 };
 
 export function extraLabels(preset) {

@@ -11,7 +11,7 @@ import { assignMinds } from './romance.mjs';
 import { planNotes, isMagpieName, surfaceClue, putClueOut, cluesFor, TONE_TEXT, MAGPIE } from './magpie.mjs';
 import { nameStems, hasStem } from './secrets.mjs';
 import { openThreads, spawnThread, startThread, settleThreads, pruneThreads, noteThreads, threadOver, isStale, isEnding, studyTopics, worldTopicsOf, CALENDAR_HORIZON } from './feed-threads.mjs';
-import { relationLabel } from './relations.mjs';
+import { relationLabel, scaleOff } from './relations.mjs';
 import { classmateStart } from './classmates.mjs';
 import { holidaysOn, holidaysAhead } from './holidays.mjs';
 import { normName } from './stop-names.mjs';
@@ -745,7 +745,7 @@ function authorLine(a, state, preset, ctx, said = [], onMain = false) {
   const field = (v, max) => goodProfile(v, { min: 2, max });
   let rel = '';
   const mate = a.role === 'student' ? ((state && state.classmates) || []).find((c) => c && c.id === a.id) : null;
-  if (mate && Number.isFinite(mate.relation) && mate.relation !== classmateStart(preset)) {
+  if (mate && !scaleOff(state) && Number.isFinite(mate.relation) && mate.relation !== classmateStart(preset)) {
     try { rel = relationLabel(state, a.id, preset); } catch { rel = ''; }
   }
   const threads = openThreads(state).filter((t) => t.members.includes(a.id));
@@ -833,7 +833,7 @@ function occasionLine(o) {
   if (o.kind === 'affair') {
     const bits = [
       o.members.length && `участвуют: ${o.members.join(', ')}`,
-      o.want && `хотят: ${o.want}`,
+      o.want && `суть: ${o.want}`,
       o.last && `последнее: ${o.last}`,
       o.question && `открытый вопрос: ${o.question}`,
       o.said && `в чате было: ${o.said}`,
@@ -1012,7 +1012,7 @@ export function buildMolvaPrompt(state, preset, agenda, opts = {}) {
     'Про одного человека подряд не больше двух постов. Отношение к нему разное: любопытство, симпатия, шутка, защита, удивление, зависть, колкость — не одна колкость хором. Если кто-то уже съязвил, следующий отзывается иначе или заступается; стаей на одного не накидываются, ругань не копится выпуск за выпуском. Новенькую в первые дни встречают интересом, расспросами и теплом, а не «собьём спесь»; проступок обсуждают один-два раза, дальше жизнь идёт.',
     'Слова, образы и реплики, которые уже звучали («Уже сказано»), не повторяй, даже перефразируя: у каждого автора своя новая мысль. Если нового сказать нечего, молчи.',
     'Конфликт может остаться открытым. Примирение и одёргивание возникают из желания участника, а не ради завершения выпуска.',
-    'Собственные дела соседствуют со скандалом, не гася его: у них есть участники и конкретное желание, просьба или спор.',
+    'Собственные дела соседствуют со скандалом, не гася его: у них есть участники и конкретное желание, просьба или спор. Пока есть события (с…), большая часть сообщений о них; дела и быт — фон.',
     'Пиши преимущественно коротко, разговорно, по голосу автора («как пишет»): длину и заглавные соблюдай всегда, остальные привычки не обязаны проявляться все сразу.',
     `Капс, обрывки, эмодзи и мат используй по чувству момента и настройкам. ${SWEAR_LINE[swearOf(opts.swear)]} Ругань усиливает смысл, голоса участников остаются разными.${palette.map((l) => `\n   ${l}`).join('')}`,
     `Соблюдай реалии, календарь («Календарь относительно сегодня») и полномочия людей этого мира: прошедшее — в прошедшем времени, преподаватели говорят редко и по делу, ученики не принимают решений за администрацию. Мобильных и интернета нет: слухи ходят устно, запиской, с сорокой. Только заклинания и термины этого мира, ничего из известных книг и фильмов.`,

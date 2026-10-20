@@ -1,7 +1,7 @@
 import { cloneState, findSubject, pushJournal } from './state.mjs';
 import { addGrade, debtMemo, restoreDebt } from './gradebook.mjs';
 import { mark } from './attendance.mjs';
-import { changeRelation, findPerson } from './relations.mjs';
+import { changeRelation, findPerson, scaleOff } from './relations.mjs';
 import { SCENE_KINDS, SCENE_RECEIPTS, applySceneEvent, revertSceneEvent } from './scene.mjs';
 import { applyAcademicCompletion } from './academic-completion.mjs';
 import { planEvent, planPause } from './holidays.mjs';
@@ -45,6 +45,7 @@ export function applyCorrection(state, ev, preset, opts = {}) {
   }
 
   if (ev.kind === 'rel') {
+    if (scaleOff(state)) return { state, receipt: null };
     const teacher = findPerson(state, ev.teacherId);
     if (!teacher) return { state, receipt: null };
     const before = teacher.relation;

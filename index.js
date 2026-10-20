@@ -3,7 +3,7 @@ import { buildPrompt, statusLine } from './prompt.mjs';
 import {
   awaitingAnnouncement, gradeInfo, isPassing, kindOf, publicView, sittableExams, EXAM_RULES, examRule,
 } from './core/exams.mjs';
-import { PACES, PACE_WORDS } from './core/relations.mjs';
+import { PACES, PACE_WORDS, scaleOff } from './core/relations.mjs';
 import {
   buildAnalysisPrompt, parseAnalysis, effectiveText, tokenText, tokenEvent, tokenOf,
   dropTokenAt, factRef, reactionsOf, reactionOf, isFactToken, isReactToken, isPlayedToken, isPrepToken, playedOf, loudOf, privateRefs,
@@ -113,6 +113,9 @@ const live = {
   analyzing: new Set(),
   autoTried: new Set(),
   analysisErrors: new Map(),
+  analysisCancel: new Map(),
+  analysisCtl: new Map(),
+  analysisNote: new Map(),
   oneShot: '',
   plot: emptyPlot(),
   quiet: false,
@@ -293,6 +296,7 @@ function reloadState() {
   live.ledger = storage.loadLedger(ctx());
   live.plot = storage.loadPlot(ctx());
   live.analysisErrors.clear();
+  live.analysisCancel.clear();
   live.autoTried.clear();
   if (live.state && live.state.started) storage.dropDrafts(ctx(), String(currentChatId() || ''));
   primeMilestones();
@@ -338,6 +342,7 @@ function forgetTurns() {
   live.oneShot = '';
   live.ledger = [];
   live.analysisErrors.clear();
+  live.analysisCancel.clear();
   try {
     storage.saveLedger(ctx(), live.ledger);
   } catch (err) {
@@ -1220,7 +1225,9 @@ function lexiconOf(state, c) {
     subjects: state.subjects,
     teachers: markerPeople(state),
     classmates: Array.isArray(state.classmates) ? state.classmates : [],
+    known: ((liveRoster() || {}).people || []).filter((p) => p && p.id && p.name).map((p) => ({ id: p.id, name: p.name })),
     survey: state.survey,
+    relOff: scaleOff(state),
     names: sceneNames(c),
     hooks: knownHooks(live.plot),
     preps: prepList(state, c && c.name1),
@@ -1330,7 +1337,10 @@ function panelView(mesId) {
     known: Boolean(entry),
     uncounted,
     busy: live.analyzing.has(mark),
+    progress: live.analysisNote.get(mark) || '',
+    cancellable: live.analysisCtl.has(mark),
     error: live.analysisErrors.get(mark) || '',
+    cancelled: live.analysisCancel.get(mark) || '',
     unparsed: unparsedLeft((draft ? draft.unparsed : tokens && entry.unparsed) || [], (draft ? draft.tokens : tokens) || [],
       [...(live.state.teachers || []), ...(live.state.classmates || [])]),
     partial: Boolean(draft && draft.partial),
@@ -1339,7 +1349,18 @@ function panelView(mesId) {
     decisions: doneLines(live.state, live.preset, mark),
     promises: promiseCards(live.state, live.preset, mark, ctx().name1),
     heldJump: Boolean(live.state.calendar && live.state.calendar.heldJump && (turn || uncounted)),
+    jumpAsk: heldAsk(turn || uncounted),
     canUndo: Boolean(turn && turn.stamp && live.turns[live.turns.length - 1] === turn && live.undoneAt !== live.turns.length),
+  };
+}
+
+function heldAsk(on) {
+  if (!on || !live.state.calendar || !live.state.calendar.heldJump) return null;
+  const U = uiLabels(live.preset);
+  return {
+    text: PANEL_TEXT.jumpAsk.replace('{waiting}', heldWaiting(live.state, live.preset)).replace('{tab}', U.tabToday),
+    go: U.jumpAcceptNoDate,
+    decline: U.jumpDismiss,
   };
 }
 
@@ -1457,8 +1478,13 @@ async function analyzeMessage(mesId) {
     live.analysisErrors.set(mark, error);
     return { ok: false, error };
   };
+  const ctl = new AbortController();
+  const settings = storage.apiSettings(c);
   live.analyzing.add(mark);
+  live.analysisCtl.set(mark, ctl);
   live.analysisErrors.delete(mark);
+  live.analysisCancel.delete(mark);
+  live.analysisNote.delete(mark);
   try {
     renderPanels();
     const entry = entryOf(mark, turn);
@@ -1478,30 +1504,40 @@ async function analyzeMessage(mesId) {
       preps: prepList(base, c.name1),
       feats: featsOn() ? { ahead: turn ? 1 : 0 } : false,
     });
-    const ask = () => api.complete(storage.apiSettings(c), {
+    const ask = () => api.complete(settings, {
       system: prompt.system,
       user: prompt.user,
       ctx: c,
       temperature: 0.2,
       maxTokens: api.TOKEN_BUDGETS.analysis,
       timeout: ANALYSIS_TIMEOUT,
+      signal: ctl.signal,
     });
     const read = (r) => parseAnalysis(r.text, { ...lexiconOf(base, c), featsKnow: { ...featsKnow(base, turn ? 1 : 0), off: !featsOn() } }, { posts: live.legacyPosts === true });
     let res = await ask();
     let parsed = res.ok ? read(res) : null;
-    if (res.ok && !parsed.found && !res.truncated && live.epoch === epoch) {
+    let attempts = 1;
+    if (res.ok && !parsed.found && !res.truncated && live.epoch === epoch && !ctl.signal.aborted) {
       console.warn(`[${MODULE}] секретарь ответил без метки, повтор:`, res.text);
+      attempts = ANALYSIS_ATTEMPTS;
+      live.analysisNote.set(mark, PANEL_TEXT.retrying.replace('{n}', attempts).replace('{max}', ANALYSIS_ATTEMPTS));
+      renderPanels();
       res = await ask();
       parsed = res.ok ? read(res) : null;
     }
     if (live.epoch !== epoch) return { ok: false, error: 'Чат сменился, пока шёл разбор.' };
-    if (res.code === 'gateway') return fail('Шлюз модели не ответил. Нажмите «Разобрать» ещё раз.');
+    if (ctl.signal.aborted || res.code === 'aborted') {
+      live.analysisCancel.set(mark, api.resolveSource(settings) === 'tavern' ? PANEL_TEXT.cancelledTavern : PANEL_TEXT.cancelled);
+      return { ok: false, cancelled: true, error: PANEL_TEXT.cancelled };
+    }
+    if (res.code === 'gateway') return fail('Шлюз модели не ответил. Нажмите «Разобрать заново».');
+    if (res.code === 'timeout') return fail(PANEL_TEXT.failTimeout);
+    if (res.code === 'network') return fail(PANEL_TEXT.failNetwork);
     if (!res.ok) return fail(`Разбор не удался: ${res.message || res.code}`);
     if (!parsed.found) {
       console.warn(`[${MODULE}] секретарь ответил без метки:`, res.text);
-      return fail(res.truncated
-        ? 'Секретарь не договорил: ответ оборвался раньше метки. Попробуйте ещё раз.'
-        : 'Секретарь ответил не так, как нужно. Попробуйте ещё раз.');
+      if (res.truncated) return fail(PANEL_TEXT.failCut);
+      return fail(attempts > 1 ? PANEL_TEXT.failRefusedMany.replace('{n}', attempts) : PANEL_TEXT.failRefused);
     }
     const now = chatOf()[mesId];
     if (!now || stamp(String(now.mes || '')) !== mark) return { ok: false, error: 'Ответ сменился, пока шёл разбор.' };
@@ -1518,8 +1554,19 @@ async function analyzeMessage(mesId) {
     return fail(`Разбор не удался: ${(err && err.message) || err}`);
   } finally {
     live.analyzing.delete(mark);
+    live.analysisCtl.delete(mark);
+    live.analysisNote.delete(mark);
     renderPanels();
   }
+}
+
+function cancelAnalysis(mesId) {
+  const message = chatOf()[mesId];
+  if (!eligible(message)) return { ok: false };
+  const ctl = live.analysisCtl.get(stamp(String(message.mes || '')));
+  if (!ctl) return { ok: false };
+  ctl.abort();
+  return { ok: true };
 }
 
 async function writeAnalysis(mesId, tokens, summary, { molva = true } = {}) {
@@ -1703,6 +1750,7 @@ async function editAnalysis(mesId, change) {
   const mark = stamp(String(message.mes || ''));
   const entry = entryOf(mark, liveTurnOf(mesId, chat));
   live.analysisErrors.delete(mark);
+  live.analysisCancel.delete(mark);
   if (entry && entry.draft) {
     const tokens = change([...entry.draft.tokens]);
     putLedger({ ...entry, draft: tokens === null ? null : { ...entry.draft, tokens } });
@@ -1777,6 +1825,8 @@ const panelHost = {
   panelFor: (mesId) => panelView(mesId),
   lookFor: () => ensureLook(storage.loadSettings(ctx()), live.preset),
   analyze: (mesId) => analyzeMessage(mesId),
+  cancelAnalysis: (mesId) => cancelAnalysis(mesId),
+  resolveJump: (accept) => host.actions.resolveJump(accept),
   saveAnalysis: (mesId) => saveAnalysis(mesId),
   discardAnalysis: (mesId) => discardAnalysis(mesId),
   dropToken: (mesId, index) => editAnalysis(mesId, (list) => dropTokenAt(list || [], index)),
@@ -1976,6 +2026,8 @@ async function handleDeleted() {
 
 async function handleChatChanged() {
   const epoch = ++live.epoch;
+  for (const c of live.analysisCtl.values()) c.abort();
+  live.analysisCtl.clear();
   live.quiet = false;
   live.hookQueue = [];
   live.generating = null;
@@ -2061,17 +2113,20 @@ function secretaryAuto() {
 }
 
 const ANALYSIS_TIMEOUT = 120000;
+const ANALYSIS_ATTEMPTS = 2;
 
 async function autoAnalyze(mesId, mark) {
   const same = () => {
     const turn = live.turns[live.turns.length - 1];
     return Boolean(turn && turn.mesId === mesId && turn.stamp === mark);
   };
+  let cancelled = false;
   try {
     const res = await analyzeMessage(mesId);
+    cancelled = res.cancelled === true;
     if (res.ok && same()) await saveAnalysis(mesId, { molva: false });
   } finally {
-    if (same()) await autoMolva(mesId, mark);
+    if (same() && !cancelled) await autoMolva(mesId, mark);
   }
 }
 

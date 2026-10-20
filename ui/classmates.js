@@ -1,6 +1,6 @@
 import { CLASSMATE_TEXT_MAX, HEROINE, tieTarget } from '../core/classmates.mjs';
 import { clipWords } from '../core/feed.mjs';
-import { MEMORY_SIZE, relationLabel, relationMemory, relationOf } from '../core/relations.mjs';
+import { MEMORY_SIZE, relationLabel, relationMemory, relationOf, scaleOff } from '../core/relations.mjs';
 import { personAvatar } from '../core/masks.mjs';
 import { isPortrait } from '../core/portraits.mjs';
 import {
@@ -71,7 +71,7 @@ export function classmatesView(state, preset, opts = {}) {
         shift: m.crossed ? fill(U.relationShift, m.crossed) : '',
       };
     });
-    const quiet = !memory.length && !relationOf(state, c.id);
+    const quiet = scaleOff(state) || (!memory.length && !relationOf(state, c.id));
     const relation = quiet ? '' : relationLabel(state, c.id, preset);
     const score = quiet ? '' : scoreText(relationOf(state, c.id));
     const shift = lastShift(rawMemory);
@@ -106,7 +106,7 @@ export function classmatesView(state, preset, opts = {}) {
       score,
       relationText: score ? `${relation} · ${score}` : relation,
       memory,
-      memoryText: memory.length ? '' : U.relationNoHistory,
+      memoryText: memory.length ? '' : scaleOff(state) ? U.relationOff : U.relationNoHistory,
       source: c.source || 'manual',
       linkText: loreLinkText(X, c.loreLink),
       aliasesText: Array.isArray(c.aliases) && c.aliases.length ? fill(X.aliasesLine, { aliases: c.aliases.join(', ') }) : '',

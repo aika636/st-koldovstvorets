@@ -11,7 +11,6 @@ import {
   renderTransferBlock, renderSoundBlock, renderFeedBlock, renderDrawBlock, renderDebugBlock, renderLookBlock,
   LOOK_TEXT, lookSummary,
 } from './settings-blocks.js';
-import { renderAffairsParts } from './molva.js';
 import { renderStart, EXAM_RULE_VIEW, PACE_HINTS } from './start.js';
 
 export { EXAM_RULE_VIEW };
@@ -148,7 +147,7 @@ export function renderSettings(host) {
   data.push(renderTransferBlock(host, view));
   data.push(renderDebugBlock(host, view));
 
-  const feed = [bare(renderFeedBlock(host, preset, settings, renderAffairsParts(host, preset)))];
+  const feed = [bare(renderFeedBlock(host, preset, settings))];
 
   if (focusStart) sectionOpen.set('panel::set:koldo', true);
 

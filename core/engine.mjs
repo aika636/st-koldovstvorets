@@ -10,7 +10,7 @@ import { readTime } from './time-source.mjs';
 import { addGrade, setDebt, closeSkipDebt, resolveGrade, REJECT_UNKNOWN_VALUE } from './gradebook.mjs';
 import { mark, workOff, countsAttendance, effectiveSkips } from './attendance.mjs';
 import { applyAcademicCompletion } from './academic-completion.mjs';
-import { applyRelationDeltas, dampRepeats, capRelation, paceOf, teachersOfSubjects, mergeDeltas } from './relations.mjs';
+import { applyRelationDeltas, dampRepeats, capRelation, paceOf, scaleOff, teachersOfSubjects, mergeDeltas } from './relations.mjs';
 import { changeReputation } from './reputation.mjs';
 import { settleBackground, dropBackground, gradeFame } from './fame.mjs';
 import { armHolidayHooks, planEvent, planPause } from './holidays.mjs';
@@ -227,7 +227,7 @@ export function applyResponse(state, text, preset, opts = {}) {
     for (const subjectId of late.subjectIds) out.debug.applied.push({ kind: 'attendance', subjectId, status: 'late', derived: true });
   }
 
-  const relEvents = parsed.events.filter((e) => e.kind === 'rel').filter((ev) => {
+  const relEvents = scaleOff(s) ? [] : parsed.events.filter((e) => e.kind === 'rel').filter((ev) => {
     const why = counted.size ? relReason(s, ev, parsed.events, []) : null;
     return !(why && (why.kind === 'skip' || why.kind === 'late') && counted.has(why.subjectId));
   });

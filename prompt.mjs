@@ -5,7 +5,7 @@ import { sceneDigests, digestMaxOf } from './core/scene-digest.mjs';
 import { cutText } from './core/feed-text.mjs';
 import { dayPlan, currentPeriod } from './core/schedule.mjs';
 import { debts, overallScore, DEBT_RETAKE } from './core/gradebook.mjs';
-import { relationLabel } from './core/relations.mjs';
+import { relationLabel, scaleOff } from './core/relations.mjs';
 import { reputationLabel } from './core/reputation.mjs';
 import { notableGrade } from './core/fame.mjs';
 import { examMode, publicView, retakeList, weekAheadKinds } from './core/exams.mjs';
@@ -269,6 +269,7 @@ function lessonName(state, item, L) {
 }
 
 function relationSegment(state, preset, L, mode) {
+  if (scaleOff(state)) return '';
   const teacher = teacherInFrame(state, preset, mode);
   if (!teacher) return '';
   const scale = (preset && preset.relations) || {};
@@ -414,11 +415,12 @@ function teacherTail(state, teacherId, L) {
 export function markerInstruction(state, preset) {
   const P = promptsOf(preset);
   const vocab = vocabOf(preset);
-  const parts = [fill(P.marker, {
+  const marker = fill(P.marker, {
     period: vocab.period || '',
     teacher: firstId(state && state.teachers) || vocab.teacher || '',
     ...subjectVars(preset),
-  })];
+  });
+  const parts = [scaleOff(state) ? marker.replace(/\s*\brel=[^;]*;/u, '') : marker];
 
   const subjects = idsOf(state && state.subjects);
   if (subjects.length) parts.push(fill(P.markerIds, { subjects: subjects.join(', '), subjectsTitle: upFirst(subjectVars(preset).subjectPlural) }));

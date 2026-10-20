@@ -1,6 +1,6 @@
 import { plural } from '../core/plural.mjs';
 import { normalizeFeed, THREADS_MAX } from '../core/feed.mjs';
-import { extraLabels, fill, el, runAction, setStatus, call, safe, renderPanel } from './common.js';
+import { extraLabels, fill, el, runAction, setStatus, call, renderPanel } from './common.js';
 
 export function molvaDoneText(X, res) {
   const posts = Number(res && res.posts) || 0;
@@ -88,24 +88,4 @@ export function molvaRefresh(host, preset) {
     el('div', { class: 'koldo-row koldo-row-buttons' }, [button]),
     status,
   ]);
-}
-
-export function renderAffairsParts(host, preset) {
-  const state = safe(() => host.getState(), null);
-  if (!state || !state.started) return null;
-  const X = extraLabels(preset);
-  const view = affairsView(state, preset, safe(() => host.getRoster(), null));
-  const threads = view.threads.map((t) => el('div', { class: 'koldo-mob-thread' }, [
-    el('div', { class: 'koldo-mob-title', text: t.topic }),
-    el('div', { class: 'koldo-note', text: [t.paused ? X.mobThreadPaused : '', t.source].filter(Boolean).join(' · ') }),
-    t.want ? el('div', { text: t.want }) : null,
-    t.last ? el('div', { text: t.last }) : null,
-    el('div', { class: 'koldo-note', text: t.who }),
-  ]));
-  return [
-    el('div', { class: 'koldo-mob-title koldo-mob-heading', text: X.mobSection }),
-    el('p', { class: 'koldo-note', text: X.mobNote }),
-    threads.length ? el('div', { class: 'koldo-mob-list' }, threads) : el('p', { class: 'koldo-note', text: X.mobThreadsNone }),
-    el('p', { class: 'koldo-note', text: view.room }),
-  ];
 }

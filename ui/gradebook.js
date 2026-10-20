@@ -1,5 +1,5 @@
 import { debts, debtReasons, DEBT_GRADE, overallScore, subjectScore } from '../core/gradebook.mjs';
-import { relationLabel, relationMemory, relationOf } from '../core/relations.mjs';
+import { relationLabel, relationMemory, relationOf, scaleOff } from '../core/relations.mjs';
 import { stats as attendanceStats } from '../core/attendance.mjs';
 import { reputationLabel } from '../core/reputation.mjs';
 import { termsOf, termAt } from '../core/time.mjs';
@@ -45,7 +45,7 @@ export function gradebookView(state, preset) {
       : null;
     const sign = last ? (last.delta > 0 ? `+${last.delta}` : `−${-last.delta}`) : '';
     const att = attendanceStats(state, s.id);
-    const quiet = Boolean(teacher) && !relationOf(state, teacher.id)
+    const quiet = Boolean(teacher) && (scaleOff(state) || !relationOf(state, teacher.id))
       && !relationMemory(state, teacher.id, preset, 1).length;
     return {
       id: s.id,

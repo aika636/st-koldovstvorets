@@ -27,7 +27,13 @@ export function personWord(id, people, heroine = '', gender = 'f') {
   if (isCardParty(id)) return cardPartyName(id);
   if (isWhoParty(id)) return whoPartyName(id);
   const p = (people || []).find((x) => x && x.id === id);
-  return (p && (p.name || p.id)) || String(id || 'кто-то');
+  return (p && p.name) || GONE_PERSON.nom;
+}
+
+export function relPhrase(name, up, degree = '') {
+  const g = genderOfName(name);
+  const adj = `${degree ? `${degree} ` : ''}${up ? 'теплее' : 'холоднее'}`;
+  return g ? `${name} ${g === 'f' ? 'стала' : 'стал'} ${adj}` : `${name}: ${adj}`;
 }
 
 export const GONE_PERSON = { nom: 'тот, кого уже нет в списке', dat: 'тому, кого уже нет в списке' };

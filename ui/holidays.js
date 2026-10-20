@@ -3,6 +3,7 @@ import {
 } from '../core/holidays.mjs';
 import { goingWith, goingLine } from '../core/invites.mjs';
 import { isDay } from '../core/state.mjs';
+import { nextStudyDay } from '../core/time.mjs';
 import {
   fill, formatDate, plural, extraLabels, el, runAction, call, renderPanel,
 } from './common.js';
@@ -18,7 +19,7 @@ export function holidaysView(state, preset) {
     about: h.about,
     note: h.today || '',
     whenLine: X.holidayNowLine,
-    offLine: h.off ? (h.open ? fill(X.pauseOpen, { from: dayMonth(h.from) }) : fill(X.holidayOffUntil, { date: formatDate(holidayEnd(h, day), 'gen') })) : '',
+    offLine: h.off ? (h.open ? fill(X.pauseOpen, { from: dayMonth(h.from) }) : fill(X.holidayOffResume, { date: formatDate(resumeDay(preset, state, h, day), 'from') })) : '',
     days: 0,
     own: h.dated,
     off: h.off,
@@ -40,6 +41,11 @@ export function holidaysView(state, preset) {
   }));
   return [...now, ...ahead].slice(0, 3);
 }
+
+const resumeDay = (preset, state, h, day) => {
+  const end = holidayEnd(h, day);
+  return nextStudyDay(preset, end, 1, state) || end;
+};
 
 function goingOf(state, preset, h, day) {
   const who = goingWith(state, occurrenceKey(h, day));

@@ -5,9 +5,10 @@ import { sittableExams, kindOf } from './exams.mjs';
 import { teacherOfSubject } from './state.mjs';
 import { holidaysAhead, holidaysOn } from './holidays.mjs';
 import { addDays } from './time.mjs';
+import { scaleOff } from './relations.mjs';
 import { dayPlan } from './schedule.mjs';
 import { EVENT_HORIZON } from './parse-marker.mjs';
-import { SCENE_KINDS, sceneText, sceneAbout, personWord } from './scene.mjs';
+import { SCENE_KINDS, sceneText, sceneAbout, personWord, GONE_PERSON, relPhrase } from './scene.mjs';
 import { heroGender } from './gender.mjs';
 import { subjectWord, upFirst } from './words.mjs';
 import { reactionCap, loudCap, LOUDNESS, hash, postRef } from './feed.mjs';
@@ -101,12 +102,12 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
   lines.push('Narrator reply:', '"""', clipAnalysisReply(stripForeignMarkup(input.reply)), '"""', '');
   lines.push(
     'Block 1. What happened, as one service-marker line:',
-    `<!-- [KOLDO grade=subject:score:reason rel=person:minor+:reason skip=subject late=subject event=+3:name met=student clash=who:with:reason act=who:what:with:kind:access:reach rumor=about:claim looks=who:description open=who unmask=who deal=who:to:what fame=+:reason${feats.rules.length ? ' ach=id:reason' : ''}] -->`,
+    `<!-- [KOLDO grade=subject:score:reason ${scaleOff(state) ? '' : 'rel=person:minor+:reason '}skip=subject late=subject event=+3:name met=student clash=who:with:reason act=who:what:with:kind:access:reach rumor=about:claim looks=who:description open=who unmask=who deal=who:to:what fame=+:reason${feats.rules.length ? ' ach=id:reason' : ''}] -->`,
     'Block 1 rules. Everywhere: write only what the text states, not its likely consequences (an apology is not a reconciliation, a frown is not a quarrel); read the whole fragment; ids come from the lists above; keys may repeat; no time or date except days in event; nobody outside the lists (except act names, see act); open, unmask and fame at most once per reply.',
     `- grade: ${heroine} got a grade, passed or failed a test or exam, or a mentor explicitly rated ${g('her', 'his')} work in class (named a score, praised or scolded with a verdict): 2–5 by meaning (scolding 2, redo 2–3, fine 3–4, praise 5) for the subject of that lesson (see today's lessons); reason in 3–5 words, e.g. grade=subject:4:похвалил за чёткие знаки. One grade per lesson, none without an explicit rating, never for others. If the subject is unclear, do not guess it from an unnamed mentor; one good answer gives no grades for other subjects. Results may sit in the background, a memory or someone's line, even in a domestic or romantic scene.`,
     ...(said ? [`- The player's line counts: what ${heroine} did there (an action, words said aloud, a visible result) happened unless the reply contradicts it — a brilliant answer in class, an exploded cauldron, a kiss, a dance, a fight: write act, fame, grade and the rest from it too. Intention, thought, dream, question and an unfinished attempt (${g('попыталась', 'попытался')}) did not happen. Witnesses named in the player's line are witnesses: judge access from both texts. One event shown in both texts is one key.`] : []),
     `- completion=all:grade, completion=debts:grade, completion=id:grade: an explicit statement that all exams/tests are passed, all debts closed, or a named listed subject passed. "All" must be said about ${heroine}'s own exams (wish, plan, "not all yet", others' results do not count). Top marks = the highest grade on the scale; no exact grade — «зачёт» if on the scale; never invent a number. An answer at the board stays grade; do not duplicate completion with grade for the same items.`,
-    `- rel: a mentor's or student's attitude to ${heroine} noticeably changed: minor+/minor- (slightly), major+/major- (strongly); reason in 2–3 words.`,
+    ...(scaleOff(state) ? [] : [`- rel: a mentor's or student's attitude to ${heroine} noticeably changed: minor+/minor- (slightly), major+/major- (strongly); reason in 2–3 words.`]),
     `- skip: ${heroine} skipped a lesson; late: was late. Only on a direct statement; a date jump, day off, end of exam week, home scene or no lessons shown prove nothing, never infer from the calendar.`,
     `- event=+days:name: a holiday, party, ball, concert, trip, date or other event said to be coming; days from the scene (0 today, 1 tomorrow; a run +5..+6). Detention, punishment or an assignment to specific people is deal. Skip it if beyond ${EVENT_HORIZON} days, undated, past or already planned.`,
     ...pauseRules(state),
@@ -265,6 +266,7 @@ export function parseAnalysis(raw, lexicon, opts = {}) {
     rejected.push(...parsed.rejected);
     let first = null;
     for (const ev of parsed.events) {
+      if (ev.kind === 'rel' && lexicon && lexicon.relOff) continue;
       const t = tokenOf(ev);
       if (!t) continue;
       evOf.set(t, ev);
@@ -806,10 +808,14 @@ export function effectiveText(text, tokens) {
   return `${keepMarkerKinds(src, ['time'])}\n${analysisMarker(tokens.filter(isFactToken))}`;
 }
 
+function displayPeople(lexicon) {
+  return [...arr(lexicon.teachers).map((t) => ({ ...t, teacher: true })), ...arr(lexicon.classmates), ...arr(lexicon.known)];
+}
+
 export const ANON_WHO = 'без подписи';
 
 export function tokenText(token, lexicon, { known = false, brief = false, day = '', today = '' } = {}) {
-  const people = [...arr(lexicon.teachers).map((t) => ({ ...t, teacher: true })), ...arr(lexicon.classmates)];
+  const people = displayPeople(lexicon);
   const heroine = lexicon.names && typeof lexicon.names.user === 'string' ? lexicon.names.user.trim() : '';
   const gender = heroGender(lexicon, heroine);
   if (isReactToken(token)) {
@@ -865,10 +871,10 @@ export function tokenText(token, lexicon, { known = false, brief = false, day = 
   }
   if (ev.kind === 'rel') {
     const t = people.find((x) => x.id === ev.teacherId);
-    const who = (t && t.name) || ev.teacherId;
-    const dir = ev.delta > 0 ? 'теплее' : 'холоднее';
-    const how = ev.impact === 'major' ? 'заметно' : ev.impact === 'minor' ? 'немного' : '';
-    return `${who}: ${dir}${how ? ` (${how})` : ''}${ev.reason ? ` — ${ev.reason}` : ''}`;
+    const who = (t && t.name) || GONE_PERSON.nom;
+    const degree = ev.impact === 'major' ? 'заметно' : ev.impact === 'minor' ? 'чуть' : '';
+    const head = relPhrase(who, ev.delta > 0, degree);
+    return `${head}${ev.reason ? `${head.includes(': ') ? ' —' : ':'} ${ev.reason}` : ''}`;
   }
   return String(token);
 }
@@ -881,7 +887,7 @@ function featPlate(ev, lexicon) {
 }
 
 export function talkParts(token, lexicon) {
-  const people = [...arr(lexicon.teachers).map((t) => ({ ...t, teacher: true })), ...arr(lexicon.classmates)];
+  const people = displayPeople(lexicon);
   const heroine = lexicon.names && typeof lexicon.names.user === 'string' ? lexicon.names.user.trim() : '';
   const gender = heroGender(lexicon, heroine);
   const r = isReactToken(token) ? reactionOf(token) : isReplyToken(token) ? replyOf(token) : null;
@@ -894,7 +900,7 @@ export function talkParts(token, lexicon) {
 export function tokenAbout(token, lexicon) {
   const ev = tokenEvent(token, lexicon);
   if (ev && SCENE_KINDS.includes(ev.kind)) {
-    const people = [...arr(lexicon.teachers).map((t) => ({ ...t, teacher: true })), ...arr(lexicon.classmates)];
+    const people = displayPeople(lexicon);
     const heroine = lexicon.names && typeof lexicon.names.user === 'string' ? lexicon.names.user.trim() : '';
   const gender = heroGender(lexicon, heroine);
     return sceneAbout(ev, people, heroine, gender);

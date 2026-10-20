@@ -45,6 +45,7 @@ export function teachersOfSubjects(state, subjectIds) {
 }
 
 export function dampRepeats(state, events, preset, ctx = {}) {
+  if (scaleOff(state)) return { state, events: [], damped: [] };
   const next = cloneState(state);
   const day = ctx.day || (next.calendar && next.calendar.day) || '';
   const fresh = new Set(ctx.fresh || []);
@@ -83,10 +84,10 @@ export function dampRepeats(state, events, preset, ctx = {}) {
   return { state: next, events: kept, damped };
 }
 
-export const PACES = ['slow', 'normal', 'fast'];
+export const PACES = ['slow', 'normal', 'fast', 'off'];
 export const DEFAULT_PACE = 'normal';
 
-export const PACE_WORDS = { slow: 'медленный', normal: 'обычный', fast: 'быстрый' };
+export const PACE_WORDS = { slow: 'медленный', normal: 'обычный', fast: 'быстрый', off: 'без шкалы' };
 
 export const PACE_CAPS = {
   slow: { up: 1, day: 1, down: 2 },
@@ -99,8 +100,10 @@ export function paceOf(state) {
   return PACES.includes(v) ? v : DEFAULT_PACE;
 }
 
+export const scaleOff = (state) => paceOf(state) === 'off';
+
 export function paceCaps(pace, preset) {
-  const base = PACE_CAPS[PACES.includes(pace) ? pace : DEFAULT_PACE];
+  const base = PACE_CAPS[pace] || PACE_CAPS[DEFAULT_PACE];
   const r = (preset && preset.relations) || {};
   const span = Number(r.max) - Number(r.min);
   const k = Number.isFinite(span) ? Math.max(1, Math.ceil(span / 6)) : 1;
@@ -108,6 +111,7 @@ export function paceCaps(pace, preset) {
 }
 
 export function capRelation(state, events, preset, ctx = {}) {
+  if (scaleOff(state)) return { state, events: [], capped: [] };
   const next = cloneState(state);
   const pace = PACES.includes(ctx.pace) ? ctx.pace : paceOf(next);
   const day = ctx.day || (next.calendar && next.calendar.day) || '';
@@ -197,6 +201,7 @@ export const MEMORY_SIZE = 3;
 export function relationMemory(state, teacherId, preset, limit = MEMORY_SIZE) {
   const labels = labelsOf(state, teacherId, preset);
   const out = [];
+  if (scaleOff(state)) return out;
   const journal = (state && state.journal) || [];
   for (let i = journal.length - 1; i >= 0 && out.length < limit; i -= 1) {
     const e = journal[i];
@@ -291,6 +296,7 @@ export function changeRelation(state, ev, preset) {
 }
 
 export function applyRelationDeltas(state, list, preset) {
+  if (scaleOff(state)) return { state, crossed: [] };
   let acc = state;
   const crossed = [];
   for (const ev of list || []) {
