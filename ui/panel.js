@@ -678,6 +678,25 @@ function renderSettingsBlock(host) {
   const settings = safe(() => host.getSettings(), {}) || {};
   const view = settingsView(state, settings, preset, hostExtra(host));
 
+  const enabled = safe(() => host.isEnabled(), true) !== false;
+  const power = el('input', { type: 'checkbox', checked: enabled });
+  power.addEventListener('change', () => {
+    if (!power.checked) closePanel();
+    Promise.resolve(safe(() => host.setEnabled(power.checked), null))
+      .catch(() => {})
+      .then(() => renderSettingsBlock(host));
+  });
+  content.append(
+    el('label', { class: 'koldo-check' }, [power, el('span', { text: 'Колдовстворец включён' })]),
+    el('p', {
+      class: 'koldo-note',
+      text: enabled
+        ? 'Снимите галочку, чтобы Колдовстворец перестал добавлять текст в промпт и разбирать ответы. Игра в чатах сохранится.'
+        : 'Колдовстворец выключен: в промпт ничего не уходит, ответы не разбираются, кнопка скрыта. Игра в чатах сохранена и вернётся вместе с галочкой.',
+    }),
+  );
+  if (!enabled) return;
+
   const launcherNote = el('p', { class: 'koldo-note' });
   content.append(el('div', { class: 'koldo-row koldo-row-buttons' }, [
     el('div', {

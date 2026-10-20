@@ -269,7 +269,7 @@ export function naiPrompt(facts, style = DEFAULT_DRAW_STYLE, styleText = '', loo
   const outfit = own.some((t) => CLOTHES_TAG.test(t)) ? [] : f.outfit.tags;
   const st = styleOf(style, styleText);
   const who = f.gender === 'f' ? ['1girl'] : f.gender === 'm' ? ['1boy'] : [];
-  const age = f.kind === 'teacher' && !own.some((t) => /(?:mature|old|elderly|adult)/.test(t))
+  const age = f.kind === 'teacher' && !own.some((t) => /\b(?:mature|old|elderly|adult)\b/.test(t))
     ? [f.gender === 'f' ? 'mature female' : f.gender === 'm' ? 'mature male' : 'adult']
     : own.some((t) => /(?:mature|old|elderly|adult)/.test(t)) ? [] : ['adult'];
   const props = [
@@ -336,7 +336,7 @@ export function inventLooksPrompt(person, opts = {}) {
   const one = (v) => String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
   const facts = [
     ['Имя', p.name],
-    ['Кто', teacher ? 'преподаватель' : 'ученик того же курса'],
+    ['Кто', teacher ? 'преподаватель' : 'ученик школы'],
     ['Род', gender === 'f' ? 'женский' : gender === 'm' ? 'мужской' : ''],
     ['Предмет', (opts.subjects || []).map(one).filter(Boolean).join(', ')],
     ['Должность', p.post],

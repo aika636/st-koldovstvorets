@@ -84,6 +84,8 @@ const INJECT = {
 
 const ctx = () => SillyTavern.getContext();
 
+const extOn = () => storage.loadSettings(ctx()).enabled !== false;
+
 const live = {
   rawPreset: null,
   view: null,
@@ -434,7 +436,7 @@ function writeInjects({ blank = false } = {}) {
   const roles = c.extension_prompt_roles || { SYSTEM: 0 };
   const depth = Number.isFinite(settings.injectDepth) ? settings.injectDepth : 1;
 
-  const started = !blank && Boolean(live.state && live.state.started);
+  const started = !blank && extOn() && Boolean(live.state && live.state.started);
   const withMarker = Boolean(settings.injectMarker) && settings.mode !== 'context';
   const muted = started && feedMuted();
   const plotOpts = plotSettings();
@@ -459,6 +461,7 @@ function armedOneShot() {
 function handleGenerationStarted(type, _params, dryRun) {
   if (dryRun !== true) endPresetView();
   if (!live.preset || dryRun === true) return;
+  if (!extOn()) { writeInjects(); return; }
   if (type === 'quiet') {
     live.quiet = true;
     writeInjects({ blank: true });
@@ -483,6 +486,7 @@ function handleGenerationStarted(type, _params, dryRun) {
 
 async function handlePlayerSent(mesId) {
   endPresetView();
+  if (!extOn()) return 'Колдовстворец выключен';
   if (!live.preset || !live.state || !live.state.started) return 'игра не начата';
   const message = chatOf()[mesId];
   if (!message || !message.is_user) return 'не реплика игрока';
@@ -531,7 +535,7 @@ async function syncLorebook({ force = false, immediately = false } = {}) {
   const settings = storage.loadSettings(c);
   const s = lorebook.settingsOf(settings);
 
-  if (!s.enabled) {
+  if (!s.enabled || !extOn()) {
     live.lorebook.signature = null;
     live.lorebook.report = null;
     live.lorebook.error = null;
@@ -1089,6 +1093,7 @@ ${text}`);
 async function traced(event, mesId, run) {
   const row = { event, mesId, result: '…' };
   live.trace = [...(live.trace || []), row].slice(-6);
+  if (!extOn()) { row.result = 'Колдовстворец выключен'; return; }
   try {
     const result = await run();
     row.result = typeof result === 'string' ? result : 'готово';
@@ -1806,7 +1811,7 @@ function renderPanels(attempt = 0) {
   panelTimer = setTimeout(() => {
     panelTimer = null;
     try {
-      if (live.state && live.state.started) renderMessagePanels(panelHost);
+      if (extOn() && live.state && live.state.started) renderMessagePanels(panelHost);
       else clearMessagePanels();
     } catch (err) {
       console.warn(`[${MODULE}] плашки не нарисованы:`, err);
@@ -1927,6 +1932,7 @@ async function handleEdited(mesId) {
 }
 
 async function handleDeleted() {
+  if (!extOn()) return;
   if (!live.preset || !live.state || !live.turns.length) return;
   const chat = chatOf();
   const at = locateTurns(chat);
@@ -2109,6 +2115,7 @@ async function molvaAfterAnalysis(mesId, mark) {
 }
 
 async function runMolva({ auto = false, mark = '' } = {}) {
+  if (!extOn()) return { ok: false, error: 'Колдовстворец выключен' };
   if (!live.state || !live.state.started || !live.preset) return { ok: false, error: 'игры в этом чате нет' };
   if (molvaRunning) return { ok: false, error: 'Слухи уже обновляются — подождите немного.' };
   if (auto) {
@@ -2212,7 +2219,7 @@ function classmateStop() {
 const MACRO = 'koldo';
 
 function macroText() {
-  if (live.quiet) return '';
+  if (live.quiet || !extOn()) return '';
   if (!live.preset || !live.state || !live.state.started) return '';
   try {
     return buildPrompt(live.state, live.preset, { injects: [], withMarker: false, feed: { quiet: feedMuted() || !plotSettings().background }, ...promptScene() }).status || '';
@@ -2220,6 +2227,23 @@ function macroText() {
     console.error(`[${MODULE}] {{${MACRO}}} не собран:`, err);
     return '';
   }
+}
+
+function markEnabled(on) {
+  if (typeof document !== 'undefined' && document.body) document.body.classList.toggle('koldo-off', !on);
+}
+
+async function setEnabled(on) {
+  storage.saveSettings({ enabled: Boolean(on) }, ctx());
+  markEnabled(Boolean(on));
+  if (on) {
+    await handleChatChanged();
+  } else {
+    writeInjects();
+    clearMessagePanels();
+    refreshPanel();
+  }
+  renderPanels();
 }
 
 function registerMacro(c) {
@@ -2279,6 +2303,8 @@ const host = {
         .map((p) => ({ id: String(p.id), name: String(p.name || p.id), model: String(p.model || '') })),
     };
   },
+  isEnabled: () => extOn(),
+  setEnabled: (on) => setEnabled(on),
   setSettings: (patch, opts = {}) => {
     storage.saveSettings(patch, ctx());
     setInjects({});
@@ -3074,6 +3100,7 @@ async function init() {
   if (t.GENERATION_STOPPED) ev.on(t.GENERATION_STOPPED, () => handleGenerationEnded());
 
   live.macro = registerMacro(c);
+  markEnabled(extOn());
 
   setInjects({ oneShot: armedOneShot() });
   refreshPanel();

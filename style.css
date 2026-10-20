@@ -1985,3 +1985,8 @@ textarea.koldo-input.koldo-input-wrap {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+
+body.koldo-off #koldo_button,
+body.koldo-off #koldo_panel {
+  display: none !important;
+}
