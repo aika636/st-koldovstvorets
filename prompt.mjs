@@ -2,7 +2,7 @@ import { labelFor } from './core/state.mjs';
 import { addDays, weekIndex, phaseOf, weekdayIn, termAt, preExamWeek, PRE_EXAMS_DEFAULT } from './core/time.mjs';
 import { sceneDigests, digestMaxOf } from './core/scene-digest.mjs';
 import { cutText } from './core/feed-text.mjs';
-import { dayPlan, currentPeriod } from './core/schedule.mjs';
+import { dayPlan, currentPeriod, lessonKey } from './core/schedule.mjs';
 import { debts, overallScore, DEBT_RETAKE } from './core/gradebook.mjs';
 import { bondOf, defaultBond, roleOf, bondsOff, bondsFor, SHADES } from './core/bonds.mjs';
 import { reputationLabel } from './core/reputation.mjs';
@@ -161,7 +161,7 @@ function mannerSegment(L, opts, view, preset) {
   const mode = examMode(view, preset);
   const teacher = opts.roster && !mode.active && lessonOn(view, preset) ? teacherInFrame(view, preset, mode) : null;
   const p = teacher && opts.roster.get(teacher.id);
-  if (!p || !p.lesson) return '';
+  if (!p || !p.lesson || view.lessonSeen === lessonKey(view, preset)) return '';
   let lesson = '';
   for (const sentence of String(p.lesson).split(/(?<=[.!?])\s+/u)) {
     if (lesson && lesson.length + sentence.length >= LESSON_MAX) break;

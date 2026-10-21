@@ -54,6 +54,12 @@ export function dayPlan(state, preset, day = state.calendar.day) {
   return out;
 }
 
+export function lessonKey(state, preset) {
+  if (state.calendar.daypart === 'night' || !dayPlan(state, preset).length) return '';
+  const cur = currentPeriod(state, preset);
+  return cur && cur.status === 'now' ? `${state.calendar.day}|${cur.index}|${cur.subjectId}` : '';
+}
+
 export function currentPeriod(state, preset) {
   const plan = dayPlan(state, preset);
   if (!plan.length) return null;

@@ -4,7 +4,7 @@ import {
 import {
   advance, setAbsolute, shiftYears, noteIdle, phaseOf, isStudyDay, isStalled, addDays, parseDay, minutesOf, periodPosition,
 } from './time.mjs';
-import { dayPlan, dayEndInfo } from './schedule.mjs';
+import { dayPlan, dayEndInfo, lessonKey } from './schedule.mjs';
 import { parseMarker, MARKER_RE } from './parse-marker.mjs';
 import { readTime } from './time-source.mjs';
 import { addGrade, setDebt, closeSkipDebt, resolveGrade, REJECT_UNKNOWN_VALUE } from './gradebook.mjs';
@@ -363,6 +363,8 @@ export function applyResponse(state, text, preset, opts = {}) {
     }
   }
 
+  const lesson = lessonKey(state, preset);
+  if (lesson) s.lessonSeen = lesson;
   armHolidayHooks(s, preset);
   out.injects = takePending(s);
   out.state = s;
