@@ -74,6 +74,25 @@ function looksLikeContext(v) {
     && ('chatMetadata' in v || 'saveMetadataDebounced' in v || 'extensionSettings' in v));
 }
 
+const queued = new WeakSet();
+
+// ST drops its debounced save on a chat switch, so save at once, and only into the chat the data belongs to.
+function persist(c) {
+  const md = c.chatMetadata;
+  if (!md || typeof c.saveMetadata !== 'function' || !Array.isArray(c.chat) || !c.chat.length) {
+    if (typeof c.saveMetadataDebounced === 'function') c.saveMetadataDebounced();
+    return;
+  }
+  if (queued.has(md)) return;
+  queued.add(md);
+  queueMicrotask(() => {
+    queued.delete(md);
+    const cur = contextProvider() || c;
+    if (cur.chatMetadata !== md) return;
+    Promise.resolve(cur.saveMetadata()).catch((err) => console.warn('koldo/storage: чат не записан:', err));
+  });
+}
+
 export function migrationPlan(raw) {
   if (raw === undefined || raw === null) return { action: 'empty' };
   if (typeof raw !== 'object' || Array.isArray(raw)) {
@@ -138,7 +157,7 @@ export function saveState(ctx, state) {
   const md = c.chatMetadata;
   if (!md) throw new Error('koldo/storage: у чата нет метаданных');
   md[KEY] = stripSecrets(target);
-  c.saveMetadataDebounced();
+  persist(c);
   return target;
 }
 
@@ -159,7 +178,7 @@ export function clearState(ctx) {
     delete md[KEY];
     delete md[TURNS_KEY];
   }
-  c.saveMetadataDebounced();
+  persist(c);
 }
 
 export const TURNS_KEY = `${KEY}_turns`;
@@ -303,7 +322,7 @@ export function saveTurns(ctx, list) {
     });
   }
   md[TURNS_KEY] = { v: TURNS_FORMAT, pool, list: turns };
-  c.saveMetadataDebounced();
+  persist(c);
   return turns;
 }
 
@@ -362,7 +381,7 @@ export function saveLedger(ctx, list) {
   if (!md) throw new Error('koldo/storage: у чата нет метаданных');
   const ledger = readLedger({ v: LEDGER_FORMAT, list: Array.isArray(list) ? list : [] });
   md[LEDGER_KEY] = { v: LEDGER_FORMAT, list: ledger };
-  c.saveMetadataDebounced();
+  persist(c);
   return ledger;
 }
 
@@ -380,7 +399,7 @@ export function savePlot(ctx, plot) {
   if (!md) throw new Error('koldo/storage: у чата нет метаданных');
   const clean = normalizePlot(plot);
   md[PLOT_KEY] = clean;
-  c.saveMetadataDebounced();
+  persist(c);
   return clean;
 }
 

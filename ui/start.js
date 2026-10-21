@@ -25,6 +25,7 @@ export const PAST_LIMIT = 200;
 export const START_TEXT = {
   section: 'Начало игры',
   hero: 'Героиня',
+  heroM: 'Герой',
   heroNote: 'Имя берётся из персоны таверны.',
   gender: 'Обращение',
   genderHint: 'Определяет местоимения и окончания в текстах',
@@ -80,10 +81,11 @@ export const START_TEXT = {
   dayChatGoing: 'Чат уже идёт и дата в нём распознана: предлагаем начать с этого места. Игра начнётся с текущего сообщения.',
   dayFromChat: 'Дата взята из чата: {matched}. Её можно поправить: подойдёт любой день учебного года.',
   dayChatNone: 'В последних сообщениях дату распознать не удалось. Поставьте её вручную: подойдёт любой день учебного года.',
+  dayFromPick: 'Дата — {date}. Если в сюжете называют дату из другого года, календарь переедет в её год сам, пока в игре ещё ничего не произошло.',
   dayMid: 'Четверть и расписание берутся по календарю школы. Всё, что было раньше этой даты, не пересчитывается: ни праздники, ни прогулы, ни слухи, ни старые сообщения чата.',
   midOldSuggest: 'Старт посреди года: возможно, лучше подойдёт «Давняя ученица», героиня уже освоилась в школе. Выбор за вами.',
   midOldSuggestM: 'Старт посреди года: возможно, лучше подойдёт «Давний ученик», герой уже освоился в школе. Выбор за вами.',
-  dayFromPreset: 'Дата — 1 сентября 2000 года, начало учебного года в сюжете школы. Если в сюжете называют дату из другого года, календарь переедет в её год сам, пока в игре ещё ничего не произошло.',
+  dayFromPreset: 'Дата — {date}, начало учебного года в сюжете школы. Если в сюжете называют дату из другого года, календарь переедет в её год сам, пока в игре ещё ничего не произошло.',
   button: 'Начать игру',
   again: 'Начать заново',
   againNote: 'Оценки, отношения и слухи этой игры будут стерты, школа соберётся заново.',
@@ -102,6 +104,12 @@ export const START_TEXT = {
   rebuild: 'Пересобрать школу из данных',
   rebuildOk: 'Школа пересобрана.',
   noData: 'Данные школы не прочитаны: проверьте папку data у расширения.',
+};
+
+const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const dateRu = (iso) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+  return m && MONTHS[Number(m[2]) - 1] ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${Number(m[1])} года` : 'выбранный день';
 };
 
 const fill = (t, vars) => String(t).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
@@ -232,7 +240,7 @@ function dayView(hint, draft, heroStart, gender) {
   const mid = Boolean(day && yearDay && day !== yearDay);
   const note = dayMode === 'chat'
     ? (chatDay ? fill(START_TEXT.dayFromChat, { matched: chatMatched || chatDay }) : START_TEXT.dayChatNone)
-    : START_TEXT.dayFromPreset;
+    : fill(mid ? START_TEXT.dayFromPick : START_TEXT.dayFromPreset, { date: dateRu(day) });
   return {
     day,
     dayMode,
@@ -299,7 +307,7 @@ export function renderStart(host, focus = false) {
   const form = [];
 
   form.push(el('div', { class: 'koldo-field' }, [
-    el('span', { text: START_TEXT.hero }),
+    el('span', { text: view.gender === 'm' ? START_TEXT.heroM : START_TEXT.hero }),
     el('span', { class: 'koldo-note', text: view.heroName ? `${view.heroName}. ${START_TEXT.heroNote}` : START_TEXT.heroNote }),
   ]));
   form.push(el('div', { class: 'koldo-field' }, [
@@ -390,14 +398,22 @@ export function renderStart(host, focus = false) {
 
   const day = el('input', { type: 'date', class: 'text_pole koldo-input', value: view.day });
   day.value = view.day;
-  day.addEventListener('change', () => { draft.day = day.value; redraw(); });
+  const dayNote = el('p', { class: 'koldo-note', text: view.dayNote });
+  const midNote = el('p', { class: 'koldo-note', text: view.dayMidNote });
+  midNote.hidden = !view.dayMidNote;
+  day.addEventListener('change', () => {
+    draft.day = day.value;
+    const v = dayView(safe(() => host.getStartHint(), null) || {}, draft, view.heroStart, view.gender);
+    dayNote.textContent = v.dayNote;
+    midNote.textContent = v.dayMidNote;
+    midNote.hidden = !v.dayMidNote;
+  });
   form.push(el('div', { class: 'koldo-field' }, [
     el('span', { text: START_TEXT.dayWhen }),
     radios(`${key}_d`, view.dayModes, (id) => { draft.dayMode = id; draft.day = ''; redraw(); }),
   ]));
   form.push(el('div', { class: 'koldo-row' }, [el('label', { class: 'koldo-field' }, [el('span', { text: START_TEXT.day }), day])]));
-  form.push(el('p', { class: 'koldo-note', text: view.dayNote }));
-  if (view.dayMidNote) form.push(el('p', { class: 'koldo-note', text: view.dayMidNote }));
+  form.push(dayNote, midNote);
   form.push(el('div', { class: 'koldo-field' }, [
     el('span', { text: START_TEXT.firstDay }),
     radios(`${key}_f`, view.firstDays, (id) => { draft.firstDay = id; redraw(); }),

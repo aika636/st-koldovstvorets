@@ -50,7 +50,7 @@
   .koldo-portrait-frame { color: var(--koldo-ink) !important; background-color: var(--koldo-bg) !important; border: 1px solid var(--koldo-line) !important; }
   .koldo-doctor-ours { border-left: 2px solid var(--koldo-accent) !important; }
   .koldo-doctor-start { border-left: 2px solid var(--warning, rgba(255, 0, 0, 0.9)) !important; }
-  .koldo-doctor-key { color: var(--koldo-dim) !important; }
+  .koldo-doctor-key { color: #e8e4d4 !important; background: #2a2d26 !important; }
   .koldo-doctor-hint { color: var(--koldo-dim) !important; }
   @media (max-width: 600px) {
     .koldo-panel { border-left: none !important; border-right: none !important; border-top: none !important; }

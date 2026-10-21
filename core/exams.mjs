@@ -293,7 +293,7 @@ export function scheduleExams(state, preset, opts = {}) {
     added += 1;
   }
 
-  if (session && items.some((i) => i.term === term)) {
+  if (session && items.some((i) => i.term === term && !isDatedExam(preset, i))) {
     next.exams.active = true;
     next.exams.term = term;
   }
@@ -322,20 +322,19 @@ export function scheduleExams(state, preset, opts = {}) {
 export function scheduleDatedExams(state, preset, day = state && state.calendar && state.calendar.day) {
   const at = termAt(preset, state, day);
   if (!at.term || !at.inside) return { state, added: 0 };
+  const pin = (k) => Number(k.weekdays && k.weekdays[state.grade]) || 1;
   const due = examKinds(preset).filter((k) => {
     const week = kindWeek(k, at.index);
-    const pinned = Number(k.weekdays && k.weekdays[state.grade]) || 1;
-    return week !== null && (at.week > week || (at.week === week && weekdayIn(state, day) >= pinned));
+    return week !== null && (at.week > week || (at.week === week && weekdayIn(state, day) >= pin(k)));
   });
   if (!due.length) return { state, added: 0 };
 
   const before = ((state.exams && state.exams.items) || []).length;
-  const next = scheduleExams(state, preset, {
-    day,
-    term: at.index >= 0 ? at.serial : 0,
-    kinds: due.map((k) => k.id),
-    session: false,
-  });
+  let next = state;
+  for (const k of due) {
+    const dueDay = addDays(day, (kindWeek(k, at.index) - at.week) * 7 + pin(k) - weekdayIn(state, day));
+    next = scheduleExams(next, preset, { day: dueDay, term: at.index >= 0 ? at.serial : 0, kinds: [k.id], session: false });
+  }
   return { state: next, added: next.exams.items.length - before };
 }
 

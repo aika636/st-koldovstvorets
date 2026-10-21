@@ -2,7 +2,7 @@ import { cloneState, isDay, isTime, pushJournal } from './state.mjs';
 import { lunarToSolar } from './lunar.mjs';
 import { orthodoxEaster } from './easter.mjs';
 
-const STUDY_DAY_LOOKAHEAD = 31;
+const STUDY_DAY_LOOKAHEAD = 90;
 
 const DEFAULT_STUDY_WEEKS = 16;
 
@@ -188,7 +188,7 @@ export function termAt(preset, state, day = state.calendar.day) {
 export function weekIndex(state, day = state.calendar.day, preset = null) {
   if (preset) {
     const at = termAt(preset, state, day);
-    if (at.term) return at.week;
+    if (at.term) return at.terms[at.index] && day < at.terms[at.index].start ? 0 : at.week;
   }
   const base = mondayOf(state.calendar.termStart);
   return Math.floor(diffDays(base, day) / 7) + 1;

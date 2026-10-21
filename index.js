@@ -1995,25 +1995,51 @@ function lastReply(chat) {
   return -1;
 }
 
-function ledgerCalendar(chat) {
+function ledgerCalendar(chat, loose = false) {
   const m = chat[lastReply(chat)];
-  const entry = m && chatMarks(m).map(ledgerEntry).find((e) => e && e.day);
+  if (!m) return null;
+  const marks = chatMarks(m);
+  let entry = marks.map(ledgerEntry).find((e) => e && e.day);
+  if (!entry && loose) {
+    const sizes = new Set(marks.map((x) => x.split(':')[0]));
+    const same = live.ledger.filter((e) => e.day && sizes.has(e.stamp.split(':')[0]));
+    if (same.length && same.every((e) => e.day === same[0].day && e.time === same[0].time)) [entry] = same;
+  }
   return entry ? { day: entry.day, time: entry.time || null } : null;
 }
 
 const REWIND_NOTE = {
-  branch: 'Ветка старше сохранённых ходов',
+  branch: 'Точный откат ветки недоступен',
   delete: 'Удалено глубже сохранённых ходов',
 };
 
-async function rewindToChat({ branch = false, chatId } = {}) {
+async function rewindToChat({ branch = false, chatId, epoch } = {}) {
   if (!extOn() || !live.preset || !live.state || !live.turns.length) return false;
   const chat = chatOf();
   if (branch && (!chat.length || lastReply(chat) < 0)) return false;
   if (chatId !== undefined && chatId !== currentChatId()) return false;
+  const md = ctx().chatMetadata;
+  const here = () => (epoch === undefined || epoch === live.epoch)
+    && (chatId === undefined || chatId === currentChatId()) && ctx().chatMetadata === md;
+  const related = branch && Boolean(md && md.main_chat);
   const at = locateTurns(chat);
+  if (related) {
+    // a branch is a prefix of its main chat, so a turn whose text was changed later still sits at its own index
+    let floor = -1;
+    at.forEach((x, i) => {
+      const t = live.turns[i];
+      if (x < 0 && t.stamp !== null && t.mesId > floor && t.mesId < chat.length && replyLike(chat[t.mesId])) {
+        at[i] = t.mesId;
+        const mark = stamp(String(chat[t.mesId].mes || ''));
+        const entry = ledgerEntry(t.stamp);
+        if (entry) putLedger({ ...entry, stamp: mark });
+        t.stamp = mark;
+      }
+      if (at[i] >= 0) floor = at[i];
+    });
+  }
   const last = at.length - 1;
-  const save = () => (branch ? storage.flushState(ctx(), live.state) : null);
+  const save = () => (branch && here() ? storage.flushState(ctx(), live.state) : null);
   const keep = (upTo) => {
     const kept = [];
     for (let i = 0; i < upTo; i += 1) {
@@ -2055,7 +2081,7 @@ async function rewindToChat({ branch = false, chatId } = {}) {
     storage.saveTurns(ctx(), live.turns);
     return false;
   }
-  const cal = ledgerCalendar(chat);
+  const cal = ledgerCalendar(chat, related);
   const word = REWIND_NOTE[branch ? 'branch' : 'delete'];
   if (!cal) {
     storage.saveTurns(ctx(), live.turns);
@@ -2097,7 +2123,7 @@ async function handleChatChanged() {
   await adoptChatPreset();
   if (live.epoch !== epoch) return;
   checkStatePreset();
-  await rewindToChat({ branch: true, chatId });
+  await rewindToChat({ branch: true, chatId, epoch });
   if (live.epoch !== epoch) return;
   setInjects({ oneShot: armedOneShot() });
   await syncLorebook();
