@@ -84,7 +84,6 @@ export const DEFAULT_LABELS = {
   duringItem: '{when} — {text}',
   whenAfternoon: 'после обеда',
   whenEvening: 'вечером',
-  duringMark: ' (отметка: {id})',
   manner: 'Как ведёт урок {teacher}: {lesson}{grading}',
   mannerGrading: ' Зачёт: {grading}.',
   people: 'Рядом в сцене: {list}',
@@ -133,7 +132,7 @@ export function statusLine(state, preset, opts = {}) {
     kept.push(cap(seg.text.replace(/[\s.;,]+$/u, '')));
   }
   const body = kept.length ? kept.join(L.glue) + L.end : '';
-  return [body, mannerSegment(L, opts, view, preset), peopleSegment(state, preset, L, opts, view), String(L.tone || '').trim(), String(L.terms || '').trim()].filter(Boolean).join(' ');
+  return [body, mannerSegment(L, opts, view, preset), peopleSegment(state, preset, L, opts, view), String(L.tone || '').trim(), String(L.terms || '').trim()].filter(Boolean).map((x) => (/[.!?…»]$/u.test(x) ? x : `${x}.`)).join(' ');
 }
 
 function duringSegment(state, preset, L, events) {
@@ -142,7 +141,7 @@ function duringSegment(state, preset, L, events) {
   if (!['study', 'weekend'].includes(phaseOf(preset, state, state.calendar.day))) return '';
   const evening = state.calendar.daypart === 'evening';
   const items = list.filter((e) => !evening || e.when === 'evening')
-    .map((e) => fill(L.duringItem, { when: e.when === 'evening' ? L.whenEvening : L.whenAfternoon, text: cutText(String(e.text).split(/;/)[0], 90).replace(/[.\s]+$/u, '') + (e.subjectId ? fill(L.duringMark, { id: e.subjectId }) : '') }));
+    .map((e) => fill(L.duringItem, { when: e.when === 'evening' ? L.whenEvening : L.whenAfternoon, text: cutText(String(e.text).split(/;/)[0], 90).replace(/[.\s]+$/u, '') }));
   return items.length ? fill(L.during, { list: items.join(L.nearGlue) }) : '';
 }
 
@@ -358,9 +357,16 @@ function goingSegment(state, preset, L) {
     .join(L.glue);
 }
 
+const dropName = (note, name) => {
+  const n = String(name || '').toLowerCase().replace(/ё/g, 'е');
+  const head = /^([^:]{1,60}):\s*/u.exec(note || '');
+  return head && n && head[1].toLowerCase().replace(/ё/g, 'е').trim() === n ? note.slice(head[0].length) : note;
+};
+
 function holidayPhrase(items, L, full, short, vars) {
   let out = '';
-  items.forEach(({ h, note }, i) => {
+  items.forEach(({ h, note: raw }, i) => {
+    const note = dropName(raw, h.name);
     const text = i === 0
       ? fill(note ? full : short, { ...vars, name: h.name, note })
       : fill(note ? L.holidayAlso : L.holidayAlsoBare, { name: h.name, note });

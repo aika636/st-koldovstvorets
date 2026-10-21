@@ -434,6 +434,8 @@ function safeCall(fn, fallback) {
   try { return fn(); } catch { return fallback; }
 }
 
+const wrapTag = (tag, text) => (text ? `<${tag}>\n${text}\n</${tag}>` : '');
+
 function writeInjects({ blank = false } = {}) {
   const c = ctx();
   const settings = storage.loadSettings(c);
@@ -452,9 +454,9 @@ function writeInjects({ blank = false } = {}) {
   const status = settings.statusViaMacro === true ? '' : built.status;
   const oneShot = started ? [live.oneShot, hook, live.skipWarning].filter(Boolean).join(' ') : '';
 
-  c.setExtensionPrompt(INJECT.status, status, types.IN_CHAT, depth, false, roles.SYSTEM);
-  c.setExtensionPrompt(INJECT.marker, built.instruction, types.IN_CHAT, depth + 1, false, roles.SYSTEM);
-  c.setExtensionPrompt(INJECT.oneShot, oneShot, types.IN_CHAT, 0, false, roles.SYSTEM);
+  c.setExtensionPrompt(INJECT.status, wrapTag('koldo_scene', status), types.IN_CHAT, depth, false, roles.SYSTEM);
+  c.setExtensionPrompt(INJECT.marker, wrapTag('koldo_marker', built.instruction), types.IN_CHAT, depth + 1, false, roles.SYSTEM);
+  c.setExtensionPrompt(INJECT.oneShot, wrapTag('koldo_note', oneShot), types.IN_CHAT, 0, false, roles.SYSTEM);
 }
 
 function armedOneShot() {
@@ -2331,7 +2333,7 @@ function macroText() {
   if (live.quiet || !extOn()) return '';
   if (!live.preset || !live.state || !live.state.started) return '';
   try {
-    return buildPrompt(live.state, live.preset, { injects: [], withMarker: false, feed: { quiet: feedMuted() || !plotSettings().background }, ...promptScene() }).status || '';
+    return wrapTag('koldo_scene', buildPrompt(live.state, live.preset, { injects: [], withMarker: false, feed: { quiet: feedMuted() || !plotSettings().background }, ...promptScene() }).status || '');
   } catch (err) {
     console.error(`[${MODULE}] {{${MACRO}}} не собран:`, err);
     return '';
