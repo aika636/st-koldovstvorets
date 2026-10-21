@@ -12,8 +12,6 @@ export const PANEL_TEXT = {
   cancel: 'Отменить',
   cancelled: 'Разбор отменён.',
   cancelledTavern: 'Разбор отменён. Если запрос ушёл через подключение таверны, модель может дописать его до конца, но ответ будет отброшен.',
-  failTimeout: 'Секретарь не ответил за отведённое время. Нажмите «Разобрать заново».',
-  failNetwork: 'Нет связи с моделью секретаря: сервер недоступен. Проверьте адрес и нажмите «Разобрать заново».',
   failCut: 'Секретарь не договорил: ответ оборвался раньше метки. Нажмите «Разобрать заново».',
   failRefused: 'Секретарь ответил не так, как нужно. Нажмите «Разобрать заново».',
   failRefusedMany: 'Секретарь два раза подряд отказался разбирать этот ответ или ответил не по форме (попыток: {n}). Нажмите «Разобрать заново» или попробуйте позже.',
@@ -314,7 +312,7 @@ function buildPanel(host, mesId, view, look) {
   }, [
     el('span', { class: 'ad-mp-st', title: stateTitle }, [icon(stateKind)]),
     el('span', { class: 'ad-mp-sum', title: [parts.what, parts.when].filter(Boolean).join(' · ') }, [
-      busy ? (view.progress || PANEL_TEXT.analyzing) : parts.what,
+      busy ? (view.progress || PANEL_TEXT.analyzing) : (view.error || view.cancelled || parts.what),
     ]),
     el('span', { class: 'ad-mp-chev', 'aria-hidden': 'true' }, [icon('chev')]),
     busy && view.cancellable && host.cancelAnalysis ? el('button', {

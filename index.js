@@ -1469,16 +1469,18 @@ async function analyzeMessage(mesId) {
   const epoch = live.epoch;
   const fail = (error) => {
     live.analysisErrors.set(mark, error);
-    return { ok: false, error };
+    toast('warning', error);
+    return { ok: false, error, shown: true };
   };
   const ctl = new AbortController();
-  const settings = storage.apiSettings(c);
+  let settings = null;
   live.analyzing.add(mark);
   live.analysisCtl.set(mark, ctl);
   live.analysisErrors.delete(mark);
   live.analysisCancel.delete(mark);
   live.analysisNote.delete(mark);
   try {
+    settings = storage.apiSettings(c);
     renderPanels();
     const entry = entryOf(mark, turn);
     if (turn) turn.before = carryManual(live.state, turn.before);
@@ -1523,10 +1525,7 @@ async function analyzeMessage(mesId) {
       live.analysisCancel.set(mark, api.resolveSource(settings) === 'tavern' ? PANEL_TEXT.cancelledTavern : PANEL_TEXT.cancelled);
       return { ok: false, cancelled: true, error: PANEL_TEXT.cancelled };
     }
-    if (res.code === 'gateway') return fail('Шлюз модели не ответил. Нажмите «Разобрать заново».');
-    if (res.code === 'timeout') return fail(PANEL_TEXT.failTimeout);
-    if (res.code === 'network') return fail(PANEL_TEXT.failNetwork);
-    if (!res.ok) return fail(`Разбор не удался: ${res.message || res.code}`);
+    if (!res.ok) return fail(api.secretaryFailure(res));
     if (!parsed.found) {
       console.warn(`[${MODULE}] секретарь ответил без метки:`, res.text);
       if (res.truncated) return fail(PANEL_TEXT.failCut);
@@ -1544,7 +1543,7 @@ async function analyzeMessage(mesId) {
     return { ok: true, tokens: parsed.tokens, rejected: parsed.rejected };
   } catch (err) {
     console.error(`[${MODULE}] разбор ответа упал:`, err);
-    return fail(`Разбор не удался: ${(err && err.message) || err}`);
+    return fail(`Разбор не удался: ${api.safeReason(err && err.message) || 'сбой расширения'}. Нажмите «Разобрать заново».`);
   } finally {
     live.analyzing.delete(mark);
     live.analysisCtl.delete(mark);
@@ -1817,7 +1816,11 @@ async function answerPromiseNow(key, came) {
 const panelHost = {
   panelFor: (mesId) => panelView(mesId),
   lookFor: () => ensureLook(storage.loadSettings(ctx()), live.preset),
-  analyze: (mesId) => analyzeMessage(mesId),
+  analyze: async (mesId) => {
+    const res = await analyzeMessage(mesId).catch((err) => ({ ok: false, error: `Разбор не удался: ${api.safeReason(err && err.message) || 'сбой расширения'}.` }));
+    if (!res.ok && !res.cancelled && !res.shown && res.error) toast('info', res.error);
+    return res;
+  },
   cancelAnalysis: (mesId) => cancelAnalysis(mesId),
   resolveJump: (accept) => host.actions.resolveJump(accept),
   saveAnalysis: (mesId) => saveAnalysis(mesId),
