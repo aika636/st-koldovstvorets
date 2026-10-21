@@ -34,7 +34,7 @@ export function eventsInJump(state, preset, fromDay, toDay) {
   for (const item of (state && state.exams && state.exams.items) || []) {
     if (!inside(item.day) || item.missed || (item.outcome !== null && item.outcome !== undefined && item.outcome !== '')) continue;
     const kind = kinds.find((k) => k.id === item.kind);
-    const subject = ((state.subjects || []).find((s) => s.id === item.subjectId) || {}).name || item.subjectId || '';
+    const subject = ((state.subjects || []).find((s) => s.id === item.subjectId) || {}).name || item.name || item.subjectId || '';
     put(`e:${item.id}`, { type: 'exam', day: item.day, name: String((kind && kind.name) || item.kind || ''), subject });
   }
 

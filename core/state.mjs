@@ -401,6 +401,7 @@ export function migrate(state, preset) {
   };
   out.journal = Array.isArray(out.journal) ? out.journal : [];
   out.pending = Array.isArray(out.pending) ? out.pending : [];
+  dropRetiredExams(out, preset);
   out.classmates = normalizeClassmates(out.classmates, preset, { taken: out.teachers.map((t) => t.id) });
   delete out.classmateCandidates;
   delete out.loreFound;
@@ -417,6 +418,24 @@ export function migrate(state, preset) {
   delete out.relDay;
   if (out.feats !== undefined) out.feats = normalizeFeats(out.feats);
   return out;
+}
+
+const RETIRED_KINDS = ['control', 'quarter'];
+
+function dropRetiredExams(out, preset) {
+  const own = new Set(((preset && preset.exams && preset.exams.kinds) || []).map((k) => k.id));
+  const dead = out.exams.items.filter((i) => i && RETIRED_KINDS.includes(i.kind) && !own.has(i.kind));
+  const gone = new Set(dead.map((i) => i.id));
+  if (!gone.size) return;
+  out.exams.items = out.exams.items.filter((i) => !gone.has(i && i.id));
+  if (!out.exams.items.some((i) => i && (!Number.isFinite(out.exams.term) || i.term === out.exams.term))) out.exams.active = false;
+  const left = new Set(out.exams.items.map((i) => i && i.subjectId));
+  for (const s of out.subjects) {
+    if (!['exam', 'missed', 'retake'].includes(s.debtReason) || left.has(s.id) || !dead.some((i) => i.subjectId === s.id)) continue;
+    delete s.debtReason;
+    s.debt = Boolean(s.debtSkips);
+  }
+  out.pending = out.pending.filter((p) => ![...gone].some((id) => String(p && p.id).startsWith(`exam:${id}:`) || String(p && p.id).startsWith(`announce:${id}:`)));
 }
 
 function examTermsV2(state) {

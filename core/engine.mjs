@@ -19,7 +19,7 @@ import { subjectWord } from './words.mjs';
 import {
   scheduleExams, examMode, rollOutcome, applyOutcome, resolveConflict, permissionLine,
   examTermIndex, examSessionEnded, closeExamSession, isPassing, examScore,
-  scheduleDatedExams, datedExams, sittableExams, isDatedExam, kindOf, seededRng, examSeed,
+  scheduleDatedExams, trialSubjects, datedExams, sittableExams, isDatedExam, kindOf, seededRng, examSeed,
   announceResults, awaitingAnnouncement, externalValue, examRule, fromPastTerm, retakesLeft,
 } from './exams.mjs';
 
@@ -158,7 +158,7 @@ export function applyResponse(state, text, preset, opts = {}) {
 
   const lexicon = {
     ...preset,
-    subjects: s.subjects,
+    subjects: [...s.subjects, ...trialSubjects(s)],
     teachers: markerPeople(s),
     survey: s.survey,
     names: opts.names && typeof opts.names === 'object' ? opts.names : null,
@@ -454,8 +454,11 @@ function calendarEvents(state, preset) {
   if (phaseOf(preset, s, s.calendar.day) === 'exams') {
     const term = examTermIndex(preset, s, s.calendar.day);
     if (!s.exams.active || s.exams.term !== term) {
-      s = scheduleExams(s, preset, { day: s.calendar.day, term });
-      applied.push({ kind: 'exams-scheduled', day: s.calendar.day, term });
+      const sat = scheduleExams(s, preset, { day: s.calendar.day, term });
+      if (sat.exams.active) {
+        s = sat;
+        applied.push({ kind: 'exams-scheduled', day: s.calendar.day, term });
+      }
     }
   }
   const told = announceResults(s, preset, s.calendar.day);

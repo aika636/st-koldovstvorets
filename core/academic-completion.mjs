@@ -1,6 +1,6 @@
 import { cloneState, pushJournal } from './state.mjs';
 import { addGrade, resolveGrade, stampDebt } from './gradebook.mjs';
-import { applyOutcome, isPassing, examTermIndex } from './exams.mjs';
+import { applyOutcome, isPassing, examTermIndex, trialSubjects } from './exams.mjs';
 
 export function applyAcademicCompletion(state, event, preset) {
   let next = cloneState(state);
@@ -15,16 +15,17 @@ export function applyAcademicCompletion(state, event, preset) {
     || event.scope === subject.id
     || (event.scope === 'debts' && (subject.debt
       || next.exams.items.some((item) => item.subjectId === subject.id && due(item)))));
+  const settle = (exam) => {
+    const result = applyOutcome(next, { examId: exam.id, value: grade.value, day, reason: 'story-summary' }, preset);
+    next = result.state;
+    const item = next.exams.items.find((candidate) => candidate.id === exam.id);
+    item.announced = true;
+    delete item.announceOn;
+    if (result.pending) next.pending = next.pending.filter((entry) => entry.id !== result.pending.id);
+  };
   for (const selectedSubject of selected) {
     const exams = next.exams.items.filter((item) => item.subjectId === selectedSubject.id && due(item));
-    for (const exam of exams) {
-      const result = applyOutcome(next, { examId: exam.id, value: grade.value, day, reason: 'story-summary' }, preset);
-      next = result.state;
-      const item = next.exams.items.find((candidate) => candidate.id === exam.id);
-      item.announced = true;
-      delete item.announceOn;
-      if (result.pending) next.pending = next.pending.filter((entry) => entry.id !== result.pending.id);
-    }
+    exams.forEach(settle);
     const subject = next.subjects.find((candidate) => candidate.id === selectedSubject.id);
     const hadSkips = event.scope === 'debts' && subject.debtSkips;
     if (hadSkips) { delete subject.debtSkips; stampDebt(subject, subject.debtReason); }
@@ -33,6 +34,12 @@ export function applyAcademicCompletion(state, event, preset) {
       next = addGrade(next, { subjectId: subject.id, value: grade.value, day }, preset).state;
     } else if (!exams.length && !hadSkips) continue;
     subjectIds.push(subject.id);
+  }
+  for (const trial of trialSubjects(next)) {
+    const exam = next.exams.items.find((item) => item.subjectId === trial.id && due(item));
+    if (!exam || !(event.scope === 'all' || event.scope === 'debts' || event.scope === trial.id)) continue;
+    settle(exam);
+    subjectIds.push(trial.id);
   }
   if (subjectIds.length) pushJournal(next, {
     kind: 'grade', text: `Учебная сводка: ${subjectIds.join(', ')} — ${grade.value}`,

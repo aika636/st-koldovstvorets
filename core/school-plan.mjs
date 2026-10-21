@@ -1,4 +1,5 @@
-import { termAt } from './time.mjs';
+import { termAt, phaseOf, weekdayIn } from './time.mjs';
+import { matchOn, saturdayOn } from './week-events.mjs';
 import { cutWords } from './classmates.mjs';
 
 export const GRADES = [11, 12];
@@ -60,6 +61,8 @@ export function schoolMismatch(state, roster) {
 
 const SPRING_TERM = 3;
 
+const KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
 export function isSpring(preset, state, day) {
   const at = termAt(preset, state, day);
   return at.inside && at.index === SPRING_TERM;
@@ -67,8 +70,7 @@ export function isSpring(preset, state, day) {
 
 export function dayEvents(roster, state, preset, day = state.calendar.day) {
   const grade = normalizeGrade(state.grade);
-  const dow = new Date(`${day}T12:00:00Z`).getUTCDay();
-  const key = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][dow];
+  const key = KEYS[weekdayIn(state, day) % 7];
   const school = roster.school;
   const out = [];
   const spring = isSpring(preset, state, day);
@@ -77,8 +79,18 @@ export function dayEvents(roster, state, preset, day = state.calendar.day) {
     out.push(trans.grade === grade
       ? { when: 'afternoon', text: trans.text, subjectId: trans.subject }
       : { when: 'afternoon', text: 'Самостоятельная практика.' });
-  } else if (school.afternoon && school.afternoon[key]) {
+  } else if (key !== 'sat' && school.afternoon && school.afternoon[key]) {
     out.push({ when: 'afternoon', text: afternoonText(school.afternoon[key], spring) });
+  }
+  const keyOf = (d) => KEYS[weekdayIn(state, d) % 7];
+  const phaseAt = (d) => phaseOf(preset, state, d);
+  const phase = phaseAt(day);
+  const freeWeekday = (d) => phaseAt(d) === 'study' && !(isSpring(preset, state, d) && school.afternoonSpring && school.afternoonSpring[keyOf(d)]);
+  const freeSaturday = (d) => phaseAt(d) === 'weekend' && keyOf(d) === 'sat';
+  const special = phase === 'weekend' && key === 'sat' ? saturdayOn(day, freeSaturday) : phase === 'study' ? matchOn(day, roster.houses, freeWeekday) : null;
+  if (special) {
+    if (special.kind === 'match') out.splice(0, out.length, ...out.filter((e) => e.when !== 'afternoon'));
+    out.unshift({ when: 'afternoon', ...special });
   }
   const ev = school.evening || {};
   if (ev.astronomy && ev.astronomy[grade] === key) {

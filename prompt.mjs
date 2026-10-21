@@ -8,7 +8,7 @@ import { debts, overallScore, DEBT_RETAKE } from './core/gradebook.mjs';
 import { bondLabel, bondOf, defaultBond, roleOf, bondsOff, bondsFor, SHADES } from './core/bonds.mjs';
 import { reputationLabel } from './core/reputation.mjs';
 import { notableGrade } from './core/fame.mjs';
-import { examMode, publicView, retakeList, weekAheadKinds } from './core/exams.mjs';
+import { examMode, publicView, retakeList, weekAheadKinds, examKinds, trialSubjects } from './core/exams.mjs';
 import { upcomingEvents } from './core/upcoming.mjs';
 import { holidayBackground, bare, buzzFor } from './core/holidays.mjs';
 import { feedBackground, BACKGROUND_MAX } from './core/feed.mjs';
@@ -84,6 +84,9 @@ export const DEFAULT_LABELS = {
   duringItem: '{when} — {text}',
   whenAfternoon: 'после обеда',
   whenEvening: 'вечером',
+  duringMark: ' (отметка: {id})',
+  manner: 'Как ведёт урок {teacher}: {lesson}{grading}',
+  mannerGrading: ' Зачёт: {grading}.',
   people: 'Рядом в сцене: {list}',
   peopleGlue: '; ',
 
@@ -130,16 +133,16 @@ export function statusLine(state, preset, opts = {}) {
     kept.push(cap(seg.text.replace(/[\s.;,]+$/u, '')));
   }
   const body = kept.length ? kept.join(L.glue) + L.end : '';
-  return [body, peopleSegment(state, preset, L, opts, view), String(L.tone || '').trim(), String(L.terms || '').trim()].filter(Boolean).join(' ');
+  return [body, mannerSegment(L, opts, view, preset), peopleSegment(state, preset, L, opts, view), String(L.tone || '').trim(), String(L.terms || '').trim()].filter(Boolean).join(' ');
 }
 
 function duringSegment(state, preset, L, events) {
   const list = Array.isArray(events) ? events.filter((e) => e && e.text) : [];
   if (!list.length || !state.calendar || state.calendar.daypart === 'night') return '';
-  if (phaseOf(preset, state, state.calendar.day) !== 'study') return '';
+  if (!['study', 'weekend'].includes(phaseOf(preset, state, state.calendar.day))) return '';
   const evening = state.calendar.daypart === 'evening';
   const items = list.filter((e) => !evening || e.when === 'evening')
-    .map((e) => fill(L.duringItem, { when: e.when === 'evening' ? L.whenEvening : L.whenAfternoon, text: cutText(String(e.text).split(/;/)[0], 90).replace(/[.\s]+$/u, '') }));
+    .map((e) => fill(L.duringItem, { when: e.when === 'evening' ? L.whenEvening : L.whenAfternoon, text: cutText(String(e.text).split(/;/)[0], 90).replace(/[.\s]+$/u, '') + (e.subjectId ? fill(L.duringMark, { id: e.subjectId }) : '') }));
   return items.length ? fill(L.during, { list: items.join(L.nearGlue) }) : '';
 }
 
@@ -151,6 +154,24 @@ function peopleSegment(state, preset, L, opts, view) {
   const teacher = mode.active || lessonOn(view, preset) ? teacherInFrame(view, preset, mode) : null;
   const list = sceneDigests(state, opts.roster, { max, teacherId: teacher ? teacher.id : '' });
   return list.length ? fill(L.people, { list: list.map((d) => d.text).join(L.peopleGlue) }) : '';
+}
+
+const LESSON_MAX = 100;
+const GRADING_MAX = 80;
+
+function mannerSegment(L, opts, view, preset) {
+  const mode = examMode(view, preset);
+  const teacher = opts.roster && !mode.active && lessonOn(view, preset) ? teacherInFrame(view, preset, mode) : null;
+  const p = teacher && opts.roster.get(teacher.id);
+  if (!p || !p.lesson) return '';
+  let lesson = '';
+  for (const sentence of String(p.lesson).split(/(?<=[.!?])\s+/u)) {
+    if (lesson && lesson.length + sentence.length >= LESSON_MAX) break;
+    lesson = lesson ? `${lesson} ${sentence}` : sentence;
+  }
+  const rule = String(p.grading || '').split(/[.;]\s+|\.$/u).map((x) => x.replace(/^судя по (?:методу|предмету),\s*/iu, '').trim()).find((x) => x && !/лор/iu.test(x));
+  const grading = rule ? fill(L.mannerGrading, { grading: cutText(rule, GRADING_MAX).replace(/[.\s]+$/u, '').replace(/^./u, (c) => c.toLowerCase()) }) : '';
+  return fill(L.manner, { teacher: p.short || p.name, lesson: cutText(lesson, LESSON_MAX), grading });
 }
 
 function segmentsOf(state, preset, L) {
@@ -285,7 +306,7 @@ function nearSegment(state, preset, L) {
     const when = nearWhen(ev, L, state);
     if (!when) continue;
     if (ev.kind === 'exam') {
-      const subject = ev.subjectId ? subjectName(state, ev.subjectId) : '';
+      const subject = ev.subjectId && !isTrial(preset, ev.subjectId) ? subjectName(state, ev.subjectId) : '';
       parts.push(fill(subject ? L.nearExamSubject : L.nearExam, { when, what: ev.what || '', subject }));
     } else if (ev.kind === 'announce') {
       parts.push(fill(L.nearAnnounce, { when, subject: subjectName(state, ev.subjectId) }));
@@ -354,8 +375,10 @@ function nearWhen(ev, L, state) {
   return (L.weekdaysOn || [])[weekdayIn(state, ev.day) - 1] || '';
 }
 
+const isTrial = (preset, id) => examKinds(preset).some((k) => k.standalone && k.id === id);
+
 function subjectName(state, id) {
-  const s = (state.subjects || []).find((x) => x.id === id);
+  const s = (state.subjects || []).find((x) => x.id === id) || trialSubjects(state).find((x) => x.id === id);
   return (s && (s.name || s.id)) || String(id || '');
 }
 

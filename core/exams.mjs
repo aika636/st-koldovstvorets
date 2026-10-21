@@ -2,8 +2,8 @@ import { presetGender } from './gender.mjs';
 import {
   cloneState, pushJournal, pushPending, findSubject, teacherOfSubject, clamp, isDay,
 } from './state.mjs';
-import { addDays, diffDays, mondayOf, termAt, termsOf, phaseOf, dayOfWeek } from './time.mjs';
-import { addGrade, subjectScore, stampDebt, debtReasons, DEBT_EXAM, DEBT_MISSED, DEBT_RETAKE, DEBT_SKIPS, DEBT_GRADE } from './gradebook.mjs';
+import { addDays, diffDays, mondayOf, termAt, termsOf, phaseOf, dayOfWeek, weekdayIn } from './time.mjs';
+import { addGrade, subjectScore, overallScore, stampDebt, debtReasons, DEBT_EXAM, DEBT_MISSED, DEBT_RETAKE, DEBT_SKIPS, DEBT_GRADE } from './gradebook.mjs';
 
 export const DEFAULTS = {
   retakes: 1,
@@ -40,6 +40,9 @@ export const DEFAULT_PHRASES = {
 };
 
 export const DEFAULT_SCENE_GUARD = 'Если сцена сейчас интимная или для этого неподходящая — не обрывай её: отложи это до первой уместной минуты.';
+
+export const trialSubjects = (state) => ((state && state.exams && state.exams.items) || [])
+  .filter((i) => i && i.name && !findSubject(state, i.subjectId)).map((i) => ({ id: i.subjectId, name: i.name }));
 
 const examsOf = (preset) => (preset && preset.exams) || {};
 const gradesOf = (preset) => (preset && preset.grades) || {};
@@ -92,13 +95,13 @@ export function weekAheadKinds(state, preset) {
     kind: k.id,
     name: String(k.name || k.id),
     subjects: (state.subjects || [])
-      .filter((s, pos) => (s.season !== 'spring' || isSpringTerm(preset, state)) && kindsForSubject(preset, s, pos).some((x) => x.id === k.id) && !items.some((i) => i.id === `${term}:${s.id}:${k.id}`))
+      .filter((s, pos) => (s.season !== 'spring' || isSpringTerm(preset, state)) && kindsForSubject(preset, s, pos, state.grade).some((x) => x.id === k.id) && !items.some((i) => i.id === `${term}:${s.id}:${k.id}`))
       .map((s) => s.name || s.id),
   })).filter((x) => x.subjects.length);
 }
 
 const isPassScale = (v) => v.points === null || v.points === undefined;
-const isPointScale = (v) => typeof v.points === 'number' && Number.isFinite(v.points);
+const isPointScale = (v) => typeof v.points === 'number' && Number.isFinite(v.points) && !v.rare;
 
 const rankKey = (v) => [v.pass === false ? 0 : 1, isPointScale(v) ? v.points : 0];
 const rankCmp = (a, b) => (rankKey(b)[0] - rankKey(a)[0]) || (rankKey(b)[1] - rankKey(a)[1]);
@@ -152,7 +155,10 @@ function isSpringTerm(preset, state, day) {
   return terms.length > 1 && at.index === terms.length - 1;
 }
 
-export function kindsForSubject(preset, subject, rr = 0) {
+const fits = (k, subject, grade) => (!Array.isArray(k.grades) || k.grades.includes(Number(grade)))
+  && (!Array.isArray(k.subjects) || k.subjects.includes(subject && subject.id));
+
+export function kindsForSubject(preset, subject, rr = 0, grade = null) {
   const kinds = examKinds(preset);
   if (!kinds.length) return [];
 
@@ -163,10 +169,11 @@ export function kindsForSubject(preset, subject, rr = 0) {
   const one = subject && subject.examKind ? kinds.find((k) => k.id === subject.examKind) : null;
   if (one) return [one];
 
-  const every = kinds.filter((k) => k.everySubject === true);
-  if (every.length) return every;
+  const named = kinds.filter((k) => !k.standalone && (k.everySubject === true || Array.isArray(k.subjects)) && fits(k, subject, grade));
+  if (named.length) return named;
 
-  return [kinds[((rr % kinds.length) + kinds.length) % kinds.length]];
+  const rotating = kinds.filter((k) => !k.standalone && k.everySubject !== true && !Array.isArray(k.subjects) && fits(k, subject, grade));
+  return rotating.length ? [rotating[((rr % rotating.length) + rotating.length) % rotating.length]] : [];
 }
 
 export function examTermIndex(preset, state, day) {
@@ -180,7 +187,7 @@ export function examScore(state, preset, item) {
   const term = Number.isFinite(item && item.term)
     ? item.term
     : examTermIndex(preset, state, item && item.day);
-  const average = subjectScore(state, subjectId, preset, { term }).average;
+  const average = findSubject(state, subjectId) ? subjectScore(state, subjectId, preset, { term }).average : overallScore(state, preset);
   return average ?? (preset && preset.grades && preset.grades.startScore);
 }
 
@@ -211,7 +218,7 @@ export function closeExamSession(state, preset) {
       pushJournal(next, {
         kind: 'exam',
         text: fill(ph.tail, {
-          subject: (owner && owner.name) || item.subjectId,
+          subject: (owner && owner.name) || item.name || item.subjectId,
           debt: vocabOf(preset).debt || '',
           examPeriod: vocabOf(preset).examPeriod || '',
           due: ph.debtRetake,
@@ -231,7 +238,7 @@ export function closeExamSession(state, preset) {
     pushJournal(next, {
       kind: 'exam',
       text: fill(ph.missed, {
-        subject: (subject && subject.name) || item.subjectId,
+        subject: (subject && subject.name) || item.name || item.subjectId,
         kind: (kind && kind.name) || String(item.kind || ''),
         debt: vocabOf(preset).debt || '',
         examPeriod: vocabOf(preset).examPeriod || '',
@@ -266,7 +273,7 @@ export function scheduleExams(state, preset, opts = {}) {
   for (let pos = 0; pos < next.subjects.length; pos += 1) {
     const subject = next.subjects[pos];
     if (!subject.id || (subject.season === 'spring' && !spring)) continue;
-    for (const kind of kindsForSubject(preset, subject, pos)) {
+    for (const kind of kindsForSubject(preset, subject, pos, next.grade)) {
       if (only && !only.has(kind.id)) continue;
       const id = `${term}:${subject.id}:${kind.id}`;
       if (had.has(id)) continue;
@@ -285,7 +292,15 @@ export function scheduleExams(state, preset, opts = {}) {
     }
   }
 
-  if (session) {
+  for (const kind of examKinds(preset)) {
+    const id = `${term}:${kind.id}:${kind.id}`;
+    if (!kind.standalone || (only && !only.has(kind.id)) || had.has(id) || !fits(kind, null, next.grade)) continue;
+    items.push({ id, term, subjectId: kind.id, name: String(kind.name || kind.id), kind: kind.id, day, outcome: null, attempts: 0 });
+    byKind.set(kind.id, 1);
+    added += 1;
+  }
+
+  if (session && items.some((i) => i.term === term)) {
     next.exams.active = true;
     next.exams.term = term;
   }
@@ -316,7 +331,8 @@ export function scheduleDatedExams(state, preset, day = state && state.calendar 
   if (!at.term || !at.inside) return { state, added: 0 };
   const due = examKinds(preset).filter((k) => {
     const week = kindWeek(k, at.index);
-    return week !== null && at.week >= week;
+    const pinned = Number(k.weekdays && k.weekdays[state.grade]) || 1;
+    return week !== null && (at.week > week || (at.week === week && weekdayIn(state, day) >= pinned));
   });
   if (!due.length) return { state, added: 0 };
 
@@ -385,7 +401,7 @@ export function retakeList(state, preset) {
   for (const item of (state && state.exams && state.exams.items) || []) {
     if (!item.outcome || isPassing(preset, item.outcome) || awaitingAnnouncement(item) || retakesLeft(preset, item) <= 0) continue;
     const subject = findSubject(state, item.subjectId);
-    out.set(item.subjectId, { subjectId: item.subjectId, name: (subject && subject.name) || item.subjectId, left: retakesLeft(preset, item) });
+    out.set(item.subjectId, { subjectId: item.subjectId, name: (subject && subject.name) || item.name || item.subjectId, left: retakesLeft(preset, item) });
   }
   return [...out.values()];
 }
@@ -582,7 +598,7 @@ export function applyOutcome(state, { examId, value, day, reason, check }, prese
   const record = rollRecord({ day: when, value, reason, check });
   if (record) item.rolls = [...(Array.isArray(item.rolls) ? item.rolls : []), record];
 
-  const graded = addGrade(next, { subjectId: item.subjectId, value, day: when }, preset);
+  const graded = findSubject(next, item.subjectId) ? addGrade(next, { subjectId: item.subjectId, value, day: when }, preset) : { applied: false };
   if (graded.applied) {
     next = graded.state;
     item = next.exams.items.find((i) => i.id === examId);
@@ -631,7 +647,7 @@ function verdictVars(state, preset, item, value) {
   const teacher = teacherOfSubject(state, item.subjectId);
   const info = gradeInfo(preset, value);
   return {
-    subject: (subject && subject.name) || item.subjectId,
+    subject: (subject && subject.name) || item.name || item.subjectId,
     value: (info && info.label) || String(value),
     teacher: (teacher && teacher.name) || vocabOf(preset).teacher || '',
     left: String(retakesLeft(preset, item)),
@@ -821,7 +837,7 @@ export function resolveConflict(state, { examId, modelSaid, source }, preset) {
 
   const divergence = { examId, subjectId: item.subjectId, computed, modelSaid: said, applied: true, ...from };
   const text = fill(phrasesOf(preset).divergence, {
-    subject: (subject && subject.name) || item.subjectId,
+    subject: (subject && subject.name) || item.name || item.subjectId,
     computed: computed === null ? '' : String(computed),
     said,
   });

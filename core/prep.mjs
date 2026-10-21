@@ -94,7 +94,7 @@ function eventsOf(state, preset, today, lead) {
     const kind = kindOf(preset, item.kind);
     out.push({
       kind: 'exam', on: item.id, day: ahead.day, days: ahead.days, subjectId: item.subjectId,
-      subject: (subject && subject.name) || item.subjectId, what: String((kind && kind.name) || '').toLowerCase(),
+      subject: (subject && subject.name) || item.name || item.subjectId, what: String((kind && kind.name) || '').toLowerCase(),
     });
   }
   return out;

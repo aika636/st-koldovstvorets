@@ -97,6 +97,32 @@ export function subjectScore(state, subjectId, preset, opts = {}) {
   return { average: mean(points), grades, passed, debt };
 }
 
+export function quarterMark(state, subjectId, preset, term) {
+  const { average } = subjectScore(state, subjectId, preset, { term });
+  if (average === null) return null;
+  const n = Math.round(average);
+  const spec = ((preset && preset.grades && preset.grades.values) || []).find((g) => g.points === n);
+  return spec ? String(spec.value) : String(n);
+}
+
+export function quarterMarks(state, subjectId, preset) {
+  const subject = findSubject(state, subjectId);
+  const today = state && state.calendar && state.calendar.day;
+  if (!subject || !isDay(today)) return [];
+  const now = termAt(preset, state, today);
+  if (!now.term) return [];
+  const closed = (at) => at.serial < now.serial || (at.serial === now.serial && !now.inside);
+  const seen = new Map();
+  for (const g of subject.grades || []) {
+    if (!isDay(g.day)) continue;
+    const at = termAt(preset, state, g.day);
+    if (at.term && closed(at)) seen.set(at.serial, at.index);
+  }
+  return [...seen].sort((a, b) => a[0] - b[0])
+    .map(([serial, index]) => ({ term: serial, number: index + 1, mark: quarterMark(state, subjectId, preset, serial) }))
+    .filter((q) => q.mark !== null);
+}
+
 export function overallScore(state, preset) {
   const points = [];
   for (const s of state.subjects || []) {

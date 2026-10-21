@@ -85,7 +85,8 @@ export function hookJournal(state, preset, n = 10) {
   const limit = Math.max(0, Math.min(HOOK_JOURNAL_MAX, Number.isFinite(Number(n)) ? Math.floor(Number(n)) : 10));
   if (!limit) return [];
   const findS = (id) => (state.subjects || []).find((s) => s.id === id);
-  const subjectName = (id) => (((state.subjects || []).find((s) => s.id === id)) || {}).name || subjectWord(preset);
+  const subjectName = (id) => (((state.subjects || []).find((s) => s.id === id)) || {}).name
+    || (((state.exams && state.exams.items) || []).find((i) => i.subjectId === id && i.name) || {}).name || subjectWord(preset);
   const teacherName = (id) => (([...(state.teachers || []), ...(state.classmates || [])].find((t) => t && t.id === id)) || {}).name || GONE_PERSON.nom;
   const repLabels = (preset && preset.reputation && preset.reputation.labels) || [];
   const items = (state.exams && state.exams.items) || [];

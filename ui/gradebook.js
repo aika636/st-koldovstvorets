@@ -1,10 +1,11 @@
-import { debts, debtReasons, DEBT_GRADE, overallScore, subjectScore } from '../core/gradebook.mjs';
+import { debts, debtReasons, DEBT_GRADE, overallScore, subjectScore, quarterMarks } from '../core/gradebook.mjs';
 import { bondView } from './classmates.js';
 import { stats as attendanceStats } from '../core/attendance.mjs';
 import { reputationLabel } from '../core/reputation.mjs';
 import { termsOf, termAt } from '../core/time.mjs';
-import { awaitingAnnouncement, examMode, datedExams, debtReasonText, isPassing } from '../core/exams.mjs';
+import { awaitingAnnouncement, examMode, datedExams, debtReasonText, isPassing, gradeInfo } from '../core/exams.mjs';
 import { milestones } from '../core/milestones.mjs';
+import { cutWords } from '../core/classmates.mjs';
 import {
   uiLabels, fill, stateHealth, formatDate, formatDateOn, termTitle, formatScore, capNumbers, capitalize, plural,
   extraLabels, el, emptyPage, svgIcon, mounted, artImg,
@@ -18,11 +19,24 @@ export function openExamList(state, preset) {
     .map((e) => {
       const s = (state.subjects || []).find((x) => x.id === e.subjectId);
       const kind = ((preset.exams && preset.exams.kinds) || []).find((k) => k.id === e.kind);
-      return { id: e.id, subject: (s && s.name) || e.subjectId, kind: (kind && kind.name) || e.kind, day: e.day };
+      return { id: e.id, subject: (s && s.name) || e.name || e.subjectId, kind: (kind && kind.name) || e.kind, day: e.day };
     });
 }
 
-export function gradebookView(state, preset) {
+function gradingRule(roster, teacher) {
+  const raw = teacher && roster && roster.get ? (roster.get(teacher.id) || {}).grading : '';
+  return raw ? `${teacher.name}: ${cutWords(raw, 140)}` : '';
+}
+
+function trialsView(state, preset) {
+  return ((state.exams && state.exams.items) || []).filter((i) => i && i.name && !(state.subjects || []).some((s) => s.id === i.subjectId)).map((i) => {
+    const shown = i.outcome && !awaitingAnnouncement(i);
+    const info = shown ? gradeInfo(preset, i.outcome) : null;
+    return { id: i.id, name: i.name, mark: shown ? ((info && info.label) || String(i.outcome)) : '', bad: shown && !isPassing(preset, i.outcome) };
+  });
+}
+
+export function gradebookView(state, preset, opts = {}) {
   const health = stateHealth(state, preset);
   if (health.kind !== 'ok') return { ...health, subjects: [], numbers: [] };
 
@@ -44,6 +58,8 @@ export function gradebookView(state, preset) {
       teacher: teacher ? teacher.name : '',
       teacherId: teacher ? teacher.id : null,
       relation: bond ? bond.relation : '',
+      rule: gradingRule(opts.roster, teacher),
+      quarters: quarterMarks(state, s.id, preset),
       reason: bond && firstOfTeacher && firstOfTeacher.id === s.id && bond.memory[0] ? bond.memory[0].reason : '',
       attendanceText: [
         skipsText(att),
@@ -83,6 +99,7 @@ export function gradebookView(state, preset) {
     action: null,
     errors: [],
     subjects,
+    trials: trialsView(state, preset),
     seal: preset.displayName || '',
     strip: raw.filter((n) => n.key === 'debts' || n.key === 'exams').map((n) => n.text),
     termText: termText(state, preset, U),
@@ -144,7 +161,7 @@ export function awaitingView(state, preset) {
     .filter((i) => awaitingAnnouncement(i))
     .map((i) => {
       const s = (state.subjects || []).find((x) => x.id === i.subjectId);
-      const subject = (s && s.name) || i.subjectId || '';
+      const subject = (s && s.name) || i.name || i.subjectId || '';
       return {
         id: i.id, subject, day: i.announceOn,
         text: fill(X.awaitingLine, { subject, date: formatDateOn(i.announceOn) || i.announceOn }),
@@ -195,6 +212,7 @@ function subjectRow(s, U, X, noGradesAtAll) {
     : (noGradesAtAll ? null : el('span', { class: 'ad-none', text: U.noGrades }));
   const rel = s.relation;
   const extra = [
+    s.quarters.length ? el('span', { class: 'ad-gr-q', text: fill(X.quarterLine, { marks: s.quarters.map((q) => `${q.number} — ${q.mark}`).join(', ') }), title: [X.quarterNote, s.rule].filter(Boolean).join(' ') }) : null,
     s.attendanceText ? el('span', { class: 'ad-gr-att', text: s.attendanceText }) : null,
     s.reason ? el('span', { class: 'ad-gr-reason', text: s.reason }) : null,
     s.debtReason ? el('span', { class: 'ad-gr-reason', text: s.debtReason }) : null,
@@ -208,7 +226,7 @@ function subjectRow(s, U, X, noGradesAtAll) {
     }),
     el('div', { class: 'ad-gr-marks' }, [marks, ...tags]),
     el('div', { class: 'ad-gr-teacher' }, [
-      el('span', { class: 'ad-t', text: s.teacher || '—' }),
+      el('span', { class: 'ad-t', text: s.teacher || '—', title: s.rule || null }),
       rel ? el('span', { class: 'ad-r', text: rel }) : null,
     ]),
     extra.length ? el('div', { class: 'ad-gr-extra' }, extra) : null,
@@ -243,6 +261,11 @@ export function renderGradebook(host, view, preset) {
     body.push(el('div', { class: 'ad-gr' }, [
       el('div', { class: 'ad-gr-head', 'aria-hidden': 'true' }, [el('span', { text: 'Дисциплина' }), el('span', { text: 'Отметка' })]),
       ...rows.map((s) => subjectRow(s, U, X, noGradesAtAll)),
+      ...(view.trials || []).map((t) => el('div', { class: 'ad-gr-row ad-gr-trial', dataset: { trial: t.id } }, [
+        el('div', { class: 'ad-gr-subj', text: t.name }),
+        el('div', { class: 'ad-gr-avg' }),
+        el('div', { class: 'ad-gr-marks' }, [t.mark ? el('span', { class: 'ad-mark', dataset: t.bad ? { bad: '1' } : {}, text: t.mark }) : el('span', { class: 'ad-none', text: '—' })]),
+      ])),
     ]));
     if (folded.size) {
       body.push(el('div', {

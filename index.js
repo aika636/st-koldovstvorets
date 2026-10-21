@@ -1,7 +1,7 @@
 import { applyResponse, sitExam, sceneExamId, timeSkipWarning } from './core/engine.mjs';
 import { buildPrompt, statusLine } from './prompt.mjs';
 import {
-  awaitingAnnouncement, gradeInfo, isPassing, kindOf, publicView, sittableExams, EXAM_RULES, examRule,
+  awaitingAnnouncement, trialSubjects, gradeInfo, isPassing, kindOf, publicView, sittableExams, EXAM_RULES, examRule,
 } from './core/exams.mjs';
 import { applyBondEvent, bondsOff } from './core/bonds.mjs';
 import {
@@ -723,7 +723,7 @@ function examDetail(state, item, meta) {
   return {
     examId: item.id,
     subjectId: item.subjectId,
-    subject: (subject && subject.name) || item.subjectId,
+    subject: (subject && subject.name) || item.name || item.subjectId,
     kind: item.kind,
     kindName: (kind && kind.name) || String(item.kind || ''),
     value: String(item.outcome),
@@ -1141,7 +1141,7 @@ function turnRows(before, after, exam) {
   const logRows = hookJournal({ ...after, journal: fresh }, live.preset, 50);
   const rows = [];
   if (exam && exam.announceOn) {
-    const subject = ((after.subjects || []).find((s) => s.id === exam.subjectId) || {}).name || exam.subjectId;
+    const subject = ((after.subjects || []).find((s) => s.id === exam.subjectId) || {}).name || exam.name || exam.subjectId;
     rows.push(`${subject}: ${heroGender(after, safeHeroName()) === 'm' ? 'сдавал' : 'сдавала'}, итог объявят ${formatDateOn(exam.announceOn) || exam.announceOn}`);
   }
   const extra = [];
@@ -1207,7 +1207,7 @@ function recordLedger(mark, before, after, { marker = false, exam = null } = {})
 function lexiconOf(state, c) {
   return {
     ...live.preset,
-    subjects: state.subjects,
+    subjects: [...state.subjects, ...trialSubjects(state)],
     teachers: markerPeople(state),
     classmates: Array.isArray(state.classmates) ? state.classmates : [],
     known: ((liveRoster() || {}).people || []).filter((p) => p && p.id && p.name).map((p) => ({ id: p.id, name: p.name })),

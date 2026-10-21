@@ -1,6 +1,6 @@
 import { currentPeriod, dayEndInfo, dayPlan, nextPeriod } from '../core/schedule.mjs';
 import { dayOfWeek, isStalled, phaseOf, preExamWeek, termAt, weekdayShiftOf, weekIndex } from '../core/time.mjs';
-import { gradeInfo, isPassing } from '../core/exams.mjs';
+import { gradeInfo, isPassing, examMode } from '../core/exams.mjs';
 import { eventsInJump } from '../core/skipped.mjs';
 import {
   uiLabels, fill, TIME_VIA_LAST, stateHealth, formatDate, setDateShift, formatWeek, termTitle, capNumbers, plural,
@@ -98,7 +98,7 @@ export function todayView(state, preset, opts = {}) {
   if (phase === 'vacation') { silent = true; silentReason = pauseName ? `${pauseName} — ${extraLabels(preset).holidayOffMark}.` : U.silentVacation; }
   else if (phase === 'break') { silent = true; silentReason = U.silentBreak; }
   else if (phase === 'weekend') { silent = true; silentReason = U.silentWeekend; }
-  else if (phase === 'exams') { silent = true; silentReason = U.silentExams; }
+  else if (phase === 'exams') { silent = true; silentReason = examMode(state, preset).active ? U.silentExams : U.silentExamsFree; }
   else if (night) { silent = true; silentReason = U.silentNight; }
   else if (!plan.length) { silent = true; silentReason = U.silentEmpty; }
   else if (cur && cur.status === 'after') { silent = true; silentReason = U.silentOver; }
@@ -313,7 +313,7 @@ export function examResultsToday(state, preset) {
       id: item.id,
       key: `${item.id}:${rolls.length}:${day}`,
       subjectId: item.subjectId,
-      subject: (subject && subject.name) || item.subjectId || '',
+      subject: (subject && subject.name) || item.name || item.subjectId || '',
       kind: (kind && kind.name) || String(item.kind || ''),
       value: String(shown),
       valueLabel: (info && info.label) || String(shown),
@@ -327,7 +327,7 @@ export function examResultsToday(state, preset) {
       pending,
       head: fill(sameWord(kind && kind.name, shown) ? X.checkLineSame : X.checkLine, {
         kind: String((kind && kind.name) || item.kind || '').toLowerCase(),
-        subject: (subject && subject.name) || item.subjectId || '',
+        subject: (subject && subject.name) || item.name || item.subjectId || '',
         value: String(shown),
       }),
       rollText: auto ? X.checkAuto : fill(X.checkRoll, { roll: last.roll, dc: last.dc, tier: tierText }),
@@ -454,7 +454,7 @@ export function renderToday(host, view, preset) {
       })];
   }
 
-  const dayEvents = view.silent ? [] : (safe(() => host.getDayEvents(), []) || []);
+  const dayEvents = view.silent && view.phase !== 'weekend' ? [] : (safe(() => host.getDayEvents(), []) || []);
   if (dayEvents.length) {
     const WHEN = { afternoon: 'После обеда', evening: 'Вечером' };
     plan.push(el('ul', { class: 'ad-day-events' }, dayEvents.map((e) => el('li', { class: 'ad-day-event', dataset: { when: e.when } }, [

@@ -18,7 +18,7 @@ const FAME_NO_POINTS_FAIL = -2;
 export function gradeTiers(preset) {
   const seen = new Set();
   const list = ((preset && preset.grades && preset.grades.values) || [])
-    .filter((g) => g && typeof g.points === 'number')
+    .filter((g) => g && typeof g.points === 'number' && !g.rare)
     .sort((a, b) => b.points - a.points)
     .filter((g) => !seen.has(g.points) && seen.add(g.points));
   const pass = list.filter((g) => g.pass);
@@ -37,6 +37,7 @@ export function fameOfGrade(preset, value) {
   const spec = resolveGrade(preset, value);
   if (!spec) return 0;
   if (typeof spec.points !== 'number') return spec.pass ? 0 : FAME_NO_POINTS_FAIL;
+  if (spec.rare) return FAME.worst;
   const t = gradeTiers(preset);
   const at = (tier) => t[tier] && t[tier].points === spec.points;
   if (at('best')) return FAME.best;
@@ -51,6 +52,7 @@ export function notableGrade(preset, value) {
   const spec = resolveGrade(preset, value);
   if (!spec) return null;
   if (typeof spec.points !== 'number') return spec.pass ? null : 'worst';
+  if (spec.rare) return 'worst';
   const t = gradeTiers(preset);
   if (t.worst && spec.points === t.worst.points) return 'worst';
   if (t.best && spec.points === t.best.points && t.list.length > 1) return 'best';

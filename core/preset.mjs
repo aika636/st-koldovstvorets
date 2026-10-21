@@ -582,7 +582,7 @@ export function presetSummary(preset) {
   const terms = p.calendar && Array.isArray(p.calendar.terms) ? p.calendar.terms.length : 1;
   if (v.term) parts.push(terms > 1 ? `${v.term} ×${terms}` : String(v.term));
   if (p.week && p.week.periodsPerDay) parts.push(`${v.periodPlural || 'занятия'} в день: ${p.week.periodsPerDay}`);
-  const scored = ((p.grades && p.grades.values) || []).filter((g) => typeof g.points === 'number');
+  const scored = ((p.grades && p.grades.values) || []).filter((g) => typeof g.points === 'number' && !g.rare);
   if (scored.length) {
     const min = Math.min(...scored.map((g) => g.points));
     const max = Math.max(...scored.map((g) => g.points));

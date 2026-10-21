@@ -357,7 +357,7 @@ export function renderPanel(host) {
   try {
     const state = safe(() => h.getState(), null);
     setDateShift(weekdayShiftOf(state));
-    if (mounted.tab === 'gradebook') out = renderGradebook(h, gradebookView(state, preset), preset);
+    if (mounted.tab === 'gradebook') out = renderGradebook(h, gradebookView(state, preset, { roster: safe(() => h.getRoster(), null) }), preset);
     else if (mounted.tab === 'people') out = renderPeople(h, peopleView(state, preset, { heroine: safe(() => h.getHeroine(), ''), roster: safe(() => h.getRoster(), null) }), preset);
     else if (mounted.tab === 'feed') {
       out = renderFeed(h, feedView(state, preset, {

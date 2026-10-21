@@ -54,6 +54,7 @@ export const DEFAULT_UI = {
   silentBreak: 'Между семестрами — занятий нет.',
   silentWeekend: 'Выходной — занятий нет.',
   silentExams: 'Сессия — лекций нет, идут контрольные.',
+  silentExamsFree: 'Сессия — занятий нет.',
   silentNight: 'Ночь — занятий нет.',
   silentEmpty: 'На сегодня расписание пустое.',
   silentOver: 'Занятия на сегодня кончились.',
@@ -426,6 +427,8 @@ export const KEY_NOTE = 'Ключ хранится только в этом бр
 
 export const EXTRA_UI = {
   ongoingHint: 'Оценки в порядке, но итог ещё не подведён.',
+  quarterLine: 'Четвертные: {marks}',
+  quarterNote: 'Четвертная отметка — округлённое среднее за четверть.',
   lorebookStateOk: 'Книга мира обновлена',
   lorebookStateWait: 'Книга мира ждёт: идёт пересборка, перевод или повтор после сбоя.',
   lorebookStateError: 'Книга мира: ошибка последней записи — {error}',
