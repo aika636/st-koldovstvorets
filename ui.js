@@ -4,8 +4,8 @@ export {
 } from './ui/common.js';
 export { holidaysView, ownEventsView } from './ui/holidays.js';
 export { milestonesView, achievementsView } from './ui/achievements.js';
-export { PEOPLE_HISTORY, PEOPLE_PARTS, relationScore, peopleView } from './ui/people.js';
-export { classmatesView, scoreText } from './ui/classmates.js';
+export { PEOPLE_HISTORY, PEOPLE_PARTS, peopleView } from './ui/people.js';
+export { classmatesView, bondView } from './ui/classmates.js';
 export { affairsView } from './ui/molva.js';
 export { feedView, statusText as feedStatusText, FEED_SHOWN, feedVisible } from './ui/feed.js';
 export { gradebookView, awaitingView } from './ui/gradebook.js';

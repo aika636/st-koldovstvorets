@@ -2,6 +2,7 @@ import { findSubject, findTeacher, isDay } from './state.mjs';
 import { addDays, diffDays, mondayOf, termsOf, gameStart } from './time.mjs';
 import { dayPlan } from './schedule.mjs';
 import { countsAttendance } from './attendance.mjs';
+import { bondOf } from './bonds.mjs';
 import { gradeInfo, isDatedExam } from './exams.mjs';
 
 export const KINDS = [
@@ -21,7 +22,7 @@ export function milestones(state, preset) {
     fromRolls(state, 'autoPass', (r) => r.tier === 'auto'),
     fromRolls(state, 'brilliant', (r) => r.tier === 'critSuccess'),
     retakeWin(state, preset),
-    ...relationZones(state, preset),
+    ...relationZones(state),
     onTheEdge(state, preset),
     firstSkip(state),
     ghost(state),
@@ -202,20 +203,21 @@ function fromRolls(state, kind, test) {
   return best;
 }
 
-function relationZones(state, preset) {
-  const labels = (preset && preset.relations && preset.relations.labels) || [];
-  if (labels.length < 2) return [];
-  const topFrom = labels[labels.length - 2].upTo;
-  const bottomTo = labels[0].upTo;
-  const inTop = (v) => typeof v === 'number' && v > topFrom;
-  const inBottom = (v) => typeof v === 'number' && v <= bottomTo;
+const FAVORITE_TAGS = ['trustwork', 'patron'];
+const NEMESIS_TAGS = ['hostile'];
 
+function relationZones(state) {
   const out = [];
   for (const t of state.teachers || []) {
-    for (const [kind, inside] of [['favorite', inTop], ['nemesis', inBottom]]) {
-      if (!inside(t.relation)) continue;
-      const when = lastJournalDay(state, (e) => e.kind === 'rel' && e.data
-        && e.data.teacherId === t.id && !inside(e.data.from) && inside(e.data.to));
+    const tag = bondOf(state, t.id).tag;
+    for (const [kind, tags] of [['favorite', FAVORITE_TAGS], ['nemesis', NEMESIS_TAGS]]) {
+      if (!tags.includes(tag)) continue;
+      const into = (e) => e.kind === 'rel' && e.data && e.data.teacherId === t.id
+        && e.data.to && typeof e.data.to === 'object' && tags.includes(e.data.to.tag)
+        && !(e.data.from && typeof e.data.from === 'object' && tags.includes(e.data.from.tag));
+      const when = lastJournalDay(state, into);
+      const old = kind === 'favorite' ? t.relLegacy >= 5 : t.relLegacy <= -4;
+      if (Number.isFinite(t.relLegacy) && !old && !(state.journal || []).some(into)) continue;
       out.push({ id: `${kind}:${t.id}`, kind, when, teacherId: t.id });
     }
   }

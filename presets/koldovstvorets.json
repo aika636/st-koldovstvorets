@@ -381,78 +381,6 @@
       "safeScore": 3.8
     }
   },
-  "relations": {
-    "min": -5,
-    "max": 5,
-    "start": 0,
-    "impact": {
-      "minor": 1,
-      "major": 2
-    },
-    "repeatLimit": 2,
-    "labels": [
-      {
-        "upTo": -4,
-        "label": "не терпит"
-      },
-      {
-        "upTo": -2,
-        "label": "недолюбливает"
-      },
-      {
-        "upTo": -1,
-        "label": "сомневается"
-      },
-      {
-        "upTo": 1,
-        "label": "не выделяет"
-      },
-      {
-        "upTo": 2,
-        "label": "одобряет"
-      },
-      {
-        "upTo": 4,
-        "label": "доверяет"
-      },
-      {
-        "upTo": 5,
-        "label": "покровительствует"
-      }
-    ]
-  },
-  "classmates": {
-    "labels": [
-      {
-        "upTo": -4,
-        "label": "враждует"
-      },
-      {
-        "upTo": -2,
-        "label": "недолюбливает"
-      },
-      {
-        "upTo": -1,
-        "label": "сторонится"
-      },
-      {
-        "upTo": 1,
-        "label": "не выделяет"
-      },
-      {
-        "upTo": 2,
-        "label": "привечает"
-      },
-      {
-        "upTo": 4,
-        "label": "дружит"
-      },
-      {
-        "upTo": 5,
-        "label": "дорожит"
-      }
-    ]
-  },
   "feed": {
     "register": "Записки и говорок молодёжи 2000 года в волшебной школе: мобильных и интернета нет, пишут на листках, шлют с сороками, чиркают на стене горницы и спальной доске, слушают радиоточку и кассеты. «Чат» — условность: читается как общая доска горницы, реплики короткие, разговорные, без пафоса; сказочные реалии упоминают к слову, а не в каждой фразе.",
     "samples": [
@@ -686,11 +614,6 @@
     }
   },
   "attendance": {
-    "relationDelta": {
-      "skip": -1,
-      "late": 0,
-      "excused": 0
-    },
     "debtAfterSkips": 4,
     "lateEqualsSkip": 3,
     "inferHorizonDays": 7,
@@ -882,8 +805,8 @@
     "relationTitle": "Отношение",
     "relationHistoryTitle": "Запомнилось",
     "relationHistoryCount": "{title}: {n} {word}",
-    "relationNoHistory": "отношение ещё не менялось",
-    "relationOff": "шкала отношений выключена",
+    "relationNoHistory": "пока ничего не записано",
+    "relationOff": "отношения не отслеживаются",
     "relationShift": "{from} → {to}",
     "orphanSubjectsTitle": "Предметы без наставника",
     "tabToday": "Сегодня",

@@ -3,6 +3,7 @@ import {
   call, safe, renderPanel, renderSettingsBlock,
 } from './common.js';
 import { DEBUG_TEXT } from './debug.js';
+import { REL_OFF_TEXT } from './start.js';
 import { LAUNCHER_ICONS, LAUNCHER_ICON_IDS, launcherIconOf, launcherArtUrl } from './icons.js';
 import { molvaRefresh } from './molva.js';
 import { AUTO, PICKABLE, lookOf, materialById, resolveMaterial } from '../materials/index.mjs';
@@ -215,27 +216,18 @@ export function renderAnalysisBlock(host, view) {
   ]);
 }
 
-export function renderPaceBlock(host, view) {
-  const group = nextId('koldo_pace');
+export function renderRelBlock(host, view) {
   const status = el('div', { class: 'koldo-status' });
-  const paces = (view.paces || []).length
-    ? el('div', { class: 'koldo-modes' }, view.paces.map((p) => {
-      const radio = el('input', { type: 'radio', name: group, value: p.id, checked: p.active });
-      radio.addEventListener('change', async () => {
-        const res = await call(host, 'setRelPace', p.id);
-        if (res && res.ok === false) setStatus(status, 'error', res.error || 'Не вышло.');
-        else renderPanel(host);
-      });
-      return el('label', { class: p.active ? 'koldo-mode koldo-mode-on' : 'koldo-mode' }, [
-        radio,
-        el('span', { class: 'koldo-mode-label', text: p.label }),
-        el('span', { class: 'koldo-note', text: p.hint }),
-      ]);
-    }))
-    : el('p', { class: 'koldo-note', text: NOT_STARTED });
-  return section('Темп отношений', [
-    el('p', { class: 'koldo-note', text: 'Насколько быстро люди меняют отношение к вашему персонажу. Ссора может быть резкой, дружба копится. «Без шкалы» — отношения ведёт сюжет.' }),
-    paces,
+  const off = el('input', { type: 'checkbox', checked: view.relOff === true, disabled: !view.started });
+  off.addEventListener('change', async () => {
+    const res = await call(host, 'setRelOff', off.checked);
+    if (res && res.ok === false) setStatus(status, 'error', res.error || 'Не вышло.');
+    else renderPanel(host);
+  });
+  return section('Отношения', [
+    view.started ? null : el('p', { class: 'koldo-note', text: NOT_STARTED }),
+    el('label', { class: 'koldo-check' }, [off, el('span', { text: REL_OFF_TEXT.label })]),
+    el('p', { class: 'koldo-note', text: REL_OFF_TEXT.hint }),
     status,
   ]);
 }

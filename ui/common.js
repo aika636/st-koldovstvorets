@@ -3,6 +3,7 @@ import { dayOfWeek, parseDay } from '../core/time.mjs';
 import { plural } from '../core/plural.mjs';
 import { presetGender } from '../core/gender.mjs';
 import { CORE_LABELS } from '../core/core-labels.mjs';
+import { tagLabel, shadeLabel } from '../core/bonds.mjs';
 
 export const DEFAULT_MAX_NUMBERS = 6;
 
@@ -140,8 +141,8 @@ export const DEFAULT_UI = {
   relationTitle: 'Отношение',
   relationHistoryTitle: 'Запомнилось',
   relationHistoryCount: '{title}: {n} {word}',
-  relationNoHistory: 'отношение ещё не менялось',
-  relationOff: 'шкала отношений выключена',
+  relationNoHistory: 'пока ничего не записано',
+  relationOff: 'отношения не отслеживаются',
   relationShift: '{from} → {to}',
   orphanSubjectsTitle: 'Предметы без преподавателя',
   teachersTitle: 'Преподаватели',
@@ -408,6 +409,15 @@ export function historyCountText(U, n) {
   return fill(U.relationHistoryCount, { title: U.relationHistoryTitle, n, word: plural(n, ...HISTORY_WORDS) });
 }
 
+/** «знакомы → намечается дружба», «+ соперничает», «− обижен» for a bondDiff. */
+export function bondChangeLines(diff, gender) {
+  return [
+    ...(diff && diff.tag ? [`${tagLabel(diff.tag.from, gender)} → ${tagLabel(diff.tag.to, gender)}`] : []),
+    ...((diff && diff.added) || []).map((id) => `+ ${shadeLabel(id, gender)}`),
+    ...((diff && diff.removed) || []).map((id) => `− ${shadeLabel(id, gender)}`),
+  ];
+}
+
 export const str = (v) => (v == null ? '' : String(v)).trim();
 
 export const capitalize = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
@@ -620,6 +630,10 @@ export const EXTRA_UI = {
   aliasesLine: 'Ещё пишут: {aliases}',
   secretTitle: 'Тайна',
   memoryLine: '{sign} — {reason}',
+  bondFixTitle: 'Поправить вручную',
+  bondFixTag: 'Отношение',
+  bondFixShades: 'Оттенки (до двух)',
+  bondFixHint: 'Если расширение записало не так, как было в сцене. Правка попадёт в «Запомнилось».',
 
   cmName: 'Имя',
   noGradesRest: 'Ещё без оценок: {names}.',

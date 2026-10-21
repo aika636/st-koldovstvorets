@@ -361,7 +361,10 @@ export function revertSceneEvent(state, receipt) {
   if (receipt.kind === 'met') {
     restoreSeen(next, receipt.personId, receipt.prev);
     const mate = (next.classmates || []).find((c) => c && c.id === receipt.personId);
-    if (mate && receipt.knew === false) mate.known = false;
+    if (mate && receipt.knew === false) {
+      mate.known = false;
+      if (mate.bond && mate.bond.tag === 'known' && !mate.bond.day) mate.bond.tag = 'unknown';
+    }
   }
   else if (receipt.kind === 'feed') {
     removeFeedItem(next, receipt.id);
@@ -396,7 +399,10 @@ function meet(next, personId, at) {
   const prev = markSeen(next, personId, at);
   const mate = (next.classmates || []).find((c) => c && c.id === personId);
   const knew = mate ? mate.known !== false : true;
-  if (mate) mate.known = true;
+  if (mate) {
+    mate.known = true;
+    if (mate.bond && mate.bond.tag === 'unknown') mate.bond.tag = 'known';
+  }
   return { kind: 'met', personId, prev, knew };
 }
 

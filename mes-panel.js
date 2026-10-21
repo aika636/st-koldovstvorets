@@ -1,6 +1,5 @@
 import { svgIcon } from './ui/common.js';
 import { plural } from './core/plural.mjs';
-import { relPhrase } from './core/scene.mjs';
 import { TAVERN_ID } from './materials/index.mjs';
 
 const DEFAULT_MAT = TAVERN_ID;
@@ -86,8 +85,6 @@ const ROW_WORDS = {
   rowReputation: 'Репутация: {from} → {to}',
   rowFame: 'Слава: {how}',
   rowStudy: 'Учёба за день: {list}',
-  rowRelCapped: '{teacher}: {how} (больше за раз нельзя — темп «{pace}»)',
-  rowRelCappedStep: '(потолок темпа «{pace}»: засчитан шаг)',
 };
 
 export function rowText(row, words = {}) {
@@ -104,16 +101,7 @@ export function rowText(row, words = {}) {
     case 'attendance': return ATTENDANCE[row.status] ? `${ATTENDANCE[row.status]}: ${row.subject}` : '';
     case 'attendance-jump':
       return row.missed ? fillText(W.rowJump, { count: row.missed }) : '';
-    case 'relation': {
-      const up = row.direction === 'up';
-      if (row.direction !== 'up' && row.direction !== 'down') return row.changed && row.to ? `${row.teacher}: теперь ${row.to}` : '';
-      const now = row.changed && row.to ? ` (теперь ${row.to})` : '';
-      const cap = row.capped ? ` ${fillText(W.rowRelCappedStep, { pace: row.capped })}` : '';
-      const head = relPhrase(row.teacher, up);
-      return `${head}${now}${row.reason ? `${head.includes(': ') ? ' —' : ':'} ${row.reason}` : ''}${cap}`;
-    }
-    case 'relation-capped':
-      return fillText(W.rowRelCapped, { teacher: row.teacher, how: row.direction === 'down' ? 'холоднее' : 'теплее', pace: row.pace });
+    case 'relation': return row.line ? `${row.teacher}: ${row.line}${row.reason ? ` — ${row.reason}` : ''}` : '';
     case 'reputation':
       if (row.fame) return fillText(W.rowFame, { how: row.fame === 'down' ? 'ниже' : 'выше' }) + (row.why ? ` — ${row.why}` : '');
       return row.from && row.to && row.from !== row.to ? fillText(W.rowReputation, { from: row.from, to: row.to }) : '';

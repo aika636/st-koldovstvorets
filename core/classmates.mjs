@@ -1,5 +1,6 @@
 import { HARD_STOPS, STOP_CHAR, COMMON_NAME_WORDS, normName, stopHit } from './stop-names.mjs';
 import { slugify } from './text-utils.mjs';
+import { bondFields, bondAllowed } from './bonds.mjs';
 import { isPortrait, normalizePortrait, normalizeLooks, looksOk } from './portraits.mjs';
 
 export const HEROINE = '@heroine';
@@ -17,24 +18,6 @@ function healCut(v, key) {
 }
 
 export const CLASSMATE_ID_MAX = 24;
-
-const presetBlock = (preset) => (preset && preset.classmates && typeof preset.classmates === 'object'
-  ? preset.classmates : {});
-
-export function classmateLabels(preset) {
-  const own = presetBlock(preset).labels;
-  if (Array.isArray(own) && own.length && own.every((l) => l && typeof l.upTo === 'number' && typeof l.label === 'string')) {
-    return own;
-  }
-  return (preset && preset.relations && preset.relations.labels) || [];
-}
-
-export function classmateStart(preset) {
-  const own = Number(presetBlock(preset).start);
-  if (Number.isFinite(own)) return own;
-  const t = Number(preset && preset.relations && preset.relations.start);
-  return Number.isFinite(t) ? t : 0;
-}
 
 function oneLine(raw, max) {
   if (typeof raw !== 'string' && typeof raw !== 'number') return '';
@@ -99,15 +82,15 @@ export function normalizeClassmate(raw, preset) {
   const name = oneLine(raw.name, CLASSMATE_TEXT_MAX.name);
   if (!name) return null;
   const id = oneLine(raw.id, CLASSMATE_ID_MAX) || slugify(name, { maxLength: CLASSMATE_ID_MAX });
-  const rel = Number(raw.relation);
   const out = {
     id,
     name,
-    relation: Number.isFinite(rel) ? rel : classmateStart(preset),
+    ...(raw.gender === 'f' || raw.gender === 'm' ? { gender: raw.gender } : {}),
     source: SOURCES.includes(raw.source) ? raw.source : 'manual',
     known: raw.known !== false,
     locked: Boolean(raw.locked),
   };
+  Object.assign(out, bondFields(raw, 'student', out.known));
   const own = out.source === 'manual';
   if (own) {
     for (const key of ['desire', 'problem', 'club', 'seed', 'manner']) {
@@ -180,7 +163,7 @@ export function classmateErrors(state) {
     if (typeof c.name !== 'string' || !c.name.trim() || c.name.length > CLASSMATE_TEXT_MAX.name) {
       errors.push(`однокурсник ${c.id}: имя — не строка до ${CLASSMATE_TEXT_MAX.name} символов`);
     }
-    if (typeof c.relation !== 'number' || !Number.isFinite(c.relation)) errors.push(`однокурсник ${c.id}: отношение не число`);
+    if (!(c.bond && typeof c.bond === 'object' && bondAllowed(c.bond.tag, 'student')) && !Number.isFinite(c.relation)) errors.push(`однокурсник ${c.id}: нет состояния отношений`);
     for (const key of ['desire', 'problem', 'club', 'seed', 'manner']) {
       if (c[key] === undefined) continue;
       if (typeof c[key] !== 'string' || !c[key].trim() || c[key].length > CLASSMATE_TEXT_MAX[key]) {
@@ -339,7 +322,6 @@ export function removeClassmate(state, id) {
   if (i < 0) return { ok: false, code: 'unknown', error: `однокурсника «${id}» нет` };
   const [removed] = list.splice(i, 1);
   for (const c of list) if (c.tie && c.tie.to === id) delete c.tie;
-  if (state.relStreak && typeof state.relStreak === 'object') delete state.relStreak[id];
   return { ok: true, removed };
 }
 
@@ -357,7 +339,7 @@ export function tieTarget(state, to) {
 export function markerPeople(state) {
   return [
     ...((state && state.teachers) || []),
-    ...((state && state.classmates) || []).map((c) => ({ id: c.id, name: c.name, ...(c.aliases ? { aliases: c.aliases } : {}) })),
+    ...((state && state.classmates) || []).map((c) => ({ id: c.id, name: c.name, role: 'student', ...(c.aliases ? { aliases: c.aliases } : {}) })),
   ];
 }
 
@@ -366,7 +348,7 @@ export function carryRoster(live, before) {
   const old = new Map((Array.isArray(before.classmates) ? before.classmates : []).filter(Boolean).map((c) => [c.id, c]));
   const roster = live.classmates.filter((c) => c && c.id).map((c) => {
     const was = old.get(c.id);
-    return was ? { ...c, relation: was.relation } : { ...c };
+    return was ? { ...c, bond: was.bond } : { ...c };
   });
   const same = roster.length === old.size && roster.every((c) => {
     const was = old.get(c.id);
@@ -396,6 +378,7 @@ export function rosterClassmate(person, preset, extra = {}) {
     name: person.name,
     aliases: (person.aliases || []).filter((a) => /\p{L}/u.test(a)),
     source: 'roster',
+    ...(person.gender === 'f' || person.gender === 'm' ? { gender: person.gender } : {}),
     ...extra,
   }, preset);
 }
@@ -415,31 +398,28 @@ export function syncClassmates(state, roster, preset) {
     if (!person || taken.has(person.id)) { out.push(c); continue; }
     taken.add(person.id);
     out.push(rosterClassmate(person, preset, {
-      relation: c.relation, known: c.known, note: c.note, portrait: c.portrait, locked: c.locked,
+      bond: c.bond, relLegacy: c.relLegacy, known: c.known, note: c.note, portrait: c.portrait, locked: c.locked,
     }));
   }
   const extra = [];
   for (const p of roster.students) {
     if (!taken.has(p.id) && !out.some((c) => c.id === p.id)) {
-      extra.push(rosterClassmate(p, preset, { relation: classmateStart(preset), known: false }));
+      extra.push(rosterClassmate(p, preset, { known: false }));
     }
   }
   return { ...state, classmates: [...out, ...extra] };
 }
-
-export const WARM = 2;
-export const COOL = -1;
 
 export function startClassmates(roster, form, preset) {
   const f = form || {};
   const old = f.heroStart === 'old';
   const close = new Set(old ? f.close || [] : []);
   const tension = old ? f.tension : '';
-  const start = classmateStart(preset);
-  return roster.students.map((p) => rosterClassmate(p, preset, {
-    relation: close.has(p.id) ? start + WARM : p.id === tension ? start + COOL : start,
-    known: old && (p.grade === Number(f.grade) || close.has(p.id) || p.id === tension),
-  }));
+  return roster.students.map((p) => {
+    const known = old && (p.grade === Number(f.grade) || close.has(p.id) || p.id === tension);
+    const tag = close.has(p.id) ? 'friendly' : p.id === tension ? 'strained' : null;
+    return rosterClassmate(p, preset, { known, ...(tag ? { bond: { tag, shades: [] } } : {}) });
+  });
 }
 
 export function oldStartErrors(roster, form) {

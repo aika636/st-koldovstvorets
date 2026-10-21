@@ -1,6 +1,7 @@
 import { runningTermStart } from './time.mjs';
 import { cutWords, normalizeClassmates, classmateErrors, normalizeAliases, normalizeNote, normalizeLoreLink } from './classmates.mjs';
 import { subjectWord } from './words.mjs';
+import { bondFields } from './bonds.mjs';
 
 export { normalizeAliases, ALIASES_MAX, ALIAS_LEN_MAX } from './classmates.mjs';
 import { isPortrait, normalizePortrait, normalizeLooks, looksOk } from './portraits.mjs';
@@ -223,13 +224,13 @@ export function normalizeFeats(raw) {
 
 export { PORTRAIT_MAX, isPortrait, normalizePortrait } from './portraits.mjs';
 
-export function normalizeTeacher(raw, preset) {
-  const start = preset && preset.relations ? preset.relations.start : 0;
+export function normalizeTeacher(raw) {
   return {
     id: String(raw.id || '').trim(),
     name: String(raw.name || raw.id || '').trim(),
     traits: Array.isArray(raw.traits) ? raw.traits.map(String) : [],
-    relation: numberOr(raw.relation, numberOr(start, 0)),
+    ...(raw.gender === 'f' || raw.gender === 'm' ? { gender: raw.gender } : {}),
+    ...bondFields(raw, 'teacher'),
     ...(normalizePortrait(raw.portrait) ? { portrait: normalizePortrait(raw.portrait) } : {}),
     ...teacherDetails(raw),
     ...(normalizeLooks(raw.looks) ? { looks: normalizeLooks(raw.looks) } : {}),
@@ -409,6 +410,11 @@ export function migrate(state, preset) {
   out.classmates = out.classmates.map(own);
   if (out.invites !== undefined) out.invites = normalizeInvites(out.invites);
   delete out.bullying;
+  if (out.relPace === 'off') out.relOff = true;
+  if (out.relOff !== undefined) out.relOff = out.relOff === true;
+  delete out.relPace;
+  delete out.relStreak;
+  delete out.relDay;
   if (out.feats !== undefined) out.feats = normalizeFeats(out.feats);
   return out;
 }

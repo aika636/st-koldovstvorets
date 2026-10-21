@@ -5,10 +5,10 @@ import { sittableExams, kindOf } from './exams.mjs';
 import { teacherOfSubject } from './state.mjs';
 import { holidaysAhead, holidaysOn } from './holidays.mjs';
 import { addDays } from './time.mjs';
-import { scaleOff } from './relations.mjs';
+import { BONDS, SHADES, BOND_GROUPS, bondGroupsFor, bondOf, bondsOff, defaultBond, roleOf, tagLabel, shadeLabel } from './bonds.mjs';
 import { dayPlan } from './schedule.mjs';
 import { EVENT_HORIZON } from './parse-marker.mjs';
-import { SCENE_KINDS, sceneText, sceneAbout, personWord, GONE_PERSON, relPhrase } from './scene.mjs';
+import { SCENE_KINDS, sceneText, sceneAbout, personWord, GONE_PERSON, genderOfName } from './scene.mjs';
 import { heroGender } from './gender.mjs';
 import { subjectWord, upFirst } from './words.mjs';
 import { reactionCap, loudCap, LOUDNESS, hash, postRef } from './feed.mjs';
@@ -44,6 +44,32 @@ export function someoneWord(preset) {
   return typeof own === 'string' && own.trim() ? own.trim() : 'кто-то в школе';
 }
 
+const nowOf = (state, p, role) => {
+  const b = bondOf(state, p.id);
+  if (!b || (b.tag === defaultBond(role, { known: p.known }).tag && !b.shades.length)) return '';
+  return `${p.id}=${[b.tag, ...b.shades.map((x) => x.id)].join('+')}`;
+};
+
+function bondNowLines(state) {
+  const list = [
+    ...(state.teachers || []).filter((p) => p && p.id).map((p) => nowOf(state, p, roleOf(state, p.id))),
+    ...(Array.isArray(state.classmates) ? state.classmates : []).filter((p) => p && p.id).map((p) => nowOf(state, p, 'student')),
+  ].filter(Boolean);
+  return list.length ? [`Relationship now (others at start): ${list.join(', ')}.`] : [];
+}
+
+function bondRules(state, heroine) {
+  const groups = BOND_GROUPS.filter((gr) => [
+    ...((state.teachers || []).length ? [bondGroupsFor('teacher')] : []),
+    ...((state.classmates || []).length ? [bondGroupsFor('student')] : []),
+  ].some((l) => l.includes(gr)));
+  return [
+    `- rel=person:tag:reason: a person's attitude to ${heroine} (theirs, not mutual) has clearly and lastingly shifted: the tag replaces the current one. rel=person:+shade:reason adds a shade (two at most, the oldest drops); rel=person:-shade:reason only when the text explicitly ends it, silence is not removal. Reason in 2–3 words. Never infer friendship, dislike or romance from one ambiguous episode; in doubt keep the state and write only act. Same state again, skipping, grades and lateness are not rel.`,
+    ...groups.map((gr) => `  ${gr}${gr === 'mentor' ? ' (mentors only)' : ''}: ${BONDS.filter((b) => b.group === gr).map((b) => `${b.id} = ${b.hint}`).join(' | ')}`),
+    `  shades (anyone): ${SHADES.map((x) => `${x.id} = ${x.hint}`).join(' | ')}`,
+  ];
+}
+
 export function buildAnalysisPrompt(state, preset, input = {}) {
   const gender = heroGender(state, input.heroine);
   const g = (f, m) => (gender === 'm' ? m : f);
@@ -66,6 +92,7 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
   });
   const values = ((preset.grades && preset.grades.values) || []).map((g) => g.value);
 
+  const relOff = bondsOff(state);
   const lines = [];
   if (input.statusLine) lines.push(`Calendar: ${input.statusLine}`);
   const latinCards = (Array.isArray(input.cardNames) ? input.cardNames : []).filter((n) => typeof n === 'string' && /[a-z]/i.test(n) && !/[а-яё]/i.test(n));
@@ -75,6 +102,7 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
   lines.push(`${upFirst(subjectWord(preset, 'many'))} (id — name — mentor id):`, ...subjects);
   lines.push('Mentors (id — name):', ...teachers);
   lines.push('Students (id — name — about):', ...(course.length ? course : ['- none yet']));
+  if (!relOff) lines.push(...bondNowLines(state));
   const bare = [...(state.teachers || []), ...(Array.isArray(state.classmates) ? state.classmates : [])].filter((p) => p && p.id && !str(p.looks));
   if (bare.length) lines.push(`No recorded appearance: ${bare.slice(0, 40).map((p) => p.id).join(', ')}.`);
   if (values.length) lines.push(`Grade values: ${values.join(', ')}.`);
@@ -102,12 +130,12 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
   lines.push('Narrator reply:', '"""', clipAnalysisReply(stripForeignMarkup(input.reply)), '"""', '');
   lines.push(
     'Block 1. What happened, as one service-marker line:',
-    `<!-- [KOLDO grade=subject:score:reason ${scaleOff(state) ? '' : 'rel=person:minor+:reason '}skip=subject late=subject event=+3:name met=student clash=who:with:reason act=who:what:with:kind:access:reach rumor=about:claim looks=who:description open=who unmask=who deal=who:to:what fame=+:reason${feats.rules.length ? ' ach=id:reason' : ''}] -->`,
+    `<!-- [KOLDO grade=subject:score:reason ${relOff ? '' : 'rel=person:tag|+shade|-shade:reason '}skip=subject late=subject event=+3:name met=student clash=who:with:reason act=who:what:with:kind:access:reach rumor=about:claim looks=who:description open=who unmask=who deal=who:to:what fame=+:reason${feats.rules.length ? ' ach=id:reason' : ''}] -->`,
     'Block 1 rules. Everywhere: write only what the text states, not its likely consequences (an apology is not a reconciliation, a frown is not a quarrel); read the whole fragment; ids come from the lists above; keys may repeat; no time or date except days in event; nobody outside the lists (except act names, see act); open, unmask and fame at most once per reply.',
     `- grade: ${heroine} got a grade, passed or failed a test or exam, or a mentor explicitly rated ${g('her', 'his')} work in class (named a score, praised or scolded with a verdict): 2–5 by meaning (scolding 2, redo 2–3, fine 3–4, praise 5) for the subject of that lesson (see today's lessons); reason in 3–5 words, e.g. grade=subject:4:похвалил за чёткие знаки. One grade per lesson, none without an explicit rating, never for others. If the subject is unclear, do not guess it from an unnamed mentor; one good answer gives no grades for other subjects. Results may sit in the background, a memory or someone's line, even in a domestic or romantic scene.`,
     ...(said ? [`- The player's line counts: what ${heroine} did there (an action, words said aloud, a visible result) happened unless the reply contradicts it — a brilliant answer in class, an exploded cauldron, a kiss, a dance, a fight: write act, fame, grade and the rest from it too. Intention, thought, dream, question and an unfinished attempt (${g('попыталась', 'попытался')}) did not happen. Witnesses named in the player's line are witnesses: judge access from both texts. One event shown in both texts is one key.`] : []),
     `- completion=all:grade, completion=debts:grade, completion=id:grade: an explicit statement that all exams/tests are passed, all debts closed, or a named listed subject passed. "All" must be said about ${heroine}'s own exams (wish, plan, "not all yet", others' results do not count). Top marks = the highest grade on the scale; no exact grade — «зачёт» if on the scale; never invent a number. An answer at the board stays grade; do not duplicate completion with grade for the same items.`,
-    ...(scaleOff(state) ? [] : [`- rel: a mentor's or student's attitude to ${heroine} noticeably changed: minor+/minor- (slightly), major+/major- (strongly); reason in 2–3 words.`]),
+    ...(relOff ? [] : bondRules(state, heroine)),
     `- skip: ${heroine} skipped a lesson; late: was late. Only on a direct statement; a date jump, day off, end of exam week, home scene or no lessons shown prove nothing, never infer from the calendar.`,
     `- event=+days:name: a holiday, party, ball, concert, trip, date or other event said to be coming; days from the scene (0 today, 1 tomorrow; a run +5..+6). Detention, punishment or an assignment to specific people is deal. Skip it if beyond ${EVENT_HORIZON} days, undated, past or already planned.`,
     ...pauseRules(state),
@@ -782,10 +810,9 @@ export function tokenOf(ev) {
     const why = plain(ev.why, 100);
     return why && ev.id ? `ach=${ev.id}:${why}` : null;
   }
-  const sign = ev.delta < 0 ? '-' : '+';
-  const strength = ev.impact ? `${ev.impact}${sign}` : `${sign}${Math.abs(ev.delta)}`;
-  const reason = cleanReason(ev.reason);
-  return `rel=${ev.teacherId}:${strength}${reason ? `:${reason}` : ''}`;
+  const what = ev.tag || (ev.shade ? `${ev.op === '-' ? '-' : '+'}${ev.shade}` : '');
+  const reason = cleanReason(ev.reason).replace(/:/g, ' ').replace(/\s+/g, ' ').trim();
+  return what ? `rel=${ev.teacherId}:${what}${reason ? `:${reason}` : ''}` : null;
 }
 
 function cleanReason(reason, max = ANALYSIS_LIMITS.reason) {
@@ -872,9 +899,9 @@ export function tokenText(token, lexicon, { known = false, brief = false, day = 
   if (ev.kind === 'rel') {
     const t = people.find((x) => x.id === ev.teacherId);
     const who = (t && t.name) || GONE_PERSON.nom;
-    const degree = ev.impact === 'major' ? 'заметно' : ev.impact === 'minor' ? 'чуть' : '';
-    const head = relPhrase(who, ev.delta > 0, degree);
-    return `${head}${ev.reason ? `${head.includes(': ') ? ' —' : ':'} ${ev.reason}` : ''}`;
+    const g = (t && t.gender) || genderOfName(who) || 'm';
+    const what = ev.tag ? `теперь ${tagLabel(ev.tag, g)}` : `${ev.op === '-' ? '−' : '+'} ${shadeLabel(ev.shade, g)}`;
+    return `${who}: ${what}${ev.reason ? ` — ${ev.reason}` : ''}`;
   }
   return String(token);
 }

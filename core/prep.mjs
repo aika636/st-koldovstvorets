@@ -3,7 +3,7 @@ import { HEROINE } from './parse-marker.mjs';
 import { seededRng, kindOf, retakeList, examMode } from './exams.mjs';
 import { examsAhead } from './engine.mjs';
 import { holidaysAhead, holidaysOn, occurrenceKey, holidayEnd, MAX_LEAD } from './holidays.mjs';
-import { relationOf } from './relations.mjs';
+import { toneOf } from './bonds.mjs';
 import { addDays, diffDays } from './time.mjs';
 import { shortName, dealText, peopleOf } from './scene.mjs';
 import { heroGender } from './gender.mjs';
@@ -117,7 +117,7 @@ const dealWithHero = (state, id) => openDeals(state, id).some((d) => d.a === HER
 
 function linked(state, p, teacher) {
   const tie = !teacher && p.tie && p.tie.to === HEROINE;
-  return Boolean(tie) || dealWithHero(state, p.id) || relationOf(state, p.id) > 0;
+  return Boolean(tie) || dealWithHero(state, p.id) || toneOf(state, p.id) > 0;
 }
 
 function stakeIn(state, preset, ev) {
@@ -125,7 +125,7 @@ function stakeIn(state, preset, ev) {
   const teacher = teacherOfSubject(state, ev.subjectId);
   return Boolean(subject && subject.debt)
     || retakeList(state, preset).some((r) => r.subjectId === ev.subjectId)
-    || Boolean(teacher && relationOf(state, teacher.id) < 0);
+    || Boolean(teacher && toneOf(state, teacher.id) < 0);
 }
 
 function allowedTypes(state, preset, ev, p, teacher) {
@@ -173,7 +173,7 @@ function choose(state, preset, ev, seed, busy) {
   const top = ranked[0];
   if (!top) return null;
   const text = traitText(top.p, top.teacher);
-  const cold = top.teacher && ev.kind === 'exam' && relationOf(state, top.p.id) < 0;
+  const cold = top.teacher && ev.kind === 'exam' && toneOf(state, top.p.id) < 0;
   const type = top.allowed.includes('consult') && top.allowed.includes('drill')
     ? (cold || STRICT.test(text) || rng() < 0.25 ? 'drill' : 'consult')
     : pickType(top.allowed, text, rng);

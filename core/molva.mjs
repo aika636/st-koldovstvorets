@@ -11,8 +11,7 @@ import { assignMinds } from './romance.mjs';
 import { planNotes, isMagpieName, surfaceClue, putClueOut, cluesFor, TONE_TEXT, MAGPIE } from './magpie.mjs';
 import { nameStems, hasStem } from './secrets.mjs';
 import { openThreads, spawnThread, startThread, settleThreads, pruneThreads, noteThreads, threadOver, isStale, isEnding, studyTopics, worldTopicsOf, CALENDAR_HORIZON } from './feed-threads.mjs';
-import { relationLabel, scaleOff } from './relations.mjs';
-import { classmateStart } from './classmates.mjs';
+import { bondLabel, bondOf, defaultBond, bondsOff } from './bonds.mjs';
 import { holidaysOn, holidaysAhead } from './holidays.mjs';
 import { normName } from './stop-names.mjs';
 import { diffDays, addDays, preExamWeek, preExamWord } from './time.mjs';
@@ -745,9 +744,7 @@ function authorLine(a, state, preset, ctx, said = [], onMain = false) {
   const field = (v, max) => goodProfile(v, { min: 2, max });
   let rel = '';
   const mate = a.role === 'student' ? ((state && state.classmates) || []).find((c) => c && c.id === a.id) : null;
-  if (mate && !scaleOff(state) && Number.isFinite(mate.relation) && mate.relation !== classmateStart(preset)) {
-    try { rel = relationLabel(state, a.id, preset); } catch { rel = ''; }
-  }
+  if (mate && !bondsOff(state) && bondOf(state, a.id).tag !== defaultBond('student', { known: mate.known }).tag) rel = bondLabel(state, a.id);
   const threads = openThreads(state).filter((t) => t.members.includes(a.id));
   const affair = threads.map((t) => (t.owner && t.owner !== a.id && / хочет: /.test(t.want) && nameOfId(t.owner, state, roster) ? `${t.topic} (цель: ${nameOfId(t.owner, state, roster)})` : t.topic));
   const hw = heroWords(presetGender(preset));

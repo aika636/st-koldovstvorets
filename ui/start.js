@@ -2,16 +2,13 @@ import { GRADES } from '../core/state.mjs';
 import { oldStartErrors } from '../core/classmates.mjs';
 import { romanceCandidates } from '../core/romance.mjs';
 import { EXAM_RULES } from '../core/exams.mjs';
-import { PACES, PACE_WORDS, DEFAULT_PACE } from '../core/relations.mjs';
 import {
   el, section, runAction, setStatus, call, safe, renderPanel, mounted, uiLabels, artImg,
 } from './common.js';
 
-export const PACE_HINTS = {
-  slow: 'вверх — на шаг за раз и за день; вниз свободнее',
-  normal: 'вверх — шаг за раз, два за день',
-  fast: 'вверх — два шага за раз, три за день',
-  off: 'отношения не считаются, их ведёт сюжет; набранное вернётся с шкалой',
+export const REL_OFF_TEXT = {
+  label: 'Не отслеживать отношения',
+  hint: 'Секретарь не записывает отношения, рассказчик их не получает, записанное замораживается, а не удаляется. Ачивки «Любимчик наставника» и «Бельмо на глазу» при этом не открываются.',
 };
 
 export const EXAM_RULE_VIEW = [
@@ -58,7 +55,6 @@ export const START_TEXT = {
   past: 'Что о прошлом можно упоминать',
   pastHint: 'Одна строка: например, «росла у бабушки-знахарки, с отцом не ладится».',
   roster: 'Состав',
-  pace: 'Темп отношений',
   firstDay: 'Первый день игры',
   firstIntro: 'Ознакомительный',
   firstIntroHint: 'Уроков нет: заселение, прогулка по терему и двору, знакомства. Занятия начнутся со следующего учебного дня.',
@@ -160,7 +156,7 @@ export function startView(input) {
 
   const examBy = EXAM_RULES.includes(draft.examBy) ? draft.examBy : (state && EXAM_RULES.includes(state.examBy) ? state.examBy : 'story');
   const firstDay = ['intro', 'study'].includes(draft.firstDay) ? draft.firstDay : 'intro';
-  const pace = PACES.includes(draft.pace) ? draft.pace : (state && PACES.includes(state.relPace) ? state.relPace : DEFAULT_PACE);
+  const relOff = typeof draft.relOff === 'boolean' ? draft.relOff : Boolean(state && state.relOff);
   const counts = (input && input.counts) || { basic: 18, extended: 35 };
   const suggested = Boolean(suggest && suggest.suggest);
   const current = started && roster && state.house ? houseName(state.house) : '';
@@ -179,14 +175,13 @@ export function startView(input) {
       { id: 'old', label: START_TEXT[`startOld${m}`], hint: START_TEXT[`startOldHint${m}`], active: heroStart === 'old' },
     ],
     examBy,
-    pace,
+    relOff,
     examRules: EXAM_RULE_VIEW.map((r) => ({ ...r, active: r.id === examBy })),
     firstDay,
     firstDays: [
       { id: 'intro', label: START_TEXT.firstIntro, hint: START_TEXT.firstIntroHint, active: firstDay === 'intro' },
       { id: 'study', label: START_TEXT.firstStudy, hint: START_TEXT.firstStudyHint, active: firstDay === 'study' },
     ],
-    paces: PACES.map((id) => ({ id, label: PACE_WORDS[id], hint: PACE_HINTS[id], active: id === pace })),
     close,
     tension,
     past,
@@ -382,9 +377,11 @@ export function renderStart(host, focus = false) {
     view.suggestPending ? el('span', { class: 'koldo-note', text: START_TEXT.rosterChecking }) : null,
   ]));
 
+  const relOff = el('input', { type: 'checkbox', checked: view.relOff });
+  relOff.addEventListener('change', () => { draft.relOff = relOff.checked; redraw(); });
   form.push(el('div', { class: 'koldo-field' }, [
-    el('span', { text: START_TEXT.pace }),
-    radios(`${key}_p`, view.paces, (id) => { draft.pace = id; redraw(); }),
+    el('label', { class: 'koldo-check' }, [relOff, el('span', { text: REL_OFF_TEXT.label })]),
+    el('span', { class: 'koldo-note', text: REL_OFF_TEXT.hint }),
   ]));
   form.push(el('div', { class: 'koldo-field' }, [
     el('span', { text: START_TEXT.examRule }),
@@ -416,7 +413,7 @@ export function renderStart(host, focus = false) {
         grade: view.grade,
         house: view.house,
         examBy: view.examBy,
-        relPace: view.pace,
+        relOff: view.relOff,
         firstDay: view.firstDay,
         ...(view.love ? { love: view.love } : {}),
         ...(view.heroStart === 'old'

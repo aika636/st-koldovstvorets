@@ -423,14 +423,6 @@ export function normalizeScore(preset, score) {
   return clamp((numberOr(score, min) - min) / (max - min), 0, 1);
 }
 
-export function normalizeRelation(preset, relation) {
-  const r = (preset && preset.relations) || {};
-  const min = numberOr(r.min, 0);
-  const max = numberOr(r.max, 0);
-  if (max <= min) return clamp(numberOr(relation, 0), 0, 1);
-  return clamp((numberOr(relation, numberOr(r.start, min)) - min) / (max - min), 0, 1);
-}
-
 export function dcParams(preset) {
   const own = (examsOf(preset).dc && typeof examsOf(preset).dc === 'object') ? examsOf(preset).dc : {};
   const pick = (key, min = 0) => {
@@ -456,6 +448,9 @@ function kindBase(preset, kindId) {
   return typeof own === 'number' && Number.isFinite(own) ? own : dcParams(preset).base;
 }
 
+/** relation: tone of the bond scaled to the old -5..5 span (tone * 2.5). */
+const REL_SPAN = 10;
+
 export function examDC({ score, relation, reputation, kind } = {}, preset) {
   const p = dcParams(preset);
   const base = kindBase(preset, kind);
@@ -467,10 +462,8 @@ export function examDC({ score, relation, reputation, kind } = {}, preset) {
     ? round(p.score * (score - pass) / span)
     : 0;
 
-  const r = (preset && preset.relations) || {};
-  const relSpan = numberOr(r.max, 0) - numberOr(r.min, 0);
-  const relationMod = relSpan > 0 && typeof relation === 'number' && Number.isFinite(relation)
-    ? round(p.relation * (relation - numberOr(r.start, 0)) / relSpan)
+  const relationMod = typeof relation === 'number' && Number.isFinite(relation)
+    ? round(p.relation * relation / REL_SPAN)
     : 0;
 
   const rep = (preset && preset.reputation) || {};

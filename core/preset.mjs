@@ -267,11 +267,7 @@ export function normalizeClassmatesBlock(preset) {
   const warnings = [];
   const block = preset.classmates;
   if (block === undefined) return { errors, warnings };
-  if (!isPlain(block)) return { errors: ['classmates: нужен объект {labels}'], warnings };
-  if (block.labels !== undefined && (!Array.isArray(block.labels) || !block.labels.length
-    || !block.labels.every((l) => isPlain(l) && typeof l.upTo === 'number' && typeof l.label === 'string'))) {
-    errors.push('classmates.labels: список ступеней {upTo, label}');
-  }
+  if (!isPlain(block)) return { errors: ['classmates: нужен объект'], warnings };
   return { errors, warnings };
 }
 
@@ -524,7 +520,7 @@ export function normalizePreset(raw, opts = {}) {
   if (!base) return fail(['нет ни одного встроенного пресета, поверх которого его положить'], warnings);
   if (wantedBase && wantedBase !== baseId) warnings.push(`основа «${wantedBase}» неизвестна — недостающее взято из «${baseId}»`);
 
-  const borrowed = ['vocab', 'week', 'bells', 'calendar', 'grades', 'exams', 'relations', 'reputation', 'attendance']
+  const borrowed = ['vocab', 'week', 'bells', 'calendar', 'grades', 'exams', 'reputation', 'attendance']
     .filter((k) => own[k] === undefined);
   if (borrowed.length) warnings.push(`из «${base.displayName || baseId}» взято целиком: ${borrowed.join(', ')}`);
 
@@ -556,7 +552,6 @@ export function normalizePreset(raw, opts = {}) {
       ...checkGlossary(view.glossary),
       ...checkGrades(view.grades),
       ...checkExams(view.exams),
-      ...checkScale(view.relations, 'relations'),
       ...checkScale(view.reputation, 'reputation'),
     ]) if (!errors.includes(e)) errors.push(e);
   }

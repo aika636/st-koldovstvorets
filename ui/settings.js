@@ -1,5 +1,4 @@
 import { examRule } from '../core/exams.mjs';
-import { paceOf, PACES, PACE_WORDS } from '../core/relations.mjs';
 import { statusView } from '../core/lore-status.mjs';
 import { resolveSource } from '../api.js';
 import {
@@ -7,11 +6,11 @@ import {
   section, setSectionScope, call, safe, renderPanel, memoDetails, svgIcon, sectionOpen, artImg,
 } from './common.js';
 import {
-  renderApiBlock, renderAnalysisBlock, renderPaceBlock, renderModeBlock, renderLorebookBlock,
+  renderApiBlock, renderAnalysisBlock, renderRelBlock, renderModeBlock, renderLorebookBlock,
   renderTransferBlock, renderSoundBlock, renderFeedBlock, renderDrawBlock, renderDebugBlock, renderLookBlock,
   LOOK_TEXT, lookSummary,
 } from './settings-blocks.js';
-import { renderStart, EXAM_RULE_VIEW, PACE_HINTS } from './start.js';
+import { renderStart, EXAM_RULE_VIEW } from './start.js';
 
 export { EXAM_RULE_VIEW };
 
@@ -60,7 +59,7 @@ export function settingsView(state, settings, preset, extra = {}) {
     examRules: started
       ? EXAM_RULE_VIEW.map((r) => ({ ...r, hint: r.id === 'story' ? U.examRuleStoryHint : r.hint, active: r.id === examRule(state) }))
       : [],
-    paces: started ? PACES.map((id) => ({ id, label: PACE_WORDS[id], hint: PACE_HINTS[id], active: id === paceOf(state) })) : [],
+    relOff: Boolean(started && state && state.relOff),
     injectMarker: s.mode === 'context' ? false : s.injectMarker !== false,
     injectMarkerLocked: s.mode === 'context',
     markerRisk: Boolean(extra.markerRisk) && s.mode !== 'context',
@@ -135,7 +134,7 @@ export function renderSettings(host) {
 
   work.push(renderModeBlock(host, view));
   work.push(renderAnalysisBlock(host, view));
-  work.push(renderPaceBlock(host, view));
+  work.push(renderRelBlock(host, view));
   work.push(renderApiBlock(host, view));
   work.push(renderLorebookBlock(host, view));
   const drawBlock = renderDrawBlock(host, preset, settings);

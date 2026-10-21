@@ -1,13 +1,12 @@
 import { isPortrait, TEACHER_TEXT_MAX, teacherDetails } from '../core/state.mjs';
 import { NOTE_MAX } from '../core/classmates.mjs';
-import { MEMORY_SIZE, relationLabel, relationMemory, relationOf, scaleOff } from '../core/relations.mjs';
 import { reputationLabel } from '../core/reputation.mjs';
 import {
   uiLabels, fill, stateHealth, formatDate, capNumbers, str, extraLabels, mounted, el, runAction,
   setStatus, emptyPage, call, renderPanel, avatarNode, svgIcon, safe, loreLinkText, historyCountText, artImg,
 } from './common.js';
 import {
-  classmatesView, scoreText, lastShift, mentionFields, classmateExtras, classmateAddForm,
+  classmatesView, bondView, BOND_HISTORY, mentionFields, classmateExtras, classmateAddForm,
 } from './classmates.js';
 import { feedMentions } from './feed.js';
 import { marginDateOf } from './gradebook.js';
@@ -33,7 +32,7 @@ function loreLinkLine(host, p, X) {
 
 export const PEOPLE_PARTS = ['teachers', 'classmates'];
 
-export const PEOPLE_HISTORY = MEMORY_SIZE;
+export const PEOPLE_HISTORY = BOND_HISTORY;
 
 export function subjectInPost(post, subject) {
   const stem = (w) => w.slice(0, Math.max(4, w.length - 2));
@@ -41,10 +40,6 @@ export function subjectInPost(post, subject) {
   const pw = words(post);
   const sw = words(subject).filter((w) => w.length > 3);
   return sw.length > 0 && sw.every((w) => pw.some((p) => p.startsWith(stem(w))));
-}
-
-export function relationScore(state, teacherId) {
-  return scoreText(relationOf(state, teacherId));
 }
 
 export function peopleView(state, preset, opts = {}) {
@@ -62,40 +57,20 @@ export function peopleView(state, preset, opts = {}) {
   const teachers = list.map((t) => {
     const traits = (t.traits || []).map(str).filter(Boolean);
     const own = subjects.filter((s) => s.teacherId === t.id).map((s) => s.name || s.id);
-    const rawMemory = relationMemory(state, t.id, preset, PEOPLE_HISTORY);
-    const shift = lastShift(rawMemory);
-    const memory = rawMemory.map((m) => {
-      const sign = m.delta > 0 ? `+${m.delta}` : `−${-m.delta}`;
-      const shift = m.crossed ? fill(U.relationShift, m.crossed) : '';
-      return {
-        day: m.day,
-        dateLine: formatDate(m.day),
-        delta: m.delta,
-        sign,
-        reason: m.reason,
-        text: m.reason ? fill(X.memoryLine, { sign, reason: m.reason }) : sign,
-        shift,
-      };
-    });
-    const quiet = scaleOff(state) || (!memory.length && !relationOf(state, t.id));
+    const bond = bondView(state, t.id, preset, PEOPLE_HISTORY);
     const details = teacherDetails(t);
     return {
       kind: 'teacher',
       id: t.id,
       name: t.name || t.id,
       role: [details.post, own.filter((n) => !subjectInPost(details.post, n)).join(', ')].filter(Boolean).join(' · ') || U.subjectsNone,
-      was: shift.was,
-      why: shift.why,
+      ...bond,
       ...mentionFields(mentions[t.id]),
       traits,
       traitsText: traits.length ? traits.join(', ') : U.traitsNone,
       hasTraits: traits.length > 0,
       subjects: own,
       subjectsText: own.length ? own.join(', ') : U.subjectsNone,
-      relation: quiet ? '' : relationLabel(state, t.id, preset),
-      score: quiet ? '' : relationScore(state, t.id),
-      memory,
-      memoryText: memory.length ? '' : scaleOff(state) ? U.relationOff : U.relationNoHistory,
       post: details.post || '',
       aliasesText: details.aliases ? fill(X.aliasesLine, { aliases: details.aliases.join(', ') }) : '',
       linkText: loreLinkText(X, details.loreLink),
@@ -292,7 +267,7 @@ function personRow(p, { U, X, selected, onOpen, tint }) {
   if (p.role) role.push(p.role);
   if (p.relation) {
     if (role.length) role.push(el('span', { class: 'ad-sep', text: ' · ' }));
-    role.push(el('span', { class: 'ad-rel', text: p.score ? `${p.relation} · ${p.score}` : p.relation }));
+    role.push(el('span', { class: 'ad-rel', text: p.relation }));
   }
   return el('li', { class: `ad-person${selected ? ' ad-sel' : ''}`, dataset: { person: p.id } }, [
     p.buzz ? el('i', { class: 'ad-marker', dataset: { kind: 'feed' } }) : null,
@@ -362,14 +337,13 @@ function personCard(host, p, ctx) {
     ...portrait,
   ]);
 
-  if (p.relation) {
+  if (p.bondOn) {
     const open = mounted.peopleHist instanceof Set && mounted.peopleHist.has(p.id);
     const rel = [
       el('h3', { class: 'ad-sec-h', text: U.relationTitle }),
       el('div', { class: 'ad-rel-now' }, [
         p.was ? el('span', { class: 'ad-was', text: p.was }) : null,
-        p.relation,
-        p.score ? el('span', { class: 'ad-score', text: p.score }) : null,
+        p.bondLabel,
       ]),
       p.why ? el('div', { class: 'ad-rel-why', dataset: { who: teacher ? 'teacher' : 'classmate' }, text: p.why }) : null,
     ];
@@ -385,16 +359,15 @@ function personCard(host, p, ctx) {
       }));
       if (open) {
         rel.push(el('ul', { class: 'ad-journal' }, p.memory.map((m) => el('li', {}, [
-          el('b', { text: m.sign }),
+          el('b', { text: m.text }),
           m.reason ? ` ${m.reason}` : null,
-          (m.shift || m.dateLine)
-            ? el('span', { class: 'ad-j-meta', text: [m.shift, m.dateLine].filter(Boolean).join(' · ') })
-            : null,
+          m.dateLine ? el('span', { class: 'ad-j-meta', text: m.dateLine }) : null,
         ]))));
       }
     } else {
       rel.push(el('div', { class: 'ad-small ad-soft', text: U.relationNoHistory }));
     }
+    rel.push(bondFix(host, p, X));
     sections.push(el('div', { class: 'ad-blk' }, rel));
   }
 
@@ -493,6 +466,32 @@ function openPortrait(t, X) {
   (document.getElementById('movingDivs') || document.body).append(box);
   mounted.portrait = box;
   return box;
+}
+
+function bondFix(host, p, X) {
+  const status = el('div', { class: 'koldo-status' });
+  const send = (patch) => runAction(null, status, () => call(host, 'setBond', p.id, patch)).then((res) => { if (res && res.ok !== false) renderPanel(host); });
+  const select = el('select', {
+    class: 'text_pole koldo-input', 'aria-label': X.bondFixTag, dataset: { for: 'bond-tag' },
+    onchange: (e) => send({ tag: e.currentTarget.value }),
+  }, p.bondTags.map((t) => el('option', { value: t.id, text: t.label, selected: t.id === p.bondTag })));
+  select.value = p.bondTag;
+  const full = p.bondShades.length >= 2;
+  const shades = el('div', { class: 'koldo-modes', dataset: { for: 'bond-shades' } }, p.bondShadeList.map((s) => {
+    const on = p.bondShades.includes(s.id);
+    return el('button', {
+      type: 'button', class: `menu_button koldo-btn koldo-btn-small${on ? ' koldo-btn-main' : ''}`, text: s.label,
+      'aria-pressed': on ? 'true' : 'false', disabled: !on && full,
+      onclick: () => send({ shade: s.id, op: on ? '-' : '+' }),
+    });
+  }));
+  return el('details', { class: 'koldo-repair', dataset: { for: 'bond-fix' }, ...keptOpen(`bond::${p.id}`, '') }, [
+    el('summary', { text: X.bondFixTitle }),
+    el('label', { class: 'koldo-field' }, [el('span', { text: X.bondFixTag }), select]),
+    el('div', { class: 'koldo-field' }, [el('span', { text: X.bondFixShades }), shades]),
+    el('div', { class: 'ad-small ad-soft', text: X.bondFixHint }),
+    status,
+  ]);
 }
 
 function noteBlock(host, p, X) {

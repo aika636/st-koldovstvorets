@@ -1,29 +1,48 @@
 import { CLASSMATE_TEXT_MAX, HEROINE, tieTarget } from '../core/classmates.mjs';
 import { clipWords } from '../core/feed.mjs';
-import { MEMORY_SIZE, relationLabel, relationMemory, relationOf, scaleOff } from '../core/relations.mjs';
+import {
+  bondOf, bondLabel, bondHistory, bondsFor, bondsOff, defaultBond, roleOf, genderOfPerson, shadeLabel, tagLabel, SHADES,
+} from '../core/bonds.mjs';
 import { personAvatar } from '../core/masks.mjs';
 import { isPortrait } from '../core/portraits.mjs';
 import {
-  uiLabels, extraLabels, fill, formatDate, str, el, runAction, setStatus, call, renderPanel, safe, loreLinkText, mounted,
+  uiLabels, extraLabels, bondChangeLines, fill, formatDate, str, el, runAction, setStatus, call, renderPanel, safe, loreLinkText, mounted,
 } from './common.js';
 import { photoEditor, keptOpen } from './photo.js';
 
-export function scoreText(n) {
-  const v = Number(n);
-  if (!Number.isFinite(v)) return '';
-  return v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0';
-}
+export const BOND_HISTORY = 3;
 
 export const FEED_LINE_MAX = 80;
 
 export const SAID_SHOWN = 2;
 
-export function lastShift(raw) {
-  const m = raw && raw[0];
-  if (!m) return { was: '', why: '' };
+export function bondView(state, id, preset, limit = BOND_HISTORY) {
+  const U = uiLabels(preset);
+  const none = { relation: '', bondOn: false, quiet: true, was: '', why: '', memory: [], memoryText: bondsOff(state) ? U.relationOff : U.relationNoHistory };
+  const b = bondOf(state, id);
+  if (!b || bondsOff(state)) return none;
+  const g = genderOfPerson(state, id);
+  const role = roleOf(state, id);
+  const memory = bondHistory(state, id, limit).map((h) => {
+    const lines = bondChangeLines(h, g);
+    return { day: h.day, dateLine: formatDate(h.day), reason: h.reason, text: lines.join(', ') };
+  });
+  const last = bondHistory(state, id, 1)[0];
+  const quiet = !memory.length && !b.shades.length && b.tag === defaultBond(role, { known: ((state.classmates || []).find((c) => c && c.id === id) || {}).known }).tag;
+  const label = bondLabel(state, id, { withShades: true });
   return {
-    was: m.crossed ? m.crossed.from : '',
-    why: [m.reason, formatDate(m.day)].filter(Boolean).join(' · '),
+    relation: quiet ? '' : label,
+    bondOn: true,
+    quiet,
+    bondLabel: label,
+    was: last && last.tag ? tagLabel(last.tag.from, g) : '',
+    why: last ? [last.reason, formatDate(last.day)].filter(Boolean).join(' · ') : '',
+    memory,
+    memoryText: memory.length ? '' : U.relationNoHistory,
+    bondTag: b.tag,
+    bondShades: b.shades.map((x) => x.id),
+    bondTags: bondsFor(role).map((x) => ({ id: x.id, group: x.group, label: tagLabel(x.id, g) })),
+    bondShadeList: SHADES.map((x) => ({ id: x.id, label: shadeLabel(x.id, g) })),
   };
 }
 
@@ -58,23 +77,7 @@ export function classmatesView(state, preset, opts = {}) {
       const what = str(c.tie.what);
       tieText = shown && what ? fill(X.cmTieLine, { who: shown, what }) : (shown || what);
     }
-    const rawMemory = relationMemory(state, c.id, preset, MEMORY_SIZE);
-    const memory = rawMemory.map((m) => {
-      const sign = scoreText(m.delta);
-      return {
-        day: m.day,
-        dateLine: formatDate(m.day),
-        delta: m.delta,
-        sign,
-        reason: m.reason,
-        text: m.reason ? fill(X.memoryLine, { sign, reason: m.reason }) : sign,
-        shift: m.crossed ? fill(U.relationShift, m.crossed) : '',
-      };
-    });
-    const quiet = scaleOff(state) || (!memory.length && !relationOf(state, c.id));
-    const relation = quiet ? '' : relationLabel(state, c.id, preset);
-    const score = quiet ? '' : scoreText(relationOf(state, c.id));
-    const shift = lastShift(rawMemory);
+    const bond = bondView(state, c.id, preset);
     const tieKind = c.tie ? tieTarget(state, c.tie.to).kind : 'none';
     const tieLink = c.tie && tieKind !== 'none' && (tieWho || tieText)
       ? {
@@ -89,8 +92,7 @@ export function classmatesView(state, preset, opts = {}) {
       name: c.name,
       role: reg ? `${house ? house.name : ''}, ${reg.grade} класс`.replace(/^, /, '') : c.club || '',
       links: tieLink ? [tieLink] : [],
-      was: shift.was,
-      why: shift.why,
+      ...bond,
       ...mentionFields(mentions[c.id]),
       club: c.club || '',
       about: reg ? reg.summary || '' : '',
@@ -102,11 +104,6 @@ export function classmatesView(state, preset, opts = {}) {
       tieWhat: c.tie ? (c.tie.what || '') : '',
       tieWho,
       tieText,
-      relation,
-      score,
-      relationText: score ? `${relation} · ${score}` : relation,
-      memory,
-      memoryText: memory.length ? '' : scaleOff(state) ? U.relationOff : U.relationNoHistory,
       source: c.source || 'manual',
       linkText: loreLinkText(X, c.loreLink),
       aliasesText: Array.isArray(c.aliases) && c.aliases.length ? fill(X.aliasesLine, { aliases: c.aliases.join(', ') }) : '',

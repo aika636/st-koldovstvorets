@@ -1,6 +1,7 @@
 import { normName, stopHit } from './stop-names.mjs';
 import { normalizeFeed, hash, clipText } from './feed.mjs';
 import { diffDays } from './time.mjs';
+import { toneOf } from './bonds.mjs';
 import { cleanVoiceText, SECRET_TIE } from './secrets.mjs';
 
 export { SECRET_TIE };
@@ -44,8 +45,9 @@ export function circleOf(state, roster) {
     if (grade && house && p.grade === grade && p.house === house) s += 1;
     const c = mates.get(p.id);
     if (c && c.known === true) s += 1;
-    if (c && Number(c.relation) >= 1) s += 2;
-    else if (c && Number(c.relation) <= -1) s += 1;
+    const tone = c ? toneOf(state, p.id) : 0;
+    if (tone > 0) s += 2;
+    else if (tone < 0) s += 1;
     if (seenAgo(state, p.id, day) <= SEEN_DAYS) s += 2;
     base.set(p.id, s);
   }

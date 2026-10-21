@@ -3,9 +3,10 @@ import { GONE_PERSON } from '../core/scene.mjs';
 import { subjectWord } from '../core/words.mjs';
 import { debts } from '../core/gradebook.mjs';
 import { reasonText } from '../core/relations.mjs';
+import { bondDiff, genderOfPerson } from '../core/bonds.mjs';
 import { dayOfWeek, weekdayShiftOf } from '../core/time.mjs';
 import { awaitingAnnouncement, gradeInfo, isPassing, publicView } from '../core/exams.mjs';
-import { WEEKDAYS, uiLabels, fill, whereText } from './common.js';
+import { WEEKDAYS, uiLabels, fill, whereText, bondChangeLines } from './common.js';
 import { todayView } from './today.js';
 
 export function hookNow(state) {
@@ -86,7 +87,6 @@ export function hookJournal(state, preset, n = 10) {
   const findS = (id) => (state.subjects || []).find((s) => s.id === id);
   const subjectName = (id) => (((state.subjects || []).find((s) => s.id === id)) || {}).name || subjectWord(preset);
   const teacherName = (id) => (([...(state.teachers || []), ...(state.classmates || [])].find((t) => t && t.id === id)) || {}).name || GONE_PERSON.nom;
-  const relLabels = (preset && preset.relations && preset.relations.labels) || [];
   const repLabels = (preset && preset.reputation && preset.reputation.labels) || [];
   const items = (state.exams && state.exams.items) || [];
   const hidden = items.filter(awaitingAnnouncement);
@@ -131,15 +131,11 @@ export function hookJournal(state, preset, n = 10) {
         }
         break;
       case 'rel': {
-        if (d.damped || !Number.isFinite(d.from) || !Number.isFinite(d.to)) break;
-        const from = labelFor(relLabels, d.from);
-        const to = labelFor(relLabels, d.to);
-        row = {
-          kind: 'relation', teacherId: d.teacherId, teacher: teacherName(d.teacherId),
-          from: from || '', to: to || '', changed: Boolean(from && to && from !== to),
-          direction: d.to > d.from ? 'up' : d.to < d.from ? 'down' : 'same',
-          ...(why(d.reason) ? { reason: why(d.reason) } : {}),
-        };
+        if (!d.from || !d.to || typeof d.from !== 'object' || typeof d.to !== 'object') break;
+        const reason = why(d.reason);
+        for (const line of bondChangeLines(bondDiff(d.from, d.to), genderOfPerson(state, d.teacherId))) {
+          out.push({ day, kind: 'relation', teacherId: d.teacherId, teacher: teacherName(d.teacherId), line, ...(reason ? { reason } : {}) });
+        }
         break;
       }
       case 'reputation': {

@@ -1,9 +1,9 @@
-import { cloneState, findSubject, teacherOfSubject, pushJournal, isDay } from './state.mjs';
+import { cloneState, findSubject, pushJournal, isDay } from './state.mjs';
 import { diffDays, gameStart } from './time.mjs';
 
 export const STATUSES = ['present', 'skip', 'late', 'excused'];
 
-const noEffects = () => ({ relation: [], reputation: 0, debt: [] });
+const noEffects = () => ({ reputation: 0, debt: [] });
 
 export function countsAttendance(state, day) {
   const start = gameStart(state);
@@ -52,8 +52,8 @@ export function mark(state, ev, preset, opts = {}) {
     subject.bg = (subject.bg || 0) + 1;
   }
 
-  const effects = effectsFor(next, subjectId, status, preset, day);
-  if (was && SEVERITY[status] > SEVERITY[was]) subtractMark(effects, effectsFor(next, subjectId, was, preset, day));
+  const effects = effectsFor(next, subjectId, status, preset);
+  if (was && SEVERITY[status] > SEVERITY[was]) subtractMark(effects, effectsFor(next, subjectId, was, preset));
   return { state: next, effects };
 }
 
@@ -61,24 +61,12 @@ const SEVERITY = { present: 0, excused: 0, late: 1, skip: 2 };
 
 function subtractMark(effects, old) {
   effects.reputation -= old.reputation;
-  for (const o of old.relation) {
-    const same = effects.relation.find((r) => r.teacherId === o.teacherId);
-    if (same) same.delta -= o.delta;
-    else effects.relation.push({ ...o, delta: -o.delta });
-  }
-  effects.relation = effects.relation.filter((r) => r.delta !== 0);
 }
 
-function effectsFor(state, subjectId, status, preset, day) {
+function effectsFor(state, subjectId, status, preset) {
   const out = noEffects();
   const att = (preset && preset.attendance) || {};
   const rep = (preset && preset.reputation && preset.reputation.delta) || {};
-
-  const relDelta = (att.relationDelta || {})[status];
-  const teacher = teacherOfSubject(state, subjectId);
-  if (teacher && typeof relDelta === 'number' && relDelta !== 0) {
-    out.relation.push({ teacherId: teacher.id, delta: relDelta, reason: { kind: status, subjectId, day } });
-  }
 
   if (typeof rep[status] === 'number') out.reputation += rep[status];
 
@@ -176,7 +164,6 @@ export function inferMissed(state, arg, preset, opts = {}) {
     const res = mark(acc, { subjectId, status: 'skip', day, periodIndex }, preset, opts);
     acc = res.state;
     missed.push(subjectId);
-    effects.relation.push(...res.effects.relation);
     effects.reputation += res.effects.reputation;
     effects.debt.push(...res.effects.debt);
   }

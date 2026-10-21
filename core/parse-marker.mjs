@@ -1,4 +1,4 @@
-import { impactWeight } from './relations.mjs';
+import { isBondTag, isShadeId, bondAllowed } from './bonds.mjs';
 import { stopList, stopHit, strictest, HARD_STOPS, STOP_USER, STOP_CHAR } from './stop-names.mjs';
 import { namesOf, isPerson } from './classmates.mjs';
 import { slugify } from './text-utils.mjs';
@@ -89,14 +89,6 @@ const KEY_RE = new RegExp(
   `(?<![\\p{L}\\p{M}\\d_])([\\p{L}\\d_-]{1,24})\\s*=\\s*`,
   'giu',
 );
-
-const IMPACT_WORDS = {
-  minor: ['minor', 'small', 'слегка', 'чуть', 'немного'],
-  major: ['major', 'big', 'сильно', 'крупно'],
-};
-
-const IMPACT_BY_WORD = new Map();
-for (const [level, words] of Object.entries(IMPACT_WORDS)) for (const w of words) IMPACT_BY_WORD.set(w, level);
 
 const TIME_UNITS = [
   { unit: 'week', re: /^(?:w|week|weeks|нед|недел[яиьюе]|недель)$/i },
@@ -314,39 +306,18 @@ function parseGrade(value, raw, ctx, events, rejected) {
   events.push({ kind: 'grade', subjectId, value: graded, ...(why ? { why } : {}) });
 }
 
-function parseRel(value, raw, ctx, events, rejected) {
-  const at = value.lastIndexOf(':');
-  if (at < 0) {
-    rejected.push({ raw, reason: 'нет двоеточия: ожидается «преподаватель:дельта»' });
-    return;
-  }
-  const split = splitReason(value, ctx);
-  if (split) {
-    parseRelCore(split.head, raw, ctx, events, rejected, split.reason);
-    return;
-  }
-  parseRelCore(value, raw, ctx, events, rejected, '');
-}
-
 const REASON_MAX = 60;
 
-function splitReason(value, ctx) {
+function parseRel(value, raw, ctx, events, rejected) {
   const parts = value.split(':');
-  for (let k = parts.length - 2; k >= 1; k -= 1) {
-    const word = parts[k].replace(/[[\]()]/g, '').trim();
-    if (!/^[+-]?\d{1,2}$/.test(word) && !parseImpact(word, ctx)) continue;
-    const reason = parts.slice(k + 1).join(':')
-      .replace(/[[\]()]/g, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
-      .slice(0, REASON_MAX);
-    return { head: `${parts.slice(0, k).join(':')}:${word}`, reason };
+  if (parts.length < 2) {
+    rejected.push({ raw, reason: 'ожидается rel=кто:тег:причина' });
+    return;
   }
-  return null;
-}
-
-function parseRelCore(value, raw, ctx, events, rejected, reason) {
-  const at = value.lastIndexOf(':');
-  const written = value.slice(0, at).trim();
+  const written = parts[0].trim();
   const who = isCardParty(written) ? cardPartyName(written).trim() : written;
+  const word = parts[1].replace(/[[\]()]/g, '').replace(/[−‒–—―]/g, '-').trim().toLowerCase();
+  const reason = parts.slice(2).join(':').replace(/[[\]()]/g, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim().slice(0, REASON_MAX);
   const teacherId = ctx.findPerson(who);
   const hit = strictest([
     ctx.stopHit(who),
@@ -358,22 +329,20 @@ function parseRelCore(value, raw, ctx, events, rejected, reason) {
     return;
   }
   if (!teacherId) {
-    rejected.push({ raw, reason: `неизвестный преподаватель: «${who}»` });
+    rejected.push({ raw, reason: `неизвестный человек: «${who}»` });
     return;
   }
-  const word = value.slice(at + 1).trim();
   const why = reason ? { reason } : {};
-  const d = word.match(/^([+-]?\d{1,2})$/);
-  if (d) {
-    events.push({ kind: 'rel', teacherId, delta: Number(d[1]), ...why });
+  const sign = word[0] === '+' || word[0] === '-' ? word[0] : '';
+  const id = sign ? word.slice(1).trim() : word;
+  if (sign) {
+    if (!isShadeId(id)) rejected.push({ raw, reason: `неизвестный оттенок отношения: «${id}»` });
+    else events.push({ kind: 'rel', teacherId, shade: id, op: sign, ...why });
     return;
   }
-  const w = parseImpact(word, ctx);
-  if (!w) {
-    rejected.push({ raw, reason: `дельта отношения не число и не слово силы: «${word}»` });
-    return;
-  }
-  events.push({ kind: 'rel', teacherId, delta: w.delta, impact: w.level, ...why });
+  if (!isBondTag(id)) rejected.push({ raw, reason: `неизвестный тег отношения: «${word}»` });
+  else if (!bondAllowed(id, ctx.bondRole(teacherId))) rejected.push({ raw, reason: `тег «${id}» не для этого человека` });
+  else events.push({ kind: 'rel', teacherId, tag: id, ...why });
 }
 
 const STOP_WORDS = {
@@ -382,19 +351,6 @@ const STOP_WORDS = {
   preset: 'служебное слово',
   [STOP_CHAR]: 'карточка',
 };
-
-function parseImpact(word, ctx) {
-  const v = String(word).replace(/[−‒–—―]/g, '-').replace(/\s+/g, '').toLowerCase();
-  const m = v.match(/^([+-]?)([\p{L}]+)([+-]?)$/u);
-  if (!m) return null;
-  const sign = m[1] || m[3];
-  if (!sign || (m[1] && m[3])) return null;
-  const level = IMPACT_BY_WORD.get(m[2].replace(/ё/g, 'е'));
-  if (!level) return null;
-  const weight = ctx.impactWeight(level);
-  if (!weight) return null;
-  return { level, delta: sign === '-' ? -weight : weight };
-}
 
 function parseEvent(value, raw, events, rejected) {
   const v = value.replace(/[−‒–—―]/g, '-');
@@ -804,8 +760,6 @@ function buildContext(preset) {
     graded.set(norm(alias), canon);
   }
 
-  const scaleOwner = p.relations ? p : inner;
-
   const stop = Array.isArray(p.stop) ? p.stop : stopList({
     ...((p.names && typeof p.names === 'object') ? p.names : {}),
     preset: p.displayName || p.stopNames ? p : inner,
@@ -824,7 +778,10 @@ function buildContext(preset) {
       const t = people.find((x) => x && x.id === id);
       return t ? (t.name || t.id) : '';
     },
-    impactWeight: (level) => impactWeight(scaleOwner, level),
+    bondRole: (id) => {
+      const x = people.find((q) => q && q.id === id) || {};
+      return x.role === 'staff' ? 'staff' : x.role === 'student' || classmates.some((c) => c.id === id) ? 'student' : 'teacher';
+    },
     stopHit: (raw) => stopHit(raw, stop),
     cardName: (written, hitName) => cardDisplayName(
       written, hitName,

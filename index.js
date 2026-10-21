@@ -3,7 +3,7 @@ import { buildPrompt, statusLine } from './prompt.mjs';
 import {
   awaitingAnnouncement, gradeInfo, isPassing, kindOf, publicView, sittableExams, EXAM_RULES, examRule,
 } from './core/exams.mjs';
-import { PACES, PACE_WORDS, scaleOff } from './core/relations.mjs';
+import { applyBondEvent, bondsOff } from './core/bonds.mjs';
 import {
   buildAnalysisPrompt, parseAnalysis, effectiveText, tokenText, tokenEvent, tokenOf,
   dropTokenAt, factRef, reactionsOf, reactionOf, isFactToken, isReactToken, isPlayedToken, isPrepToken, playedOf, loudOf, privateRefs,
@@ -39,7 +39,7 @@ import { readDiceRoll, readTimeSkip, readPhoneTurn } from './core/cues.mjs';
 import { diffMilestones } from './core/milestones.mjs';
 import { earnedFeats, tickFeats, syncFeats, featsKnow, RARITIES } from './core/feats.mjs';
 import { stopList, filterPeople, stopHit, normName } from './core/stop-names.mjs';
-import { addClassmate, updateClassmate, removeClassmate, startClassmates, syncClassmates, oldStartErrors, classmateStart, COOL } from './core/classmates.mjs';
+import { addClassmate, updateClassmate, removeClassmate, startClassmates, syncClassmates, oldStartErrors } from './core/classmates.mjs';
 import { feedAuthors } from './core/authors.mjs';
 import { markerPeople, findClassmate, sameName, isPerson, normalizeAliases, carryRoster, carryNotes, setPersonNote } from './core/classmates.mjs';
 import { planFromRoster, normalizeGrade, schoolMismatch, dayEvents } from './core/school-plan.mjs';
@@ -1144,18 +1144,7 @@ function turnRows(before, after, exam) {
     const subject = ((after.subjects || []).find((s) => s.id === exam.subjectId) || {}).name || exam.subjectId;
     rows.push(`${subject}: ${heroGender(after, safeHeroName()) === 'm' ? 'сдавал' : 'сдавала'}, итог объявят ${formatDateOn(exam.announceOn) || exam.announceOn}`);
   }
-  const taken = new Set();
   const extra = [];
-  for (const e of fresh) {
-    const d = e && e.kind === 'rel' && e.data;
-    if (!d || !d.capped) continue;
-    const direction = d.delta > 0 ? 'up' : 'down';
-    const pace = PACE_WORDS[d.pace] || d.pace;
-    const own = logRows.find((r) => r.kind === 'relation' && r.teacherId === d.teacherId && r.direction === direction && !taken.has(r));
-    if (own) { own.capped = pace; taken.add(own); continue; }
-    const who = [...(after.teachers || []), ...(after.classmates || [])].find((t) => t && t.id === d.teacherId);
-    extra.push({ kind: 'relation-capped', teacher: (who && who.name) || d.teacherId, direction, pace });
-  }
   const text = (r) => rowText(r, rowWords());
   const study = logRows.filter((r) => r.kind === 'grade' && r.bg).map((r) => `${r.subject} — ${r.label}`);
   if (study.length) extra.push({ kind: 'study', list: study.join('; ') });
@@ -1168,7 +1157,6 @@ function recordLedger(mark, before, after, { marker = false, exam = null } = {})
   const oldLast = (before.journal || []).at(-1);
   const journal = after.journal || [];
   const boundary = oldLast ? journal.findLastIndex((row) => JSON.stringify(row) === JSON.stringify(oldLast)) : -1;
-  const relations = journal.slice(boundary + 1).filter((row) => row.kind === 'rel' && Number.isFinite(row.data?.from) && Number.isFinite(row.data?.to));
   const applied = (live.lastRun?.debug?.applied || []).filter((ev) => ev.kind === 'rel');
   const planned = (live.lastRun?.debug?.applied || []).filter((ev) => ev.kind === 'event' || ev.kind === 'event-known');
   const refused = live.lastRun?.debug?.refused || [];
@@ -1187,12 +1175,9 @@ function recordLedger(mark, before, after, { marker = false, exam = null } = {})
       return { kind: 'pause', known: true };
     }
     if (ev?.kind === 'rel') {
-      const at = applied.findIndex((item) => item.teacherId === ev.teacherId && item.delta === ev.delta);
+      const at = applied.findIndex((item) => item.teacherId === ev.teacherId && (ev.tag ? item.tag === ev.tag : item.shade === ev.shade && item.op === ev.op));
       const info = at >= 0 ? applied.splice(at, 1)[0] : null;
-      if (info?.damped) return { kind: 'rel', teacherId: ev.teacherId, applied: 0, damped: true };
-      const index = relations.findIndex((row) => row.data.teacherId === ev.teacherId && (info?.capped || row.data.delta === ev.delta));
-      const row = index >= 0 ? relations.splice(index, 1)[0] : null;
-      return { kind: 'rel', teacherId: ev.teacherId, applied: row ? row.data.to - row.data.from : 0 };
+      return info?.change ? { kind: 'rel', teacherId: ev.teacherId, from: info.change.from, to: info.change.to } : { kind: 'rel', teacherId: ev.teacherId };
     }
     if (ev?.kind === 'completion') {
       const row = journal.slice(boundary + 1).find((item) => item.data?.completion === ev.scope && item.data?.value === ev.value);
@@ -1227,7 +1212,7 @@ function lexiconOf(state, c) {
     classmates: Array.isArray(state.classmates) ? state.classmates : [],
     known: ((liveRoster() || {}).people || []).filter((p) => p && p.id && p.name).map((p) => ({ id: p.id, name: p.name })),
     survey: state.survey,
-    relOff: scaleOff(state),
+    relOff: bondsOff(state),
     names: sceneNames(c),
     hooks: knownHooks(live.plot),
     preps: prepList(state, c && c.name1),
@@ -1306,8 +1291,6 @@ function retimeLatestEntry() {
     return;
   }
 }
-
-const DAMPED_NOTE = '(повтор за день — не засчитано)';
 
 function panelView(mesId) {
   if (!live.preset || !live.state || !live.state.started) return null;
@@ -1434,9 +1417,8 @@ function panelTokens(list, lexicon, entry, isDraft) {
     const ev = tokenEvent(t, lexicon);
     const known = ev?.kind === 'event' && eventKnown(ev, entry, isDraft ? null : i);
     const refused = !isDraft && ev && ev.kind === 'grade' ? entry?.receipts?.[i]?.refused : '';
-    const damped = !isDraft && ev && ev.kind === 'rel' && Boolean(entry && entry.receipts && entry.receipts[i] && entry.receipts[i].damped);
     const kind = ev ? (ev.kind === 'completion' || ev.kind === 'fame' ? 'grade' : SCENE_KINDS.includes(ev.kind) ? 'course' : ev.kind) : 'other';
-    const note = damped ? ` ${DAMPED_NOTE}` : refused ? ` — не записано: ${refused}` : '';
+    const note = refused ? ` — не записано: ${refused}` : '';
     return {
       text: tokenText(t, lexicon, { known, ...when }) + note,
       brief: tokenText(t, lexicon, { known, brief: true, ...when }) + note,
@@ -2425,7 +2407,7 @@ const host = {
       const startDay = isDay(opts.startDay) ? opts.startDay : undefined;
       const plan = planFromRoster(roster, { grade });
       const mentor = fields.heroStart === 'old' ? plan.teachers.find((t) => t.id === form.tension) : null;
-      if (mentor) mentor.relation = classmateStart(live.preset) + COOL;
+      if (mentor) mentor.bond = { tag: 'strained', shades: [] };
       const state = createState(live.preset, {
         ...fields,
         grade,
@@ -2444,8 +2426,7 @@ const host = {
       const first = firstCountedMes(chatOf());
       if (first > 0) state.startMes = first;
       state.examBy = [form.examBy, prev.examBy].find((v) => EXAM_RULES.includes(v)) || 'story';
-      const pace = [form.relPace, prev.relPace].find((v) => PACES.includes(v));
-      if (pace) state.relPace = pace;
+      if (typeof form.relOff === 'boolean' ? form.relOff : prev.relOff) state.relOff = true;
       forgetTurns();
       await commit(state, { flush: true });
       setInjects({ oneShot: '' });
@@ -2498,7 +2479,7 @@ const host = {
       }).map(normalizeSubject);
       const teachers = plan.teachers.map((t) => {
         const old = oldTeachers.get(t.id) || (prev.teachers || []).find((x) => roster.find(x.name, 'teacher')?.id === t.id);
-        return normalizeTeacher(old ? { ...t, relation: old.relation, portrait: old.portrait, note: old.note } : t, live.preset);
+        return normalizeTeacher(old ? { ...t, bond: old.bond, relLegacy: old.relLegacy, portrait: old.portrait, note: old.note } : t);
       });
       const next = cloneState(prev);
       Object.assign(next, { grade, subjects, teachers, schedule: plan.schedule });
@@ -2532,15 +2513,27 @@ const host = {
       return { ok: true, rule };
     },
 
-    async setRelPace(pace) {
+    async setRelOff(off) {
       if (!live.state) return { ok: false, error: 'игры в этом чате нет' };
-      if (!PACES.includes(pace)) return { ok: false, error: `неизвестный темп «${pace}»` };
-      if ((live.state.relPace || 'normal') === pace) return { ok: true, pace };
+      const value = off === true;
+      if (Boolean(live.state.relOff) === value) return { ok: true, relOff: value };
       const next = cloneState(live.state);
-      next.relPace = pace;
+      if (value) next.relOff = true; else delete next.relOff;
       await commit(next);
       refreshPanel();
-      return { ok: true, pace };
+      return { ok: true, relOff: value };
+    },
+
+    async setBond(id, patch = {}) {
+      if (!live.state) return { ok: false, error: 'игры в этом чате нет' };
+      if (bondsOff(live.state)) return { ok: false, error: uiLabels(live.preset).relationOff };
+      const ev = { ...patch, teacherId: id, reason: 'поправка вручную' };
+      const res = applyBondEvent(live.state, ev, live.preset);
+      if (!res.change) return { ok: true, changed: false };
+      for (const t of live.turns) if (t.before) t.before = applyBondEvent(t.before, ev, live.preset).state;
+      await commit(res.state);
+      refreshPanel();
+      return { ok: true, changed: true };
     },
 
     async analyzeMessage(mesId) {

@@ -1,5 +1,5 @@
 import { cloneState, normalizeInvites } from './state.mjs';
-import { relationOf, capRelation, applyRelationDeltas, impactWeight, paceOf, findPerson } from './relations.mjs';
+import { bondOf, BONDS } from './bonds.mjs';
 import { holidaysAhead, holidaysOn, occurrenceKey } from './holidays.mjs';
 import { addDays, diffDays, parseDay, weekdayIn } from './time.mjs';
 import { plural } from './plural.mjs';
@@ -36,8 +36,6 @@ export const INVITE_PHRASES = {
   no: 'Нет',
   yesterday: 'вчера',
   months: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
-  memCame: '{event} — вместе с {heroIns}',
-  memMissed: '{event}: {hero} не {arrived}',
 };
 
 const phrasesOf = (preset) => ({ ...INVITE_PHRASES, ...((preset && preset.phrases && preset.phrases.invites) || {}) });
@@ -56,21 +54,14 @@ export function hash32(s) {
 
 export const inviteSeed = (text, turn) => `${hash32(text).toString(36)}:${turn}`;
 
-export function inviteThreshold(preset) {
-  const r = (preset && preset.relations) || {};
-  const min = Number.isFinite(r.min) ? r.min : -3;
-  const max = Number.isFinite(r.max) ? r.max : 3;
-  return Math.ceil(max - (max - min) / 3);
-}
+const CLOSE = { budding: 0.5, interest: 0.5, friendly: 0.6, friend: 0.75, love: 0.85, close: 1, couple: 1 };
+
+/** Who may invite: friend group from «budding», love group except «ex». */
+export const inviteTags = BONDS.filter((b) => CLOSE[b.id] !== undefined).map((b) => b.id);
 
 export const urgency = (days) => (days <= 3 ? 1 : days <= 7 ? 0.6 : 0.3);
 
-export function closeness(rel, preset) {
-  const thr = inviteThreshold(preset);
-  const max = Number.isFinite(preset && preset.relations && preset.relations.max) ? preset.relations.max : 3;
-  if (max <= thr) return 1;
-  return 0.5 + 0.5 * Math.min(Math.max((rel - thr) / (max - thr), 0), 1);
-}
+export const closeness = (tag) => CLOSE[tag] || 0;
 
 export function whenWord(state, preset, days, day) {
   const P = phrasesOf(preset);
@@ -88,8 +79,12 @@ export function whenWord(state, preset, days, day) {
 export function inviteCandidates(state, preset, day, turn = invitesOf(state).n) {
   const inv = invitesOf(state);
   if (!state || !day) return [];
-  const thr = inviteThreshold(preset);
-  const people = (state.classmates || []).filter((p) => p && p.id && relationOf(state, p.id) >= thr);
+  const tags = new Map();
+  for (const p of state.classmates || []) {
+    const b = p && p.id && bondOf(state, p.id);
+    if (b && CLOSE[b.tag] !== undefined) tags.set(p.id, b.tag);
+  }
+  const people = (state.classmates || []).filter((p) => p && tags.has(p.id));
   if (!people.length) return [];
   const events = holidaysAhead(preset, day, INVITE_WINDOW, state)
     .filter((a) => !a.holiday.off && !a.holiday.pause && !a.holiday.open)
@@ -102,7 +97,7 @@ export function inviteCandidates(state, preset, day, turn = invitesOf(state).n) 
       if ((inv.cool[key] || 0) > turn) continue;
       out.push({
         personId: p.id, name: p.name || p.id, key, eventName: a.holiday.name, day: a.day, days: a.days,
-        chance: INVITE_BASE * urgency(a.days) * closeness(relationOf(state, p.id), preset),
+        chance: INVITE_BASE * urgency(a.days) * closeness(tags.get(p.id)),
       });
     }
   }
@@ -345,27 +340,14 @@ export function answerPromise(state, preset, key, came, heroName = '') {
   const a = invitesOf(state).asked.find((x) => x.key === key);
   if (!a) return { ok: false, state, error: 'вопроса нет' };
   if (typeof came !== 'boolean') return { ok: false, state, error: 'ответ — «да» или «нет»' };
-  let next = cloneState(state);
+  const next = cloneState(state);
   const out = invitesOf(next);
   out.asked = out.asked.filter((x) => x.key !== key);
   const g = out.going.find((x) => x.key === key);
   if (g) g.came = came;
   if (a.mark) pushDone(out, { mark: a.mark, kind: came ? 'came' : 'missed', key, eventName: a.eventName, withId: a.withId });
   next.invites = normalizeInvites(out);
-  let delta = 0;
-  if (findPerson(next, a.withId)) {
-    const P = phrasesOf(preset);
-    const gender = presetGender(preset);
-    const W = heroWords(gender);
-    const text = fill(came ? P.memCame : P.memMissed, {
-      heroIns: W.heroIns, hero: String(heroName || '').trim() || W.hero, arrived: gender === 'm' ? 'пришёл' : 'пришла', event: a.eventName,
-    });
-    const w = impactWeight(preset, 'minor');
-    const cap = capRelation(next, [{ teacherId: a.withId, delta: came ? w : -w }], preset, { pace: paceOf(next) });
-    next = applyRelationDeltas(cap.state, cap.events.map((ev) => ({ ...ev, reason: { kind: 'promise', text } })), preset).state;
-    delta = cap.events.reduce((x, ev) => x + ev.delta, 0);
-  }
-  return { ok: true, state: next, delta };
+  return { ok: true, state: next, delta: 0 };
 }
 
 export function settlePromise(snapshot, preset, key, came, heroName = '') {

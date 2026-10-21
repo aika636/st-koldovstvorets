@@ -1,7 +1,7 @@
 import { cloneState, findSubject, pushJournal } from './state.mjs';
 import { addGrade, debtMemo, restoreDebt } from './gradebook.mjs';
 import { mark } from './attendance.mjs';
-import { changeRelation, findPerson, scaleOff } from './relations.mjs';
+import { applyBondEvent, bondsOff, restoreBond } from './bonds.mjs';
 import { SCENE_KINDS, SCENE_RECEIPTS, applySceneEvent, revertSceneEvent } from './scene.mjs';
 import { applyAcademicCompletion } from './academic-completion.mjs';
 import { planEvent, planPause } from './holidays.mjs';
@@ -45,14 +45,9 @@ export function applyCorrection(state, ev, preset, opts = {}) {
   }
 
   if (ev.kind === 'rel') {
-    if (scaleOff(state)) return { state, receipt: null };
-    const teacher = findPerson(state, ev.teacherId);
-    if (!teacher) return { state, receipt: null };
-    const before = teacher.relation;
-    const r = changeRelation(state, { teacherId: ev.teacherId, delta: ev.delta, reason: ev.reason || null }, preset);
-    const after = (findPerson(r.state, ev.teacherId) || {}).relation;
-    const applied = Number(after) - Number(before);
-    return { state: r.state, receipt: { kind: 'rel', teacherId: ev.teacherId, applied: Number.isFinite(applied) ? applied : 0 } };
+    if (bondsOff(state)) return { state, receipt: null };
+    const r = applyBondEvent(state, { ...ev, day }, preset);
+    return { state: r.state, receipt: r.change ? { kind: 'rel', teacherId: ev.teacherId, from: r.change.from, to: r.change.to } : null };
   }
 
   if (ev.kind === 'event') {
@@ -133,9 +128,7 @@ export function revertCorrection(state, receipt, preset) {
   }
 
   if (receipt.kind === 'rel') {
-    const delta = Number.isFinite(receipt.applied) ? -receipt.applied : -Number(receipt.delta || 0);
-    if (!delta) return next;
-    return changeRelation(next, { teacherId: receipt.teacherId, delta, reason: null }, preset).state;
+    return receipt.from ? restoreBond(next, receipt.teacherId, receipt.from, receipt.to) : next;
   }
 
   if (receipt.kind === 'event') {
@@ -177,7 +170,7 @@ export function revertCorrection(state, receipt, preset) {
 export function receiptOf(ev, day) {
   if (!ev) return null;
   if (ev.kind === 'grade') return { kind: 'grade', subjectId: ev.subjectId, value: String(ev.value), day };
-  if (ev.kind === 'rel') return { kind: 'rel', teacherId: ev.teacherId, delta: ev.delta };
+  if (ev.kind === 'rel') return { kind: 'rel', teacherId: ev.teacherId };
   if (ev.kind === 'attendance') return { kind: 'attendance', subjectId: ev.subjectId, status: ev.status, day };
   if (ev.kind === 'event' && day) return { kind: 'event', name: ev.name, from: addDays(day, ev.days) };
   return null;

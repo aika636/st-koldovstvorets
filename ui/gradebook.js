@@ -1,5 +1,5 @@
 import { debts, debtReasons, DEBT_GRADE, overallScore, subjectScore } from '../core/gradebook.mjs';
-import { relationLabel, relationMemory, relationOf, scaleOff } from '../core/relations.mjs';
+import { bondView } from './classmates.js';
 import { stats as attendanceStats } from '../core/attendance.mjs';
 import { reputationLabel } from '../core/reputation.mjs';
 import { termsOf, termAt } from '../core/time.mjs';
@@ -10,7 +10,6 @@ import {
   extraLabels, el, emptyPage, svgIcon, mounted, artImg,
 } from './common.js';
 import { milestonesView } from './achievements.js';
-import { relationScore } from './people.js';
 
 export function openExamList(state, preset) {
   const mode = examMode(state, preset);
@@ -27,7 +26,6 @@ export function gradebookView(state, preset) {
   const health = stateHealth(state, preset);
   if (health.kind !== 'ok') return { ...health, subjects: [], numbers: [] };
 
-  const X0 = extraLabels(preset);
   const scale = (preset.grades && Array.isArray(preset.grades.values)) ? preset.grades.values : [];
   const badMarks = scale.filter((v) => v && v.pass === false).map((v) => String(v.value));
   const legend = scale
@@ -38,23 +36,15 @@ export function gradebookView(state, preset) {
     const score = subjectScore(state, s.id, preset);
     const teacher = s.teacherId ? (state.teachers || []).find((t) => t.id === s.teacherId) : null;
     const firstOfTeacher = teacher && (state.subjects || []).find((x) => x.teacherId === teacher.id);
-    const last = teacher
-      ? relationMemory(state, teacher.id, preset, 12).find((m) => (m.subjectId
-        ? m.subjectId === s.id
-        : Boolean(firstOfTeacher) && firstOfTeacher.id === s.id)) || null
-      : null;
-    const sign = last ? (last.delta > 0 ? `+${last.delta}` : `−${-last.delta}`) : '';
+    const bond = teacher ? bondView(state, teacher.id, preset, 1) : null;
     const att = attendanceStats(state, s.id);
-    const quiet = Boolean(teacher) && (scaleOff(state) || !relationOf(state, teacher.id))
-      && !relationMemory(state, teacher.id, preset, 1).length;
     return {
       id: s.id,
       name: s.name,
       teacher: teacher ? teacher.name : '',
       teacherId: teacher ? teacher.id : null,
-      relation: teacher && !quiet ? relationLabel(state, teacher.id, preset) : '',
-      score: teacher && !quiet ? relationScore(state, teacher.id) : '',
-      reason: last && last.reason ? (sign && sign === relationScore(state, teacher.id) ? last.reason : fill(X0.memoryLine, { sign, reason: last.reason })) : '',
+      relation: bond ? bond.relation : '',
+      reason: bond && firstOfTeacher && firstOfTeacher.id === s.id && bond.memory[0] ? bond.memory[0].reason : '',
       attendanceText: [
         skipsText(att),
         att.lates ? `${att.lates} ${plural(att.lates, 'опоздание', 'опоздания', 'опозданий')}` : '',
@@ -203,7 +193,7 @@ function subjectRow(s, U, X, noGradesAtAll) {
       class: 'ad-mark', dataset: m.bad ? { bad: '1' } : {}, text: m.value,
     })))
     : (noGradesAtAll ? null : el('span', { class: 'ad-none', text: U.noGrades }));
-  const rel = s.relation ? (s.score ? `${s.relation} · ${s.score}` : s.relation) : '';
+  const rel = s.relation;
   const extra = [
     s.attendanceText ? el('span', { class: 'ad-gr-att', text: s.attendanceText }) : null,
     s.reason ? el('span', { class: 'ad-gr-reason', text: s.reason }) : null,

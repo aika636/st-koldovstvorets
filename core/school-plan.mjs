@@ -14,6 +14,7 @@ export function teacherFromRoster(t) {
   return {
     id: t.id,
     name: t.name,
+    ...(t.gender === 'f' || t.gender === 'm' ? { gender: t.gender } : {}),
     traits: surface ? [cutWords(surface, 60)] : [],
     post: firstClause(t.post, 60),
     looks: t.looks || '',

@@ -1,7 +1,9 @@
 import { normalizeFeed, ensureFeed, hash } from './feed.mjs';
 import { heroGender } from './gender.mjs';
-import { classmateStart } from './classmates.mjs';
+import { bondOf, BONDS } from './bonds.mjs';
 import { openTies, circleOf, SHARP_TIES } from './authors.mjs';
+
+const FRIEND_TAGS = new Set(BONDS.filter((b) => b.group === 'friend').map((b) => b.id));
 
 export const LOVERS_DEFAULT = 2;
 export const JEALOUS_MAX = 2;
@@ -51,9 +53,8 @@ function pickFan(roster, state, taken) {
 
 function jealousies(roster, state, lovers, fan, taken, opts = {}) {
   const seed = seedOf(state);
-  const start = classmateStart(opts.preset);
   const mates = new Map(((state && state.classmates) || []).filter((c) => c && c.id).map((c) => [c.id, c]));
-  const closeToHeroine = new Set([...mates.values()].filter((c) => Number(c.relation) > start + 0.5).map((c) => c.id));
+  const closeToHeroine = new Set([...mates.values()].filter((c) => FRIEND_TAGS.has((bondOf(state, c.id) || {}).tag)).map((c) => c.id));
   const students = roster.students.filter((p) => !taken.has(p.id));
   const out = [];
   const used = new Set();

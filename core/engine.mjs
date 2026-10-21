@@ -10,7 +10,7 @@ import { readTime } from './time-source.mjs';
 import { addGrade, setDebt, closeSkipDebt, resolveGrade, REJECT_UNKNOWN_VALUE } from './gradebook.mjs';
 import { mark, workOff, countsAttendance, effectiveSkips } from './attendance.mjs';
 import { applyAcademicCompletion } from './academic-completion.mjs';
-import { applyRelationDeltas, dampRepeats, capRelation, paceOf, scaleOff, teachersOfSubjects, mergeDeltas } from './relations.mjs';
+import { applyBondEvent, toneOf, bondsOff } from './bonds.mjs';
 import { changeReputation } from './reputation.mjs';
 import { settleBackground, dropBackground, gradeFame } from './fame.mjs';
 import { armHolidayHooks, planEvent, planPause } from './holidays.mjs';
@@ -167,15 +167,12 @@ export function applyResponse(state, text, preset, opts = {}) {
   out.rejected = parsed.rejected;
   out.debug.rejected = parsed.rejected;
 
-  const effects = { relation: [], reputation: 0, debt: [] };
+  const effects = { reputation: 0, debt: [] };
   const attendance = parsed.events.filter((e) => e.kind === 'attendance');
-  const counted = new Set();
   const markDay = (acc, day, pos) => {
     const plan = dayPlan(acc, preset, day);
     for (const ev of attendance) {
       const slot = plan.find((p) => p.subjectId === ev.subjectId);
-      if (acc.attendance.records.some((r) => r.day === day && r.subjectId === ev.subjectId && r.status === ev.status
-        && r.periodIndex === (slot ? slot.index : pos))) counted.add(ev.subjectId);
       const res = mark(acc, { subjectId: ev.subjectId, status: ev.status, day, periodIndex: slot ? slot.index : pos }, preset);
       acc = res.state;
       absorb(effects, res.effects);
@@ -227,34 +224,18 @@ export function applyResponse(state, text, preset, opts = {}) {
     for (const subjectId of late.subjectIds) out.debug.applied.push({ kind: 'attendance', subjectId, status: 'late', derived: true });
   }
 
-  const relEvents = scaleOff(s) ? [] : parsed.events.filter((e) => e.kind === 'rel').filter((ev) => {
-    const why = counted.size ? relReason(s, ev, parsed.events, []) : null;
-    return !(why && (why.kind === 'skip' || why.kind === 'late') && counted.has(why.subjectId));
-  });
-  const touched = [
-    ...parsed.events.filter((e) => e.kind === 'grade' || e.kind === 'attendance').map((e) => e.subjectId),
-    ...sweep.missed,
-  ];
-  const damp = dampRepeats(s, relEvents, preset, { fresh: teachersOfSubjects(s, touched) });
-  s = damp.state;
-  const reasons = new Map(relEvents.map((ev) => [ev, relReason(s, ev, parsed.events, sweep.missed)]));
-  const cap = capRelation(s, damp.events, preset, { pace: paceOf(s) });
-  s = cap.state;
-  const cappedIds = new Set(cap.capped.map((c) => c.teacherId));
-  s = applyRelationDeltas(s, cap.events.map((ev) => ({ ...ev, reason: reasons.get(ev) || reasons.get(ev.capOf) })), preset).state;
-  for (const ev of relEvents) {
-    const reason = reasons.get(ev);
+  for (const ev of bondsOff(s) ? [] : parsed.events.filter((e) => e.kind === 'rel')) {
+    const res = applyBondEvent(s, ev, preset);
+    s = res.state;
     out.debug.applied.push({
       kind: 'rel',
       teacherId: ev.teacherId,
-      delta: ev.delta,
-      ...(ev.impact ? { impact: ev.impact } : {}),
-      ...(reason ? { reason } : {}),
-      ...(!damp.events.includes(ev) ? { damped: true } : cappedIds.has(ev.teacherId) ? { capped: true } : {}),
+      ...(ev.tag ? { tag: ev.tag } : { shade: ev.shade, op: ev.op }),
+      ...(ev.reason ? { reason: ev.reason } : {}),
+      ...(res.change ? { change: res.change } : { noop: true }),
     });
   }
 
-  s = applyRelationDeltas(s, effects.relation, preset).state;
   for (const id of effects.debt) s = setDebt(s, id, true, preset);
   if (effects.reputation) {
     s = changeReputation(s, { delta: effects.reputation, reason: 'attendance' }, preset).state;
@@ -417,7 +398,7 @@ function lessonGraded(state, subjectId, preset) {
 }
 
 function arrivalLate(state, events, fromDay, fromTime, preset) {
-  const none = { state, effects: { relation: [], reputation: 0, debt: [] }, subjectIds: [] };
+  const none = { state, effects: { reputation: 0, debt: [] }, subjectIds: [] };
   const cal = state.calendar || {};
   if (!fromTime || cal.precision !== 'datetime' || cal.day !== fromDay || !cal.time) return none;
   const graded = new Set(events.filter((e) => e.kind === 'grade').map((e) => e.subjectId));
@@ -428,7 +409,7 @@ function arrivalLate(state, events, fromDay, fromTime, preset) {
   const after = minutesOf(cal.time);
 
   let s = state;
-  const effects = { relation: [], reputation: 0, debt: [] };
+  const effects = { reputation: 0, debt: [] };
   const subjectIds = [];
   for (const item of dayPlan(s, preset)) {
     if (!graded.has(item.subjectId) || !item.start || !item.end) continue;
@@ -449,7 +430,6 @@ function arrivalLate(state, events, fromDay, fromTime, preset) {
 function sweepAndSettle(state, fromDay, fromPos, unit, preset, opts = {}) {
   const sweep = sweepAttendance(state, fromDay, fromPos, unit, preset, opts);
   let s = sweep.state;
-  s = applyRelationDeltas(s, sweep.effects.relation, preset).state;
   for (const id of sweep.effects.debt) s = setDebt(s, id, true, preset);
   if (sweep.effects.reputation) {
     s = changeReputation(s, { delta: sweep.effects.reputation, reason: 'attendance' }, preset).state;
@@ -507,14 +487,13 @@ export function resolveHeldJump(state, preset, accept = true) {
 
   if (Array.isArray(held.marks) && held.marks.length) {
     const plan = dayPlan(s, preset, s.calendar.day);
-    const fx = { relation: [], reputation: 0, debt: [] };
+    const fx = { reputation: 0, debt: [] };
     for (const ev of held.marks) {
       const slot = plan.find((p) => p.subjectId === ev.subjectId);
       const res = mark(s, { subjectId: ev.subjectId, status: ev.status, day: s.calendar.day, periodIndex: slot ? slot.index : posOf(s, preset) }, preset);
       s = res.state;
       absorb(fx, res.effects);
     }
-    s = applyRelationDeltas(s, fx.relation, preset).state;
     for (const id of fx.debt) s = setDebt(s, id, true, preset);
     if (fx.reputation) s = changeReputation(s, { delta: fx.reputation, reason: 'attendance' }, preset).state;
   }
@@ -658,7 +637,7 @@ export function sitExam(state, preset, opts = {}) {
   const roll = rollOutcome(
     {
       score,
-      relation: teacher ? teacher.relation : 0,
+      relation: teacher ? toneOf(state, teacher.id) * 2.5 : 0,
       reputation: state.reputation ? state.reputation.value : undefined,
       kind: item.kind,
     },
@@ -842,7 +821,7 @@ export function sweepAttendance(state, fromDay, fromPos, unit, preset, opts = {}
   let s = state;
   const policy = SKIP_POLICIES.includes(opts.policy) ? opts.policy : 'attend';
   const missed = [];
-  const effects = { relation: [], reputation: 0, debt: [] };
+  const effects = { reputation: 0, debt: [] };
   if (!unit) return { state: s, missed, effects, summary: null, counted: 0 };
   const sameDay = unit === 'absolute' && s.calendar.day === fromDay;
   const quiet = unit !== 'period' && !sameDay;
@@ -881,7 +860,6 @@ export function sweepAttendance(state, fromDay, fromPos, unit, preset, opts = {}
       fromDay, toDay: acc.calendar.day, days,
       periods: missed.length + presentCount, missed: missed.length, present: presentCount, policy,
     };
-    effects.relation = mergeDeltas(effects.relation);
     if (summary.periods) {
       acc = pushJournal(cloneState(acc), {
         kind: 'attendance',
@@ -900,35 +878,10 @@ export function sweepAttendance(state, fromDay, fromPos, unit, preset, opts = {}
   return finish(s);
 }
 
-function relReason(state, ev, events, missed) {
-  const subjects = (state.subjects || [])
-    .filter((x) => x.teacherId === ev.teacherId)
-    .map((x) => x.id);
-  const mine = (id) => subjects.includes(id);
-  const text = ev.reason ? { text: ev.reason } : {};
-
-  const grade = events.find((x) => x.kind === 'grade' && mine(x.subjectId));
-  if (grade) return { kind: 'grade', subjectId: grade.subjectId, value: String(grade.value), ...text };
-
-  const day = state.calendar && state.calendar.day;
-  const exam = ((state.exams && state.exams.items) || [])
-    .find((i) => i.outcome && i.day === day && mine(i.subjectId));
-  if (exam) return { kind: 'exam', subjectId: exam.subjectId, examId: exam.id, value: String(exam.outcome), ...text };
-
-  const mark = events.find((x) => x.kind === 'attendance' && mine(x.subjectId));
-  if (mark) return { kind: mark.status, subjectId: mark.subjectId, ...text };
-
-  const skipped = (missed || []).filter(mine);
-  if (skipped.length) return { kind: 'skip', subjectId: skipped[0], count: skipped.length, ...text };
-
-  return ev.reason ? { kind: 'marker', text: ev.reason } : null;
-}
-
 const isDayStr = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const dayDiff = (a, b) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86400000);
 
 function absorb(acc, effects) {
-  acc.relation.push(...effects.relation);
   acc.reputation += effects.reputation;
   acc.debt.push(...effects.debt.filter((id) => !acc.debt.includes(id)));
 }

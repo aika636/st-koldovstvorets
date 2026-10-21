@@ -1,4 +1,3 @@
-import { reasonText } from '../core/relations.mjs';
 import { fill, SOURCE_LABEL, plural, str, el, safe } from './common.js';
 import { DOCTOR_TEXT } from './doctor.js';
 
@@ -134,10 +133,9 @@ export function describeApplied(item, vocab, ctx = {}) {
     case 'missed': return `пропущено по расписанию: ${item.count}`;
     case 'grade': return `оценка: ${item.subjectId} — ${item.value}`;
     case 'rel': {
-      const impact = item.impact ? ` (${item.impact})` : '';
-      const damped = item.damped ? ' — погашено: тот же сдвиг подряд' : item.capped ? ' — срезано темпом отношений' : '';
-      const why = item.reason ? reasonText(item.reason, state, preset) : '';
-      return `отношение: ${item.teacherId} ${item.delta > 0 ? '+' : ''}${item.delta}${impact}${damped}${why ? `; повод: ${why}` : ''}`;
+      const what = item.tag ? `состояние ${item.tag}` : `оттенок ${item.op === '-' ? '−' : '+'}${item.shade}`;
+      const why = item.reason ? ` — ${item.reason}` : '';
+      return `отношение: ${item.teacherId} ${what}${item.change ? '' : ' (без изменений)'}${why}`;
     }
     case 'announced': return `объявлены итоги: ${(item.examIds || []).join(', ')}`;
     case 'exams-scheduled': return `назначено: ${vocab.examPeriod || 'сессия'} — ${item.day}`;

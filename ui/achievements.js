@@ -1,6 +1,6 @@
 import { milestones, milestoneDetail } from '../core/milestones.mjs';
 import {
-  FEATS, FEAT_FAMILIES, MOMENTS_FAMILY, earnedFeats, featText, featLine,
+  FEATS, FEAT_FAMILIES, MOMENTS_FAMILY, REL_FEATS, earnedFeats, featText, featLine,
 } from '../core/feats.mjs';
 import { fill, stateHealth, formatDate, extraLabels, uiLabels, plural, el, memoDetails, artImg } from './common.js';
 
@@ -21,6 +21,7 @@ export function milestonesView(state, preset) {
   }));
 }
 
+
 const shortDay = (d) => (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d.slice(8, 10)}.${d.slice(5, 7)}` : '');
 
 const rarityLabel = (X, r) => X[`achRarity${r[0].toUpperCase()}${r.slice(1)}`] || r;
@@ -29,6 +30,7 @@ export function achievementsView(state, preset, opts = {}) {
   const X = extraLabels(preset);
   const char = opts.char || '';
   const off = opts.enabled === false;
+  const relOff = Boolean(state && state.relOff);
   const health = stateHealth(state, preset);
   let list = [];
   if (health.kind === 'ok') {
@@ -68,7 +70,8 @@ export function achievementsView(state, preset, opts = {}) {
     const cats = feats.map((f) => byKind.get(f.id));
     const got = cats.filter((c) => c.got);
     const title = fam.id === 'teach' ? ((preset && preset.ui && preset.ui.achFamTeach) || uiLabels(preset).teachersTitle) : X[fam.labelKey];
-    const secretLeft = cats.filter((c) => !c.got && c.secret).length;
+    const frozenOf = (c) => relOff && REL_FEATS.includes(c.kind) && !c.got;
+    const secretLeft = cats.filter((c) => !c.got && c.secret && !frozenOf(c)).length;
     return {
       id: fam.id,
       title,
@@ -77,7 +80,9 @@ export function achievementsView(state, preset, opts = {}) {
       countLine: fill(X.achShelfCount, { got: got.length, total: cats.length }),
       share: cats.length ? got.length / cats.length : 0,
       awards: list.filter((e) => e.fam === fam.id).map((e) => awardOf(e, title)),
-      todo: cats.filter((c) => !c.got && !c.secret).map((c) => ({ kind: c.kind, title: c.title, hint: c.hint })),
+      todo: cats.filter((c) => !c.got && (!c.secret || frozenOf(c))).map((c) => (frozenOf(c)
+        ? { kind: c.kind, title: featText(c.kind, preset).name, hint: uiLabels(preset).relationOff, unavailable: true }
+        : { kind: c.kind, title: c.title, hint: c.hint })),
       secretMore: secretLeft
         ? fill(X.achSecretMore, { n: secretLeft, word: plural(secretLeft, X.achSecretWordOne, X.achSecretWordMany, X.achSecretWordMany) })
         : '',
@@ -149,12 +154,12 @@ export function renderAchievements(host, view, preset) {
       a.mark ? el('span', { class: 'ad-award-mark', text: a.mark }) : null,
     ])),
   ]);
-  const todo = (t) => el('li', { class: 'ad-todo-row', dataset: { kind: t.kind } }, [
+  const todo = (t) => el('li', { class: 'ad-todo-row', dataset: { kind: t.kind, ...(t.unavailable ? { off: '1' } : {}) } }, [
     el('div', { class: 'ad-row ad-row-flat' }, [el('div', { class: 'ad-row-head' }, [
       sign(),
       el('span', { class: 'ad-row-main' }, [
         el('span', { class: 'ad-award-title ad-tr-t', text: t.title }),
-        el('span', { class: 'ad-row-sub ad-tr-h', text: t.hint }),
+        el('span', { class: t.unavailable ? 'ad-row-sub ad-tr-h ad-soft' : 'ad-row-sub ad-tr-h', text: t.hint }),
       ]),
     ])]),
   ]);

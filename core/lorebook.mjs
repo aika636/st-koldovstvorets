@@ -1,7 +1,8 @@
-import { presetGender } from './gender.mjs';
+import { presetGender, heroWords } from './gender.mjs';
 import { labelFor, findTeacher } from './state.mjs';
-import { relationMemory, relationLabel, relationOf, findPerson, scaleOff } from './relations.mjs';
-import { tieTarget, classmateStart } from './classmates.mjs';
+import { findPerson } from './relations.mjs';
+import { bondOf, bondsOff, defaultBond, roleOf, tagLabel, shadeLabel, genderOfPerson } from './bonds.mjs';
+import { tieTarget } from './classmates.mjs';
 import { stableLooks } from './portraits.mjs';
 import { normalizeFeed, openDeals } from './feed.mjs';
 import { diffDays } from './time.mjs';
@@ -46,7 +47,7 @@ export const DEFAULT_TEMPLATES = {
   classmateHeroine: 'героиня',
   classmateProblem: 'Что не ладится: {problem}.',
   classmateRelation: 'К героине: {relation}.',
-  classmateMemory: 'Помнит: {memory}.',
+  classmateLast: 'Последнее: {last}.',
 };
 
 const MALE_TEMPLATES = {
@@ -101,25 +102,56 @@ export function personKind(person) {
 
 const isTeacherOf = (state, p) => Boolean(p && (state.teachers || []).some((t) => t.id === p.id));
 
-function startOf(state, p, preset) {
-  return isTeacherOf(state, p) ? numberOr(preset && preset.relations && preset.relations.start, 0) : classmateStart(preset);
+const MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+function dayWord(day) {
+  const m = /^\d{4}-(\d\d)-(\d\d)/.exec(String(day || ''));
+  return m && MONTHS_GEN[Number(m[1]) - 1] ? `${Number(m[2])} ${MONTHS_GEN[Number(m[1]) - 1]}` : '';
+}
+
+const stamp = (x) => `${x.at.day} ${x.at.time}`;
+
+function lastAct(state, id) {
+  const hits = normalizeFeed(state && state.feed).items.filter((x) => x.kind === 'fact' && x.act && x.about.includes(HEROINE) && x.about.includes(id));
+  if (!hits.length) return null;
+  return hits.reduce((best, x) => (stamp(x) >= stamp(best) ? x : best));
+}
+
+const actWhat = (item) => {
+  const t = String(item.text || '');
+  const at = t.indexOf(': ');
+  return bare((at >= 0 ? t.slice(at + 2) : t).replace(/\s*\([^()]*\)\s*$/, ''));
+};
+
+/** Narrator memory of one person: bond label with shades and the last thing that happened; empty when nothing is worth saying. */
+function bondStory(state, p, preset) {
+  const none = { relation: '', last: '' };
+  if (bondsOff(state)) return none;
+  const bond = bondOf(state, p.id);
+  if (!bond) return none;
+  const g = genderOfPerson(state, p.id);
+  const W = heroWords(presetGender(preset));
+  const act = lastAct(state, p.id);
+  const noteDay = dayWord(bond.day);
+  const last = act
+    ? [actWhat(act), dayWord(act.at.day)].filter(Boolean).join(', ')
+    : bond.note ? [bare(bond.note), noteDay].filter(Boolean).join(', ') : '';
+  const start = defaultBond(roleOf(state, p.id), { known: p.known }).tag;
+  if (bond.tag === start && !bond.shades.length && !last) return none;
+  const label = tagLabel(bond.tag, g).replace(/с вами/, `с ${W.heroIns}`).replace(/вашей работе/, `работе ${W.heroGen}`);
+  const shades = bond.shades.map((s) => shadeLabel(s.id, g)).join(', ');
+  return { relation: shades ? `${label} (${shades})` : label, last };
 }
 
 function storyOf(state, p, preset, vars) {
   const phrase = (tpl, extra) => fill(templateOf(preset, tpl), { ...vars, ...extra });
-  const memory = relationMemory(state, p.id, preset).map((m) => bare(m.reason)).filter(Boolean);
-  const moved = relationMemory(state, p.id, preset).length > 0
-    || (personKind(p) === 'own' && relationOf(state, p.id) !== startOf(state, p, preset));
+  const { relation, last } = bondStory(state, p, preset);
   const deals = openDeals(state, p.id).filter((d) => !d.intent && d.b).map((d) => {
     const other = d.a === p.id ? d.b : d.a;
     const who = other === HEROINE ? templateOf(preset, 'classmateHeroine') : ((findPerson(state, other) || {}).name || '');
     return who ? phrase('dealLine', { who, what: bare(d.what) }) : '';
   }).filter(Boolean);
-  return {
-    memory,
-    deals,
-    relation: moved && !scaleOff(state) ? relationLabel(state, p.id, preset) : '',
-  };
+  return { last, deals, relation };
 }
 
 function personEntry(state, p, preset) {
@@ -132,7 +164,7 @@ function personEntry(state, p, preset) {
   const subjectName = subject && subject.name ? subject.name : '';
   const story = storyOf(state, p, preset, vars);
   const relation = phrase('classmateRelation', 'relation', story.relation);
-  const memory = phrase('classmateMemory', 'memory', story.memory.join('; '));
+  const memory = phrase('classmateLast', 'last', story.last);
   const uid = teacher ? `koldo:teacher:${p.id}` : classmateUid(p.id);
   const base = { uid, category: 'people', title: p.name, spec: { type: 'person', name: p.name, aliases: p.aliases || [] }, order: teacher ? 50 : 45 };
 
@@ -223,6 +255,8 @@ function englishCharter(state, preset, vars) {
   return [place, rules].filter(Boolean).join(' ');
 }
 
+const BONDS_NOTE = 'Relationship lines about {{user}} in people entries are memory of past scenes; the chat text takes precedence.';
+
 export function heroineEntry(state) {
   if (!state || !state.grade) return null;
   const house = bare(state.survey && state.survey.faculty);
@@ -239,7 +273,7 @@ export function heroineEntry(state) {
     title: 'Героиня',
     spec: { type: 'none' },
     constant: true,
-    content: sectionsText([['HEROINE', `${head} ${body}`]]),
+    content: sectionsText([['HEROINE', [head, body, bondsOff(state) ? '' : BONDS_NOTE].filter(Boolean).join(' ')]]),
     order: 95,
     lang: 'en',
   });
@@ -254,7 +288,7 @@ export function charterEntry(state, preset) {
     reputation: labelFor(reputationLabels(preset), state.reputation ? state.reputation.value : 0),
   }).replace(/^\s*\.\s*/, '') : english;
   const content = sectionsText([
-    ['KOLDO RULES', english === null ? rules : rules],
+    ['KOLDO RULES', rules],
   ]);
 
   return entry({

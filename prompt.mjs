@@ -5,7 +5,7 @@ import { sceneDigests, digestMaxOf } from './core/scene-digest.mjs';
 import { cutText } from './core/feed-text.mjs';
 import { dayPlan, currentPeriod } from './core/schedule.mjs';
 import { debts, overallScore, DEBT_RETAKE } from './core/gradebook.mjs';
-import { relationLabel, scaleOff } from './core/relations.mjs';
+import { bondLabel, bondOf, defaultBond, roleOf, bondsOff, bondsFor, SHADES } from './core/bonds.mjs';
 import { reputationLabel } from './core/reputation.mjs';
 import { notableGrade } from './core/fame.mjs';
 import { examMode, publicView, retakeList, weekAheadKinds } from './core/exams.mjs';
@@ -95,7 +95,7 @@ export const DEFAULT_LABELS = {
 export const FEED_LINE_MAX = 220;
 
 export const DEFAULT_PROMPTS = {
-  marker: 'Первой строкой ответа (если он открыт блоком состояния сцены — сразу после него) добавь метку: <!-- [KOLDO t=+1] -->. Ключи: t= сдвиг времени (+1 — {period}, +1 day, +1 week); grade={subject}:оценка; rel={teacher}:minor+ или major- (:повод); skip={subject}; late={subject}. Только то, что случилось в ответе.',
+  marker: 'Первой строкой ответа (если он открыт блоком состояния сцены — сразу после него) добавь метку: <!-- [KOLDO t=+1] -->. Ключи: t= сдвиг времени (+1 — {period}, +1 day, +1 week); grade={subject}:оценка; rel={teacher}:тег, +оттенок или -оттенок (:повод), только при явном и долгом сдвиге отношения к {heroDat} (теги — {bondTags} · оттенки — {bondShades}); skip={subject}; late={subject}. Только то, что случилось в ответе.',
   markerIds: '{subjectsTitle}: {subjects}.',
   markerTeachers: '{teacherPlural}: {teachers}.',
 };
@@ -269,13 +269,11 @@ function lessonName(state, item, L) {
 }
 
 function relationSegment(state, preset, L, mode) {
-  if (scaleOff(state)) return '';
+  if (bondsOff(state)) return '';
   const teacher = teacherInFrame(state, preset, mode);
   if (!teacher) return '';
-  const scale = (preset && preset.relations) || {};
-  const label = relationLabel(state, teacher.id, preset);
-  if (!label || label === labelFor(scale.labels || [], numberOr(scale.start, 0))) return '';
-  return fill(L.relation, { teacher: teacher.name || teacher.id, label });
+  if (bondOf(state, teacher.id).tag === defaultBond(roleOf(state, teacher.id)).tag) return '';
+  return fill(L.relation, { teacher: teacher.name || teacher.id, label: bondLabel(state, teacher.id) });
 }
 
 function nearSegment(state, preset, L) {
@@ -417,10 +415,13 @@ export function markerInstruction(state, preset) {
   const vocab = vocabOf(preset);
   const marker = fill(P.marker, {
     period: vocab.period || '',
+    heroDat: heroWords(presetGender(preset)).heroDat,
+    bondTags: bondsFor('teacher').map((b) => b.id).join(', '),
+    bondShades: SHADES.map((x) => x.id).join(', '),
     teacher: firstId(state && state.teachers) || vocab.teacher || '',
     ...subjectVars(preset),
   });
-  const parts = [scaleOff(state) ? marker.replace(/\s*\brel=[^;]*;/u, '') : marker];
+  const parts = [bondsOff(state) ? marker.replace(/\s*\brel=[^;]*;/u, '') : marker];
 
   const subjects = idsOf(state && state.subjects);
   if (subjects.length) parts.push(fill(P.markerIds, { subjects: subjects.join(', '), subjectsTitle: upFirst(subjectVars(preset).subjectPlural) }));
