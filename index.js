@@ -6,14 +6,14 @@ import {
 import { applyBondEvent, bondsOff } from './core/bonds.mjs';
 import {
   buildAnalysisPrompt, parseAnalysis, effectiveText, tokenText, tokenEvent, tokenOf,
-  dropTokenAt, factRef, reactionsOf, reactionOf, isFactToken, isReactToken, isPlayedToken, isPrepToken, playedOf, loudOf, privateRefs,
+  dropTokenAt, factRef, reactionsOf, reactionOf, isFactToken, isReactToken, isPlayedToken, isPrepToken, playedOf, loudOf, placeOf, privateRefs,
   unparsedNames, unparsedLeft, repliesOf, replyOf, isReplyToken, tokenAbout, talkParts,
 } from './core/analysis.mjs';
 import { heroGender, heroWords, resolvePreset, GENDERS } from './core/gender.mjs';
 import { applyEventFame } from './core/fame.mjs';
 import { applySceneEvents, applyNotableFacts, applyLoudScene, applyReactions, localMet, revertSceneSource, SCENE_KINDS } from './core/scene.mjs';
 import {
-  reactionCap, carryFeedMarks, rememberFeedMarks, markRead, markPlayed, setLoudness, toggleReact, postByRef, retimeSource,
+  reactionCap, carryFeedMarks, rememberFeedMarks, markRead, markPlayed, setLoudness, setPlace, toggleReact, postByRef, retimeSource,
   feedItems as feedItemsOf,
 } from './core/feed.mjs';
 import {
@@ -1256,6 +1256,11 @@ function sceneOfTurn(state, text, tokens, mark, c) {
   if (loud !== null && next.feed) {
     next = cloneState(next);
     setLoudness(next, mark, loud);
+  }
+  const place = Array.isArray(tokens) ? placeOf(tokens) : '';
+  if (place && next.feed) {
+    next = cloneState(next);
+    setPlace(next, mark, place);
   }
   const played = Array.isArray(tokens) ? playedRefs(live.plot, playedOf(tokens)) : [];
   if (played.length) {

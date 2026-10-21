@@ -108,6 +108,23 @@ export function authorOf(p, state, info = {}) {
   };
 }
 
+const NEUTRAL_SPEECH = 'простая живая речь, без вычурности';
+
+function ownPerson(c, state) {
+  const tone = toneOf(state, c.id);
+  return {
+    id: c.id,
+    role: 'student',
+    name: c.name,
+    short: c.name.split(' ')[0],
+    gender: c.gender,
+    aliases: c.aliases,
+    grade: Number(state && state.grade) === 12 ? 12 : Number(state && state.grade) === 11 ? 11 : 0,
+    voice: { surface: c.note || c.seed || '', speech: c.manner || NEUTRAL_SPEECH, notices: c.club || '', bias: c.desire || '', tactic: '', limits: '' },
+    tier: tone > 0 ? 'near' : c.known === false ? 'far' : 'mid',
+  };
+}
+
 export function feedAuthors(state, roster, opts = {}) {
   if (!roster) return [];
   const ring = circleOf(state, roster);
@@ -115,6 +132,13 @@ export function feedAuthors(state, roster, opts = {}) {
   for (const p of roster.students) {
     if (opts.stop && stopHit(p.short || p.name, opts.stop)) continue;
     out.push(authorOf(p, state, { ...ring.get(p.id), roster }));
+  }
+  const taken = new Set([...roster.students, ...roster.staff, ...roster.teachers].map((p) => p.id));
+  for (const c of (state && state.classmates) || []) {
+    if (!c || !c.id || !c.name || c.source === 'roster' || taken.has(c.id)) continue;
+    if (opts.stop && stopHit(c.name, opts.stop)) continue;
+    const p = ownPerson(c, state);
+    out.push({ ...authorOf(p, state, { tier: p.tier, roster }), house: '', full: c.name, own: true });
   }
   for (const p of [...roster.staff, ...roster.teachers]) out.push(authorOf(p, state, { roster }));
   return out;

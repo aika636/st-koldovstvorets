@@ -9,6 +9,7 @@ export const LOVERS_DEFAULT = 2;
 export const JEALOUS_MAX = 2;
 
 const NO_MEN = /ненавидит мужчин|не любит мужчин|не терпит мужчин/iu;
+const WOMEN_ONLY = /рядом с девушками|девушкам|с женщинами|женщину редко/iu;
 const COLD = /циник|язвит|колк|холодн|угрюм|заносч|властн|манипул/iu;
 const VAIN = /тщеслав|престиж|вторым|статус|вожак|доминир|не любит проигрывать|первым/iu;
 
@@ -26,8 +27,8 @@ export function romanceCandidates(roster, state, gender) {
   const g = gender === 'm' ? 'm' : 'f';
   return roster.students.filter((p) => {
     if (!(p.romance in ROMANCE_RANK)) return false;
-    if (g === 'm') return p.gender === 'f' && !NO_MEN.test(`${p.romanceNote || ''}`);
-    return true;
+    const note = `${p.romanceNote || ''}`;
+    return g !== 'm' || (!NO_MEN.test(note) && !WOMEN_ONLY.test(note));
   });
 }
 

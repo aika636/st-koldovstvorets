@@ -1739,7 +1739,7 @@ export function applyIssue(work, result, agenda, opts = {}) {
         about: event ? o.about : o.kind === 'anon' ? (o.target && o.target !== '@heroine' ? [o.target] : ['@heroine']) : [], heroine: (event && o.heroine === true) || o.kind === 'talk' || (o.kind === 'anon' && o.target === '@heroine'),
         loud: event ? o.loud : 1, factText: event ? clip(o.text, FACT_TEXT_MAX) : '',
         occ: { kind: l.occ.kind, ref: l.occ.ref },
-        ...(l.note ? { anon: { target: l.note.target, tone: l.note.tone, fact: l.note.fact || '', clues: l.note.clues || cluesFor(opts.roster && opts.roster.get(l.author.id), opts.roster) } } : {}),
+        ...(l.note ? { anon: { target: l.note.target, tone: l.note.tone, fact: l.note.fact || '', clues: l.note.clues || cluesFor((opts.roster && opts.roster.get(l.author.id)) || l.author, opts.roster) } } : {}),
       };
       if (addFeedItem(work, withReacts(item, l, o.kind === 'life', false))) {
         posts += 1;

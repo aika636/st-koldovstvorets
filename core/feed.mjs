@@ -187,6 +187,7 @@ export function normalizeItem(raw) {
     about: (Array.isArray(raw.about) ? raw.about : []).map(str).filter(Boolean).slice(0, 4),
     heroine: raw.heroine === true,
     loud: Number.isInteger(raw.loud) && raw.loud >= 0 && raw.loud <= 3 ? raw.loud : null,
+    ...(kind === 'fact' && PLACES.includes(raw.place) ? { place: raw.place } : {}),
     factText: clipText(raw.factText, FACT_TEXT_MAX),
     gist: kind === 'fact' ? clipText(raw.gist, FEED_TEXT_MAX) : '',
     playedSrc: raw.status === 'played' ? str(raw.playedSrc) : '',
@@ -617,6 +618,15 @@ function seeded(seedText) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+export const PLACES = ['класс', 'горница', 'трапезная', 'двор', 'коридор', 'иное'];
+
+export function setPlace(state, src, place) {
+  if (!PLACES.includes(place)) return 0;
+  let n = 0;
+  for (const x of ensureFeed(state).items) if (x.src === src && x.kind === 'fact') { x.place = place; n += 1; }
+  return n;
 }
 
 export function setLoudness(state, src, loud) {

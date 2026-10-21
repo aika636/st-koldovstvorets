@@ -11,7 +11,7 @@ import { EVENT_HORIZON } from './parse-marker.mjs';
 import { SCENE_KINDS, sceneText, sceneAbout, personWord, GONE_PERSON, genderOfName } from './scene.mjs';
 import { heroGender } from './gender.mjs';
 import { subjectWord, upFirst } from './words.mjs';
-import { reactionCap, loudCap, LOUDNESS, hash, postRef } from './feed.mjs';
+import { reactionCap, loudCap, LOUDNESS, PLACES, hash, postRef } from './feed.mjs';
 import { isPrepToken, prepTokenOf, prepTokenText, prepTokens } from './prep.mjs';
 import { featText, featById, featsPromptLines } from './feats.mjs';
 
@@ -166,6 +166,7 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
     'Block 2. Слышно: how loud this will be at school and whether it was public. It changes nothing in the ledger; no posts, replies or nicknames. Lines:',
     'Слышно:',
     'loud=0..3',
+    `place=${PLACES.join('|')} (where the fragment is set; skip if unclear)`,
     'private=marker key numbers',
     'Block 2 rules. loud: 0 quiet (ordinary grade, chat), 1 noticeable, 2 loud (public skipping, quarrel), 3 the whole school (scandal, confession from the stage). private: only what happened without witnesses (closed-door talk, whisper, secret meeting): 1-based ordinal numbers of block 1 keys, comma-separated, e.g. private=2,3; leave out public ones; none — no line.',
     '',
@@ -361,6 +362,7 @@ export function parseAnalysis(raw, lexicon, opts = {}) {
 
   const loudMatch = /(?<![\p{L}\d_])(?:loud|громкость)\s*[=:]\s*([0-3])/iu.exec(text);
   const loud = loudMatch ? Number(loudMatch[1]) : null;
+  const placeMatch = new RegExp(`(?<![\\p{L}\\d_])(?:place|место)\\s*[=:]\\s*(${PLACES.join('|')})(?![\\p{L}])`, 'iu').exec(text);
   const cap = loudCap(loud === null ? 1 : loud, reactionCap(lexicon));
   const reactions = [];
   const seenText = new Set();
@@ -438,6 +440,8 @@ export function parseAnalysis(raw, lexicon, opts = {}) {
   tokens.push(...privates);
   if (posted || (loud !== null && (loud >= 2 || rejected.length > 0 || tokens.some(isFactToken)))) tokens.push(`loud=${loud === null ? 1 : loud}`);
 
+  if (placeMatch && tokens.some(isFactToken)) tokens.push(`place=${placeMatch[1].toLowerCase()}`);
+
   const m = /кратко\s*[:：]\s*(.+)/i.exec(text);
   const summary = m ? tidySummary(m[1].replace(/<!--[\s\S]*?-->/g, ''), lexicon) : '';
   return { found, partial, tokens, summary, rejected };
@@ -462,7 +466,7 @@ export function tidySummary(text, lexicon) {
   return out.slice(0, 300);
 }
 
-const COMPOSED_KEYS = ['react', 'реакция', 'reply', 'ответ', 'loud', 'громкость', 'private', 'наедине'];
+const COMPOSED_KEYS = ['react', 'реакция', 'reply', 'ответ', 'loud', 'громкость', 'private', 'наедине', 'place', 'место'];
 
 const PRIVATE_WORDS = ['private', 'наедине'];
 
@@ -682,6 +686,16 @@ export function isLoudToken(token) {
   return /^loud=/.test(String(token || ''));
 }
 
+export function isPlaceToken(token) {
+  return /^place=/.test(String(token || ''));
+}
+
+export function placeOf(tokens) {
+  const t = (tokens || []).find(isPlaceToken);
+  const v = t ? t.slice(6) : '';
+  return PLACES.includes(v) ? v : '';
+}
+
 export function isPrivateToken(token) {
   return /^private=/.test(String(token || ''));
 }
@@ -701,7 +715,7 @@ export function playedOf(tokens) {
 }
 
 export function isFactToken(token) {
-  return Boolean(token) && !isReactToken(token) && !isReplyToken(token) && !isLoudToken(token) && !isPlayedToken(token) && !isPrivateToken(token) && !isPrepToken(token);
+  return Boolean(token) && !isReactToken(token) && !isReplyToken(token) && !isLoudToken(token) && !isPlaceToken(token) && !isPlayedToken(token) && !isPrivateToken(token) && !isPrepToken(token);
 }
 
 export function reactionOf(token, tokens = []) {
@@ -737,13 +751,13 @@ export function pruneReactions(tokens) {
     return Boolean(a && (a.feed || posts.has(a.parent.slice(2))));
   });
   const left = kept.filter((t) => !isPrivateToken(t) || refs.has(t.slice(8)));
-  return left.some((t) => isReactToken(t) || isReplyToken(t) || isFactToken(t)) ? left : left.filter((t) => !isLoudToken(t));
+  return left.some((t) => isReactToken(t) || isReplyToken(t) || isFactToken(t)) ? left : left.filter((t) => !isLoudToken(t) && !isPlaceToken(t));
 }
 
 export function dropTokenAt(tokens, index) {
   if (!Array.isArray(tokens)) return tokens;
   const left = tokens.filter((_, i) => i !== index);
-  if (isFactToken(tokens[index]) && !left.some(isFactToken)) return pruneReactions(left.filter((t) => !isLoudToken(t)));
+  if (isFactToken(tokens[index]) && !left.some(isFactToken)) return pruneReactions(left.filter((t) => !isLoudToken(t) && !isPlaceToken(t)));
   return pruneReactions(left);
 }
 
@@ -861,6 +875,7 @@ export function tokenText(token, lexicon, { known = false, brief = false, day = 
     const row = LOUDNESS.find((l) => l.level === loudOf([token]));
     return row ? row.word : String(token);
   }
+  if (isPlaceToken(token)) return `место: ${token.slice(6)}`;
   if (isPrivateToken(token)) return 'наедине, без свидетелей';
   if (isPrepToken(token)) return prepTokenText(token, lexicon.preps);
   if (isPlayedToken(token)) {

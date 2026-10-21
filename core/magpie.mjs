@@ -1,4 +1,4 @@
-import { normalizeFeed, hash, clipText } from './feed.mjs';
+import { normalizeFeed, hash } from './feed.mjs';
 import { diffDays } from './time.mjs';
 import { feedAuthors, mindOf, openTies, SHARP_TIES } from './authors.mjs';
 import { nameStems, hasStem } from './secrets.mjs';
@@ -71,15 +71,27 @@ function daysBetween(a, b) {
 
 const personsIn = (f, roster) => (f.about || []).filter((id) => id !== '@heroine' && roster.get(id) && roster.get(id).role === 'student');
 
+const HAND_KEYS = ['letters', 'slant', 'press', 'tool', 'quirk'];
+
+// приметы почерка, которые есть ещё у кого-то из состава: одна примета не называет автора
+export function sharedHand(person, roster) {
+  const hand = (person && person.hand) || {};
+  const others = ((roster && roster.students) || []).filter((s) => s.id !== person.id && s.hand);
+  return HAND_KEYS.filter((k) => hand[k] && others.some((s) => s.hand[k] === hand[k]));
+}
+
 export function cluesFor(person, roster) {
-  const house = roster.house(person.house);
-  const hand = String((person.voice && person.voice.speech) || person.speech || '').split(/[;.]/)[0].trim().toLowerCase();
-  const out = [];
-  if (hand) out.push({ kind: 'hand', text: `слог и почерк: ${clipText(hand, 80)}`, finder: 'draft', spent: false });
+  person = person || {};
+  const house = person.house && roster && roster.house ? roster.house(person.house) : null;
+  const out = sharedHand(person, roster)
+    .sort((a, b) => (hash(`${person.id}|${a}`) < hash(`${person.id}|${b}`) ? -1 : 1))
+    .slice(0, 2)
+    .map((k) => ({ kind: 'hand', text: person.hand[k], finder: 'draft', spent: false }));
   const coarse = hash(`${person.id}|clue`).length % 2 === 0;
   if (house && person.grade && coarse) out.push({ kind: 'room', text: `записку видели в горнице ${house.name} ${person.grade} класса`, finder: 'wax', spent: false });
   else if (house) out.push({ kind: 'ink', text: `чернила цвета «${house.color}», а бумага из лавки Лисы`, finder: 'magpie', spent: false });
-  return out.slice(0, 2);
+  else out.push({ kind: 'ink', text: 'бумага из лавки Лисы, а чернила самые обычные', finder: 'magpie', spent: false });
+  return out;
 }
 
 export function planNotes(state, roster, ctx = {}) {
@@ -165,7 +177,7 @@ export function planNotes(state, roster, ctx = {}) {
     }
   }
   return out.map((n, i) => {
-    const person = roster.get(n.author);
+    const person = roster.get(n.author) || byId.get(n.author);
     const why = hasStem(n.why, nameStems(person)) ? 'у автора на это свои причины' : n.why;
     return { ...n, why, id: `к${i + 1}`, clues: cluesFor(person, roster) };
   });

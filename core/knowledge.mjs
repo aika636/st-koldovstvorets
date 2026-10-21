@@ -34,8 +34,9 @@ export function knowersOf(fact, state, roster) {
   const how = new Map([...saw].map((id) => [id, 'saw']));
   const mark = (id, kind) => { if (!how.has(id)) how.set(id, kind); };
   const reach = f.act && f.act.reach ? f.act.reach : (f.loud ?? 1) >= 2 ? 'многие' : 'неизвестно';
-  const lesson = LESSON_RE.test(text);
-  const wing = WING_RE.test(text);
+  const where = f.place || '';
+  const lesson = where ? where === 'класс' : LESSON_RE.test(text);
+  const wing = where ? where === 'горница' : WING_RE.test(text);
   const rumor = f.rumor === true;
   const horns = parts.filter((x) => x.at.grade);
   const sameGrade = (g) => students.filter((s) => s.grade === g);
@@ -49,7 +50,7 @@ export function knowersOf(fact, state, roster) {
     } else if (wing) {
       for (const x of horns) for (const s of reach === 'многие' ? sameHouse(x.at.house) : sameHorn(x.at.grade, x.at.house)) mark(s.id, 'near');
       scope = 'wing';
-    } else if (reach === 'многие') {
+    } else if (reach === 'многие' || where === 'трапезная' || where === 'двор') {
       for (const x of horns) for (const s of [...sameGrade(x.at.grade), ...sameHouse(x.at.house)]) mark(s.id, 'near');
       scope = 'crowd';
     } else {
