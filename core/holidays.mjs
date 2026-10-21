@@ -18,9 +18,9 @@ export const MAX_PAUSE_DAYS = 366;
 export const HOOKS_KEPT = 80;
 
 export const DEFAULT_HOOK_PHRASES = {
-  hook: 'Сегодня {name}. Если уместно, можно вплести в сцену: {hook}',
-  hookBare: 'Сегодня {name}{note}. Если уместно, пусть праздник мелькнёт в сцене — фоном, без нажима.',
-  hookOff: 'Сейчас {name}{note}; занятий нет. Если уместно, пусть это почувствуется в сцене — без нажима.',
+  hook: 'Today is {name}. If it fits, weave in: {hook}',
+  hookBare: 'Today is {name}{note}. If it fits, let the holiday flicker in the scene as background, without pressure.',
+  hookOff: 'Now it is {name}{note}; no classes. If it fits, let it be felt in the scene, without pressure.',
 };
 
 const isMD = (v) => typeof v === 'string' && /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(v);
@@ -229,7 +229,9 @@ export function holidayEnd(h, day) {
 export function hookText(h, preset) {
   const own = (preset && preset.phrases && preset.phrases.holidays) || {};
   const P = { ...DEFAULT_HOOK_PHRASES, ...own };
-  const vars = { name: h.name, hook: h.hook, note: bare(h.today) ? ` — ${bare(h.today)}` : '' };
+  const head = /^([^:]{1,60}):\s*/u.exec(bare(h.today));
+  const today = head && head[1].trim().toLowerCase() === String(h.name || '').toLowerCase() ? bare(h.today).slice(head[0].length) : bare(h.today);
+  const vars = { name: h.name, hook: h.hook, note: today ? ` — ${today}` : '' };
   const template = h.hook ? P.hook : h.off ? P.hookOff : P.hookBare;
   return String(template).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 }

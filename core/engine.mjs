@@ -101,7 +101,7 @@ function timeSkipOf(state, preset, cue) {
 }
 
 export const TIME_SKIP_PHRASES = {
-  examAhead: 'Промотка времени не может перешагнуть {date}: в этот день — {what}. Останови сцену накануне.',
+  examAhead: 'A time skip cannot cross {date}: that day — {what}. Stop the scene the day before.',
 };
 
 export function timeSkipWarning(state, preset, cue) {

@@ -1,11 +1,10 @@
 import { labelFor } from './core/state.mjs';
-import { plural } from './core/plural.mjs';
 import { addDays, weekIndex, phaseOf, weekdayIn, termAt, preExamWeek, PRE_EXAMS_DEFAULT } from './core/time.mjs';
 import { sceneDigests, digestMaxOf } from './core/scene-digest.mjs';
 import { cutText } from './core/feed-text.mjs';
 import { dayPlan, currentPeriod } from './core/schedule.mjs';
 import { debts, overallScore, DEBT_RETAKE } from './core/gradebook.mjs';
-import { bondLabel, bondOf, defaultBond, roleOf, bondsOff, bondsFor, SHADES } from './core/bonds.mjs';
+import { bondOf, defaultBond, roleOf, bondsOff, bondsFor, SHADES } from './core/bonds.mjs';
 import { reputationLabel } from './core/reputation.mjs';
 import { notableGrade } from './core/fame.mjs';
 import { examMode, publicView, retakeList, weekAheadKinds, examKinds, trialSubjects } from './core/exams.mjs';
@@ -18,89 +17,89 @@ import { heroWords, presetGender } from './core/gender.mjs';
 import { subjectVars, upFirst } from './core/words.mjs';
 
 export const DEFAULT_LABELS = {
-  weekdays: ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'],
+  weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
   phases: {
-    study: '', weekend: 'выходной', vacation: 'каникулы', break: 'каникулы', exams: '',
+    study: '', weekend: 'weekend', vacation: 'vacation', break: 'vacation', exams: '',
     preExams: PRE_EXAMS_DEFAULT,
   },
 
-  day: '{weekday}, {week}-я неделя',
+  day: '{weekday}, week {week}',
   dayOutside: '{weekday}, {phase}',
-  dayPhase: '{weekday}, {week}-я неделя, {phase}',
+  dayPhase: '{weekday}, week {week}, {phase}',
 
-  now: 'сейчас: {subject}{teacher}',
-  next: 'скоро: {subject}{teacher}',
-  today: 'сегодня: {list}',
-  nowMark: '{subject} (сейчас)',
+  now: 'now: {subject}{teacher}',
+  next: 'next: {subject}{teacher}',
+  today: 'today: {list}',
+  nowMark: '{subject} (now)',
   teacherOf: ' ({teacher})',
 
   debts: '{debtPlural}: {list}',
-  retakes: 'пересдача: {list}',
-  lastTry: '{subject} (последняя попытка)',
-  expelled: '{hero} {expelled}: {paths}',
-  expelPaths: 'остаются апелляция, восстановление или перевод в другое заведение — что из этого, решает сцена',
+  retakes: 'retake: {list}',
+  lastTry: '{subject} (last attempt)',
+  expelled: '{hero} is expelled: {paths}',
+  expelPaths: 'appeal, reinstatement or transfer to another school remain; the scene decides which',
   score: '{scoreName}: {value}',
-  exams: '{examPeriod}: не сдано {count}, до конца — {days} {daysWord}',
-  examsNoDays: '{examPeriod}: не сдано {count}',
-  relation: '{teacher}: {label}',
-  reputation: 'репутация: {label}',
-  study: 'заметные оценки: {list}',
+  exams: '{examPeriod}: {count} not passed, {days} {daysWord} left',
+  examsNoDays: '{examPeriod}: {count} not passed',
+  relation: '{teacher} toward {hero}: {label}',
+  reputation: 'reputation: {label}',
+  study: 'notable grades: {list}',
   studyItem: '{subject} — {grade} ({when})',
-  studyToday: 'сегодня',
-  studyYesterday: 'вчера',
+  studyToday: 'today',
+  studyYesterday: 'yesterday',
 
   glue: '. ',
   end: '.',
   listGlue: ', ',
 
-  nearToday: 'сегодня',
-  nearTomorrow: 'завтра',
-  weekdaysOn: ['в понедельник', 'во вторник', 'в среду', 'в четверг', 'в пятницу', 'в субботу', 'в воскресенье'],
+  nearToday: 'today',
+  nearTomorrow: 'tomorrow',
+  weekdaysOn: ['on Monday', 'on Tuesday', 'on Wednesday', 'on Thursday', 'on Friday', 'on Saturday', 'on Sunday'],
   nearExam: '{when} — {what}',
   nearExamSubject: '{when} — {what}: {subject}',
-  nearAnnounce: '{when} объявят итог: {subject}',
+  nearAnnounce: '{when} results announced: {subject}',
   nearGlue: '; ',
-  weekAhead: 'через неделю — {what}: {subjects}',
-  weekAheadAll: 'через неделю — {what}',
+  weekAhead: 'in a week — {what}: {subjects}',
+  weekAheadAll: 'in a week — {what}',
 
-  holidayNow: 'сегодня {name} — {note}',
-  holidayNowBare: 'сегодня {name}',
+  holidayNow: 'today is {name} — {note}',
+  holidayNowBare: 'today is {name}',
   holidayAhead: '{when} {name} — {note}',
   holidayAheadBare: '{when} {name}',
-  holidayAlso: 'и {name} — {note}',
-  holidayAlsoBare: 'и {name}',
-  holidaySoon: 'скоро',
-  holidayGoing: '{hero} и {who} договорились пойти вместе: {name}',
+  holidayAlso: 'and {name} — {note}',
+  holidayAlsoBare: 'and {name}',
+  holidaySoon: 'soon',
+  holidayGoing: '{hero} and {who} agreed to go together: {name}',
 
-  feed: '{crowdIn} говорят: {list}',
+  feed: 'Talk in {crowdIn}: {list}',
   feedFact: '{text}',
-  feedRumor: '{text} — слух',
-  feedTalk: '{text} — обсуждают',
-  feedTalkQuote: 'обсуждают: «{text}»',
-  feedGossip: '«{text}» — слух, правда ли, неизвестно',
+  feedRumor: '{text} — rumor',
+  feedTalk: '{text} — being discussed',
+  feedTalkQuote: 'being discussed: «{text}»',
+  feedGossip: '«{text}» — a rumor, unknown if true',
   feedGlue: '; ',
 
-  during: 'В это время: {list}',
+  during: 'Meanwhile: {list}',
   duringItem: '{when} — {text}',
-  whenAfternoon: 'после обеда',
-  whenEvening: 'вечером',
-  manner: 'Как ведёт урок {teacher}: {lesson}{grading}',
-  mannerGrading: ' Зачёт: {grading}.',
-  people: 'Рядом в сцене: {list}',
+  whenAfternoon: 'after lunch',
+  whenEvening: 'in the evening',
+  manner: 'How {teacher} teaches: {lesson}{grading}',
+  mannerGrading: ' Grading: {grading}.',
+  people: 'In the scene: {list}',
   peopleGlue: '; ',
 
   dayList: '',
   terms: '',
 
-  tone: 'Травли в школе нет: конфликты — это ссоры, соперничество, ревность и обиды; ничей характер не оборачивается систематическим преследованием или унижением.',
+  tone: 'No bullying at school: conflicts are quarrels, rivalry, jealousy and grudges; no character turns into systematic persecution or humiliation.',
 };
 
 export const FEED_LINE_MAX = 220;
 
 export const DEFAULT_PROMPTS = {
-  marker: 'Первой строкой ответа (если он открыт блоком состояния сцены — сразу после него) добавь метку: <!-- [KOLDO t=+1] -->. Ключи: t= сдвиг времени (+1 — {period}, +1 day, +1 week); grade={subject}:оценка; rel={teacher}:тег, +оттенок или -оттенок (:повод), только при явном и долгом сдвиге отношения к {heroDat} (теги — {bondTags} · оттенки — {bondShades}); skip={subject}; late={subject}. Только то, что случилось в ответе.',
-  markerIds: '{subjectsTitle}: {subjects}.',
-  markerTeachers: '{teacherPlural}: {teachers}.',
+  marker: 'Start the reply (right after the scene-state block, if any) with a marker: <!-- [KOLDO t=+1] -->. Keys: t= time shift (+1 = one lesson, +1 day, +1 week); grade=subject:grade; rel=teacher:tag, +shade or -shade (:reason), only for a clear lasting shift in attitude toward {hero} (tags — {bondTags} · shades — {bondShades}); skip=subject; late=subject. Only what happened in the reply.',
+  markerIds: 'Subject ids: {subjects}.',
+  markerTeachers: 'Mentor ids: {teachers}.',
 };
 
 const vocabOf = (preset) => (preset && preset.vocab) || {};
@@ -117,7 +116,7 @@ export function statusLine(state, preset, opts = {}) {
   if (during) segments.splice(Math.max(0, segments.findIndex((s) => s.id === 'schedule') + 1), 0, { id: 'during', text: during });
   if (opts.feed) {
     const holiday = segments.some((s) => (s.id === 'holiday' || s.id === 'holidayAhead') && s.text);
-    const crowdIn = String(vocabOf(preset).crowdIn || '').trim() || 'в классе';
+    const crowdIn = String(vocabOf(preset).crowdIn || '').trim() || 'class';
     segments.push({ id: 'feed', text: feedSegment(state, L, { quiet: opts.feed.quiet === true, holiday, crowdIn }) });
   }
 
@@ -193,7 +192,7 @@ function segmentsOf(state, preset, L) {
         examPeriod: vocab.examPeriod || '',
         count: String(count),
         days: String(days),
-        daysWord: plural(days, 'день', 'дня', 'дней'),
+        daysWord: days === 1 ? 'day' : 'days',
       }),
     });
   }
@@ -294,7 +293,7 @@ function relationSegment(state, preset, L, mode) {
   const teacher = teacherInFrame(state, preset, mode);
   if (!teacher) return '';
   if (bondOf(state, teacher.id).tag === defaultBond(roleOf(state, teacher.id)).tag) return '';
-  return fill(L.relation, { teacher: teacher.name || teacher.id, label: bondLabel(state, teacher.id) });
+  return fill(L.relation, { teacher: teacher.name || teacher.id, hero: heroWords(presetGender(preset)).heroEn, label: bondOf(state, teacher.id).tag });
 }
 
 function nearSegment(state, preset, L) {
@@ -326,7 +325,7 @@ function holidaySegment(state, preset, L, part) {
   return holidayPhrase(bg.aheadAll.map((a) => ({ h: a.holiday, note: bare(buzzFor(a.holiday, a.days)) })), L, L.holidayAhead, L.holidayAheadBare, { when });
 }
 
-function feedSegment(state, L, { quiet = false, holiday = false, crowdIn = 'в классе' } = {}) {
+function feedSegment(state, L, { quiet = false, holiday = false, crowdIn = 'class' } = {}) {
   if (quiet) return '';
   const points = feedBackground(state, { max: holiday ? 1 : BACKGROUND_MAX });
   if (!points.length) return '';
@@ -353,7 +352,7 @@ function feedSegment(state, L, { quiet = false, holiday = false, crowdIn = 'в �
 function goingSegment(state, preset, L) {
   const gender = presetGender(preset);
   return goingToday(state, preset)
-    .map((g) => fill(L.holidayGoing, { hero: heroWords(gender).hero, a: gender === 'm' ? '' : 'а', name: g.eventName, who: g.who }))
+    .map((g) => fill(L.holidayGoing, { hero: heroWords(gender).heroEn, name: g.eventName, who: g.who }))
     .join(L.glue);
 }
 
@@ -398,9 +397,7 @@ function weekAheadSegment(state, preset, L) {
 function expelledSegment(state, preset, L) {
   if (!(state.reputation && state.reputation.expelled)) return '';
   const vocab = vocabOf(preset);
-  const gender = presetGender(preset);
-  const word = (typeof vocab.expelled === 'string' ? vocab.expelled.trim() : '') || (gender === 'm' ? 'отчислен' : 'отчислена');
-  return fill(L.expelled, { hero: heroWords(gender).hero, expelled: word, paths: (typeof vocab.expelPaths === 'string' && vocab.expelPaths.trim()) || L.expelPaths });
+  return fill(L.expelled, { hero: heroWords(presetGender(preset)).heroEn, paths: (typeof vocab.expelPaths === 'string' && vocab.expelPaths.trim()) || L.expelPaths });
 }
 
 function reputationSegment(state, preset, L) {
@@ -409,7 +406,9 @@ function reputationSegment(state, preset, L) {
   if (!label) return '';
   const start = labelFor(scale.labels || [], numberOr(scale.start, state.reputation.value));
   if (label === start) return '';
-  return fill(L.reputation, { label });
+  const en = (((preset && preset.phrases) || {}).lorebook || {}).reputationEn;
+  const at = (scale.labels || []).findIndex((l) => l.label === label);
+  return fill(L.reputation, { label: (Array.isArray(en) && typeof en[at] === 'string' && en[at]) || label });
 }
 
 function teacherInFrame(state, preset, mode) {
@@ -445,11 +444,12 @@ export function markerInstruction(state, preset) {
   const vocab = vocabOf(preset);
   const marker = fill(P.marker, {
     period: vocab.period || '',
+    hero: heroWords(presetGender(preset)).heroEn,
     heroDat: heroWords(presetGender(preset)).heroDat,
+    teacher: idsOf(state && state.teachers)[0] || vocab.teacher || '',
+    ...subjectVars(preset),
     bondTags: bondsFor('teacher').map((b) => b.id).join(', '),
     bondShades: SHADES.map((x) => x.id).join(', '),
-    teacher: firstId(state && state.teachers) || vocab.teacher || '',
-    ...subjectVars(preset),
   });
   const parts = [bondsOff(state) ? marker.replace(/\s*\brel=[^;]*;/u, '') : marker];
 
@@ -505,8 +505,6 @@ function roundScore(value) {
 function idsOf(list) {
   return (Array.isArray(list) ? list : []).map((x) => x && x.id).filter(Boolean);
 }
-
-const firstId = (list) => idsOf(list)[0] || '';
 
 function cap(text) {
   const s = String(text || '');

@@ -1,4 +1,4 @@
-import { presetGender } from './gender.mjs';
+import { heroWords, presetGender } from './gender.mjs';
 import {
   cloneState, pushJournal, pushPending, findSubject, teacherOfSubject, clamp, isDay,
 } from './state.mjs';
@@ -15,13 +15,13 @@ export const DIE = 20;
 export const TIERS = ['critFail', 'fail', 'success', 'critSuccess'];
 
 export const DEFAULT_PHRASES = {
-  auto: 'Свершилось: {subject} — {value} без испытания ({teacher}). Отыграй это как уже случившееся.',
-  passed: 'Свершилось: {subject} — {value} ({teacher}). Отыграй это как уже случившееся.',
-  failed: 'Свершилось: {subject} — {value} ({teacher}). Отправлена на пересдачу, попыток осталось: {left}. Отыграй это как уже случившееся.',
-  exhausted: 'Свершилось: {subject} — {value} ({teacher}). Попытки исчерпаны, {debt} остаётся. Отыграй это как уже случившееся.',
-  permissionAuto: '{examPeriod}: {subject} — {scoreName} {score}, {auto} возможен. Провал на ровном месте отыгрывать запрещено.',
-  permissionNoAuto: '{examPeriod}: {subject} — {scoreName} {score}, {auto} невозможен; {teacher} принимает на общих основаниях. Блестящую сдачу без испытания отыгрывать запрещено.',
-  permissionRisk: '{examPeriod}: {subject} — {scoreName} {score}, сдача под вопросом; {teacher} вправе отправить на пересдачу. Успешный исход отыгрывать запрещено, его считает система.',
+  auto: 'Already happened: {subject} — {value}, no trial ({teacher}). Play it as past.',
+  passed: 'Already happened: {subject} — {value} ({teacher}). Play it as past.',
+  failed: 'Already happened: {subject} — {value} ({teacher}). Sent to retake, {left} attempts left. Play it as past.',
+  exhausted: 'Already happened: {subject} — {value} ({teacher}). Attempts exhausted, the debt remains. Play it as past.',
+  permissionAuto: '{examPeriod}: {subject} — average grade {score}, {auto} is possible. Do not play out a failure from nowhere.',
+  permissionNoAuto: '{examPeriod}: {subject} — average grade {score}, {auto} is not possible; {teacher} examines as usual. Do not play out a brilliant pass without a trial.',
+  permissionRisk: '{examPeriod}: {subject} — average grade {score}, the pass is in doubt; {teacher} may send to retake. Do not play out a success, the system decides it.',
   divergence: 'Расхождение по {subject}: посчитано {computed}, отыграно {said}. Принята версия модели.',
   scheduled: '{examPeriod}: назначено {count}.',
   scheduledKind: '{kind}: назначено {count}.',
@@ -32,14 +32,14 @@ export const DEFAULT_PHRASES = {
   debtExam: 'попытки исчерпаны',
   debtMissed: 'не сдано до конца периода',
   debtRetake: 'пересдача в начале следующего периода',
-  announceLater: 'Свершилось: {subject} — сдача позади ({teacher}). Закрытые сведения симуляции, не знание персонажей: {result}. Итог объявят {date}; до того оценку в сцене не знает никто, включая героиню. Отыграй саму сдачу как уже случившееся.',
-  announced: 'Итоги объявлены: {subject} — {result} ({teacher}). Теперь это знают все; отыграй, как героиня узнаёт итог.',
+  announceLater: 'Already happened: {subject} — the exam is over ({teacher}). Closed simulation info, not character knowledge: {result}. Results are announced {date}; until then nobody in the scene knows the grade, including {hero}. Play out only the exam itself as past.',
+  announced: 'Results announced: {subject} — {result} ({teacher}). Everyone knows now; play out how {hero} learns it.',
   resultPassed: '{value}',
-  resultFailed: '{value}, пересдача (попыток осталось: {left})',
-  resultExhausted: '{value}, попытки исчерпаны, {debt} остаётся',
+  resultFailed: '{value}, retake ({left} attempts left)',
+  resultExhausted: '{value}, attempts exhausted, the debt remains',
 };
 
-export const DEFAULT_SCENE_GUARD = 'Если сцена сейчас интимная или для этого неподходящая — не обрывай её: отложи это до первой уместной минуты.';
+export const DEFAULT_SCENE_GUARD = 'If the scene is intimate or otherwise unsuitable, do not cut it off: postpone this to the first fitting moment.';
 
 export const trialSubjects = (state) => ((state && state.exams && state.exams.items) || [])
   .filter((i) => i && i.name && !findSubject(state, i.subjectId)).map((i) => ({ id: i.subjectId, name: i.name }));
@@ -47,15 +47,8 @@ export const trialSubjects = (state) => ((state && state.exams && state.exams.it
 const examsOf = (preset) => (preset && preset.exams) || {};
 const gradesOf = (preset) => (preset && preset.grades) || {};
 const vocabOf = (preset) => (preset && preset.vocab) || {};
-export const MALE_PHRASES = {
-  failed: 'Свершилось: {subject} — {value} ({teacher}). Отправлен на пересдачу, попыток осталось: {left}. Отыграй это как уже случившееся.',
-  announceLater: 'Свершилось: {subject} — сдача позади ({teacher}). Закрытые сведения симуляции, не знание персонажей: {result}. Итог объявят {date}; до того оценку в сцене не знает никто, включая героя. Отыграй саму сдачу как уже случившееся.',
-  announced: 'Итоги объявлены: {subject} — {result} ({teacher}). Теперь это знают все; отыграй, как герой узнаёт итог.',
-};
-
 const phrasesOf = (preset) => ({
   ...DEFAULT_PHRASES,
-  ...(presetGender(preset) === 'm' ? MALE_PHRASES : {}),
   ...((preset && preset.phrases && preset.phrases.exams) || {}),
 });
 
@@ -653,6 +646,7 @@ function verdictVars(state, preset, item, value) {
     left: String(retakesLeft(preset, item)),
     debt: vocabOf(preset).debt || '',
     examPeriod: vocabOf(preset).examPeriod || '',
+    hero: heroWords(presetGender(preset)).heroEn,
   };
 }
 

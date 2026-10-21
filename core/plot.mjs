@@ -23,25 +23,25 @@ export const HOOK_TEXT_MAX = 600;
 export const CORE_MAX = 320;
 
 export const DEFAULT_PLOT_PHRASES = {
-  frame: 'Если уместно, можно вплести в сцену (необязательная находка, не приказ): {core}.',
-  rumor: 'Это слух — правда ли, неизвестно.',
-  outward: 'Покажи внешнее; слова и решения персонажа игрока оставь игроку. Прозвучит — дальше не возвращайся к этому.',
-  notAgain: 'Не повторяй: {last}.',
-  said: '{who} говорит в школе: «{text}»',
+  frame: 'If it fits, weave into the scene (an optional find, not an order): {core}.',
+  rumor: 'This is a rumor; unknown if true.',
+  outward: "Show only the outward side; leave the player character's words and decisions to the player. Once it has come up, do not return to it.",
+  notAgain: 'Do not repeat: {last}.',
+  said: '{who} says at school: «{text}»',
   someone: 'кто-то в школе',
-  gossip: 'ходит записка без подписи: «{text}»',
-  molva: 'слух от {who}: «{text}»; само утверждение не установленный факт',
-  rumorFact: 'говорят, что {gist}',
-  molvaFact: 'говорят о {fact}: «{text}» ({who})',
-  clueDraft: 'Кузя на ночном обходе нашёл смятый черновик записки «Сороки на хвосте» («{text}»). {clue}. Подписи нет, чей он — неизвестно',
-  clueWax: 'Солоха гадает на воске о записке «Сороки на хвосте» («{text}»): {clue}. Имени воск не называет',
-  clueMagpie: 'Сорока, что таскала записку («{text}»), помнит того, кто её отправил: {clue}. Имени она не знает',
-  deal: 'незакрытое дело — {deal}',
-  heroine: 'героиня',
-  threadArgue: 'в ветке спорят',
-  threadBack: 'в ветке поддерживают',
-  threadTease: 'в ветке подкалывают',
-  threadTalk: 'в ветке отвечают',
+  gossip: 'an unsigned note is going around: «{text}»',
+  molva: 'rumor from {who}: «{text}»; the claim itself is not an established fact',
+  rumorFact: 'rumor: {gist}',
+  molvaFact: 'people talk about {fact}: «{text}» ({who})',
+  clueDraft: 'Кузя on his night round found a crumpled draft of a «Сорока на хвосте» note («{text}»). {clue}. It is unsigned; whose it is, nobody knows',
+  clueWax: 'Солоха reads wax about a «Сорока на хвосте» note («{text}»): {clue}. The wax does not name a name',
+  clueMagpie: 'The magpie that carried the note («{text}») remembers who sent it: {clue}. It does not know the name',
+  deal: 'unsettled matter — {deal}',
+  heroine: 'the heroine',
+  threadArgue: 'the thread is arguing',
+  threadBack: 'the thread backs it',
+  threadTease: 'the thread is teasing',
+  threadTalk: 'the thread is replying',
   threadGlue: '; ',
 };
 
@@ -129,7 +129,7 @@ function phrasesOf(preset) {
   const someone = preset && preset.vocab && typeof preset.vocab.someone === 'string' && preset.vocab.someone.trim();
   return {
     ...DEFAULT_PLOT_PHRASES,
-    heroine: heroWords(presetGender(preset)).hero,
+    heroine: heroWords(presetGender(preset)).heroEn,
     ...(someone ? { someone } : {}),
     ...(own && typeof own === 'object' ? own : {}),
   };
@@ -228,7 +228,7 @@ export function hookCore(state, ref, opts = {}) {
 export function hookWording({ core, rumor }, opts = {}) {
   const P = phrasesOf(opts.preset);
   const parts = [fill(P.frame, { core: bare(core) })];
-  if (rumor && !/^слух(?![\p{L}])/iu.test(bare(core))) parts.push(P.rumor);
+  if (rumor && !/^(?:слух|rumou?r)(?![\p{L}])/iu.test(bare(core))) parts.push(P.rumor);
   parts.push(P.outward);
   const last = bare(opts.notAgain);
   if (last && last !== bare(core)) parts.push(fill(P.notAgain, { last }));

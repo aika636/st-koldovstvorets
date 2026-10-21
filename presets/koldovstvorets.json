@@ -21,7 +21,7 @@
     "gradebook": "ведомость",
     "debt": "долг",
     "debtPlural": "долги",
-    "expelPaths": "остаются прошение ректору — Хозяйке Медной горы, возвращение после отсидок или перевод в обычную школу за Завесой — что из этого, решает сцена",
+    "expelPaths": "a petition to the rector (Хозяйка Медной горы), return after отсидки, or transfer to an ordinary school beyond the Завеса remain; the scene decides which",
     "examPeriod": "неделя искусов",
     "expulsion": "исключение из Колдовстворца",
     "expelled": {
@@ -30,15 +30,15 @@
     },
     "warning": "вызов к ректору и строгое слово",
     "warnInject": {
-      "female": "Это уже случилось: её вызвали к ректору, и наставник выпускного класса при Хозяйке горы сказал — ещё один прогул, и вопрос об исключении или переводе в обычную школу за Завесой вынесет совет наставников. Отыграй последствия в следующем ответе.",
-      "male": "Это уже случилось: его вызвали к ректору, и наставник выпускного класса при Хозяйке горы сказал — ещё один прогул, и вопрос об исключении или переводе в обычную школу за Завесой вынесет совет наставников. Отыграй последствия в следующем ответе."
+      "female": "It has already happened: she was summoned to the rector, and the mentor of the graduating class, standing with Хозяйка горы, said that one more truancy and the council of mentors will take up expulsion or transfer to an ordinary school beyond the Завеса. Play out the consequences in the next reply.",
+      "male": "It has already happened: he was summoned to the rector, and the mentor of the graduating class, standing with Хозяйка горы, said that one more truancy and the council of mentors will take up expulsion or transfer to an ordinary school beyond the Завеса. Play out the consequences in the next reply."
     },
     "expelInject": {
-      "female": "Это уже случилось: совет наставников принял решение, слово ректора сказано, она больше не ученица Колдовстворца — исключена или переведена в обычную школу за Завесой. Отыграй последствия в следующем ответе.",
-      "male": "Это уже случилось: совет наставников принял решение, слово ректора сказано, он больше не ученик Колдовстворца — исключён или переведён в обычную школу за Завесой. Отыграй последствия в следующем ответе."
+      "female": "It has already happened: the council of mentors has decided, the rector has spoken, she is no longer a pupil of Колдовстворец — expelled or transferred to an ordinary school beyond the Завеса. Play out the consequences in the next reply.",
+      "male": "It has already happened: the council of mentors has decided, the rector has spoken, he is no longer a pupil of Колдовстворец — expelled or transferred to an ordinary school beyond the Завеса. Play out the consequences in the next reply."
     },
     "score": "средний балл",
-    "crowdIn": "в классе",
+    "crowdIn": "class",
     "someone": "кто-то из выпускников"
   },
   "week": {
@@ -635,13 +635,13 @@
   },
   "phrases": {
     "exams": {
-      "auto": "Свершилось: {subject} — {value} без работы, освобождение от работы — от {teacher}. Отыграй это как уже случившееся.",
-      "passed": "Свершилось: {subject} — {value} ({teacher}). Отыграй это как уже случившееся.",
-      "failed": "Свершилось: {subject} — {value} ({teacher}). Назначена пересдача, попыток осталось: {left}. Отыграй это как уже случившееся.",
-      "exhausted": "Свершилось: {subject} — {value} ({teacher}). Пересдача провалена, {debt} идёт в дневник. Отыграй это как уже случившееся.",
-      "permissionAuto": "{examPeriod}: {subject} — {scoreName} {score}, освобождение от работы возможно. Провал на ровном месте отыгрывать запрещено.",
-      "permissionNoAuto": "{examPeriod}: {subject} — {scoreName} {score}, освобождения нет; {teacher} пишет работу со всем классом. Блестящую сдачу без испытания отыгрывать запрещено.",
-      "permissionRisk": "{examPeriod}: {subject} — {scoreName} {score}, дело идёт к долгу; {teacher} вправе назначить пересдачу. Успешный исход отыгрывать запрещено, его считает система.",
+      "auto": "Already happened: {subject} — {value}, test waived by {teacher}. Play it as past.",
+      "passed": "Already happened: {subject} — {value} ({teacher}). Play it as past.",
+      "failed": "Already happened: {subject} — {value} ({teacher}). Retake assigned, {left} attempts left. Play it as past.",
+      "exhausted": "Already happened: {subject} — {value} ({teacher}). Retake failed, a debt goes into the diary. Play it as past.",
+      "permissionAuto": "{examPeriod}: {subject} — average grade {score}, a waiver of the test is possible. Do not play out a failure from nowhere.",
+      "permissionNoAuto": "{examPeriod}: {subject} — average grade {score}, no waiver; {teacher} gives the test to the whole class. Do not play out a brilliant pass without a trial.",
+      "permissionRisk": "{examPeriod}: {subject} — average grade {score}, heading for a debt; {teacher} may assign a retake. Do not play out a success, the system decides it.",
       "divergence": "Расхождение по {subject}: посчитано {computed}, отыграно {said}. Принята версия модели.",
       "scheduled": "{examPeriod}: назначено {count}.",
       "missed": "{examPeriod} прошла: {subject} — {kind} не сдавалась, {debt} идёт в дневник."
@@ -687,39 +687,31 @@
     }
   },
   "labels": {
-    "weekdays": [
-      "понедельник",
-      "вторник",
-      "среда",
-      "четверг",
-      "пятница",
-      "суббота",
-      "воскресенье"
-    ],
+    "weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     "phases": {
       "study": "",
-      "weekend": "выходной",
-      "vacation": "каникулы",
-      "break": "между четвертями",
+      "weekend": "weekend",
+      "vacation": "vacation",
+      "break": "between quarters",
       "exams": "",
       "preExams": "неделя перед искусами"
     },
-    "day": "{weekday}, {week}-я неделя четверти",
+    "day": "{weekday}, week {week} of the quarter",
     "dayOutside": "{weekday}, {phase}",
-    "dayPhase": "{weekday}, {week}-я неделя четверти, {phase}",
-    "now": "Расписание — факт мира, не меняй его без причины в сюжете. Сейчас урок: {subject}{teacher}",
-    "next": "Расписание — факт мира, не меняй его без причины в сюжете. Следующий урок: {subject}{teacher}",
-    "today": "Расписание — факт мира, не меняй его без причины в сюжете. Уроки сегодня: {list}",
-    "nowMark": "{subject} (сейчас)",
-    "teacherOf": " (ведёт {teacher})",
-    "dayList": "Дальше: {list}",
-    "terms": "Это школа, а не вуз. Слова мира: класс (11-й, 12-й), четверть, ученики и старшеклассники, наставники, урок, горница.",
-    "debts": "{debtPlural}: {list}",
-    "score": "{scoreName}: {value}",
-    "exams": "{examPeriod}: не сдано {count}, до конца — {days} {daysWord}",
-    "examsNoDays": "{examPeriod}: не сдано {count}",
-    "relation": "{teacher}: {label}",
-    "reputation": "репутация: {label}",
+    "dayPhase": "{weekday}, week {week} of the quarter, {phase}",
+    "now": "The timetable is a world fact; change it only for a plot reason. Lesson now: {subject}{teacher}",
+    "next": "The timetable is a world fact; change it only for a plot reason. Next lesson: {subject}{teacher}",
+    "today": "The timetable is a world fact; change it only for a plot reason. Lessons today: {list}",
+    "nowMark": "{subject} (now)",
+    "teacherOf": " ({teacher})",
+    "dayList": "Later: {list}",
+    "terms": "This is a school, not a university. Use these Russian school words: класс (11-й, 12-й), четверть, ученики и старшеклассники, наставники, урок, горница.",
+    "debts": "debts: {list}",
+    "score": "average grade: {value}",
+    "exams": "{examPeriod}: {count} not passed, {days} {daysWord} left",
+    "examsNoDays": "{examPeriod}: {count} not passed",
+    "relation": "{teacher} toward {hero}: {label}",
+    "reputation": "reputation: {label}",
     "glue": ". ",
     "end": ".",
     "listGlue": ", "

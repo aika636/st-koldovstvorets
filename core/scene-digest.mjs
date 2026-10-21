@@ -10,12 +10,14 @@ export const digestMaxOf = (raw) => {
 };
 
 
+const ordinal = (n) => `${n}${[11, 12, 13].includes(n % 100) ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
+
 function roleOf(p, roster) {
   if (p.role === 'student') {
     const house = roster.house(p.house);
-    return `${p.gender === 'f' ? 'ученица' : 'ученик'} ${p.grade} класса${house ? `, ${house.name}` : ''}`;
+    return `${ordinal(p.grade)}-grade student${house ? `, ${house.name}` : ''}`;
   }
-  return cutText(String(p.post || (p.role === 'teacher' ? 'преподаватель' : 'персонал')).split(/\s*;\s*/)[0], 60);
+  return cutText(String(p.post || (p.role === 'teacher' ? 'teacher' : 'staff')).split(/\s*;\s*/)[0], 60);
 }
 
 // Только кто рядом: имя, класс, факультет (роль — у взрослых); внешность и характер даёт лорбук.
