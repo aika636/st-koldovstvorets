@@ -790,7 +790,7 @@ function chatPool(agenda, own, lovers) {
   const inEvents = new Set(occ.filter((o) => o.kind === 'event').flatMap((o) => o.about || []));
   const lastAt = (a) => own.reduce((at, x, i) => (keyOfItem(x) === keyOfAuthor(a) ? i : at), -1);
   const talked = (a) => own.slice(-ROT_WINDOW).filter((x) => keyOfItem(x) === keyOfAuthor(a)).length;
-  const quiet = (list) => list.map((a, i) => ({ a, i, at: lastAt(a), n: talked(a) })).sort((x, y) => x.n - y.n || x.at - y.at || x.i - y.i).map(({ a }) => a);
+  const quiet = (list) => list.map((a, i) => ({ a, i, at: lastAt(a), n: talked(a) })).sort((x, y) => x.n - y.n || x.at - y.at || Number(Boolean(y.a.own)) - Number(Boolean(x.a.own)) || x.i - y.i).map(({ a }) => a);
   const students = agenda.pool.filter((a) => a.role === 'student');
   const onMain = occ.some((o) => o.kind === 'event' && o.heroine);
   const max = onMain ? MATES_ON_MAIN : MATES_SHOWN;
@@ -899,10 +899,10 @@ export function buildMolvaPrompt(state, preset, agenda, opts = {}) {
   if (samples.length) lines.push(`Образцы тона — не темы и не готовые фразы: ${samples.map((x) => `«${x}»`).join(' · ')}`);
   const heroName = str(opts.mains && opts.mains.hero);
   const cardNames = [...new Set(((opts.mains && opts.mains.card) || []).map(str).filter(Boolean))];
-  const card = cardNames.join(', ');
   const fd = normalizeFeed(state && state.feed);
   if (heroName || cardNames.length) {
-    const cardPart = cardNames.length && `${card} — персонаж карточки`;
+    const canon = (n) => { const hit = opts.roster && opts.roster.findAll ? opts.roster.findAll(n, 'student') : []; return hit.length === 1 && hit[0].short && !normName(n).split(' ').includes(normName(hit[0].short)) ? `${n} (в школе его зовут ${hit[0].short}: так и пиши)` : n; };
+    const cardPart = cardNames.length && `${cardNames.map(canon).join(', ')} — персонаж карточки`;
     lines.push('', `Главные: ${[heroName && `${heroName} — ${w0.hero} игрока`, cardPart].filter(Boolean).join('; ')}.`);
   }
   const temper = goodProfile(fd.heroineTemper, { min: 8, max: TEMPER_MAX });
@@ -1007,6 +1007,7 @@ export function buildMolvaPrompt(state, preset, agenda, opts = {}) {
     'Чувство может сохраняться несколько выпусков. Продолжение добавляет новый ход, а не повторяет прежнюю позицию.',
     `На публичную близость ${w0.heroGen} с кем-то реагирует хотя бы один осведомлённый, у кого в списке есть «ревнует» или «влюблён»: лично, по своему мотиву и голосу. Влюблённость, ревность и желание контролировать — разные состояния; собственничество не подают как доказательство любви.`,
     'Про одного человека подряд не больше двух постов. Отношение к нему разное: любопытство, симпатия, шутка, защита, удивление, зависть, колкость — не одна колкость хором. Если кто-то уже съязвил, следующий отзывается иначе или заступается; стаей на одного не накидываются, ругань не копится выпуск за выпуском. Новенькую в первые дни встречают интересом, расспросами и теплом, а не «собьём спесь»; проступок обсуждают один-два раза, дальше жизнь идёт.',
+    'Людей называй так, как они названы в списке и в «Главных»; уменьшительные, прозвища из других источников и латиницу сам не вводи.',
     'Слова, образы и реплики, которые уже звучали («Уже сказано»), не повторяй, даже перефразируя: у каждого автора своя новая мысль. Если нового сказать нечего, молчи.',
     'Конфликт может остаться открытым. Примирение и одёргивание возникают из желания участника, а не ради завершения выпуска.',
     'Собственные дела соседствуют со скандалом, не гася его: у них есть участники и конкретное желание, просьба или спор. Пока есть события (с…), большая часть сообщений о них; дела и быт — фон.',

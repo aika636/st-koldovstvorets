@@ -155,6 +155,26 @@ function pairsOf(list, roster, kinds) {
   return out;
 }
 
+const FACT_DAYS = 7;
+
+function factTopics(state, list) {
+  const day = state && state.calendar && state.calendar.day;
+  const ids = new Set(list.map((a) => a.id));
+  const out = [];
+  const facts = normalizeFeed(state && state.feed).items.filter((f) => f.kind === 'fact' && f.status !== 'expired' && !f.private && f.at && f.at.day);
+  for (let i = facts.length - 1; i >= 0 && out.length < 3; i -= 1) {
+    const f = facts[i];
+    let d = NaN;
+    try { d = day ? diffDays(f.at.day, day) : NaN; } catch { /* дата не разобрана */ }
+    const text = f.gist || f.text;
+    if (!text || !Number.isFinite(d) || d < 0 || d > FACT_DAYS) continue;
+    const who = (f.about || []).filter((id) => ids.has(id));
+    const ring = who.length ? who : list.slice(0, 2).map((a) => a.id);
+    out.push({ topic: clipText(text, THREAD_TEXT_MAX.topic), ids: ring.slice(0, 3), want: 'обсуждают недавнее' });
+  }
+  return out;
+}
+
 function lifeTopics(state, preset, list, roster) {
   const sharp = pairsOf(list, roster, (t) => SHARP_TIES.has(t.kind));
   const warm = pairsOf(list, roster, isWarmTie);
@@ -173,6 +193,8 @@ function lifeTopics(state, preset, list, roster) {
     const w = warm[i] && warmTopic(warm[i]);
     if (w) out.push(w);
   }
+  const fresh = factTopics(state, list);
+  if (fresh.length) return [...fresh, ...out];
   const [a, b] = list;
   const world = worldTopicsOf(state, preset).map((topic) => ({
     topic: clipText(topic, THREAD_TEXT_MAX.topic),

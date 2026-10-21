@@ -85,6 +85,7 @@ export const DEFAULT_LABELS = {
   whenEvening: 'in the evening',
   manner: 'How {teacher} teaches: {lesson}{grading}',
   mannerGrading: ' Grading: {grading}.',
+  quarter: 'Quarter marks are being tallied. {note} Each mentor counts by their own rule: {list}',
   people: 'In the scene: {list}',
   peopleGlue: '; ',
 
@@ -131,7 +132,7 @@ export function statusLine(state, preset, opts = {}) {
     kept.push(cap(seg.text.replace(/[\s.;,]+$/u, '')));
   }
   const body = kept.length ? kept.join(L.glue) + L.end : '';
-  return [body, mannerSegment(L, opts, view, preset), peopleSegment(state, preset, L, opts, view), String(L.tone || '').trim(), String(L.terms || '').trim()].filter(Boolean).map((x) => (/[.!?…»]$/u.test(x) ? x : `${x}.`)).join(' ');
+  return [body, quarterSegment(L, opts, state, preset), mannerSegment(L, opts, view, preset), peopleSegment(state, preset, L, opts, view), String(L.tone || '').trim(), String(L.terms || '').trim()].filter(Boolean).map((x) => (/[.!?…»]$/u.test(x) ? x : `${x}.`)).join(' ');
 }
 
 function duringSegment(state, preset, L, events) {
@@ -157,6 +158,26 @@ function peopleSegment(state, preset, L, opts, view) {
 const LESSON_MAX = 100;
 const GRADING_MAX = 80;
 
+const ruleOf = (p) => String(p.grading || '').split(/[.;]\s+|\.$/u).map((x) => x.replace(/^судя по (?:методу|предмету),\s*/iu, '').trim()).find((x) => x && !/лор/iu.test(x));
+const lowRule = (r) => cutText(r, GRADING_MAX).replace(/[.\s]+$/u, '').replace(/^./u, (c) => c.toLowerCase());
+
+function quarterSegment(L, opts, state, preset) {
+  if (!opts.roster) return '';
+  const day = state.calendar.day;
+  const phase = phaseOf(preset, state, day);
+  const at = termAt(preset, state, day);
+  const closing = phase === 'exams' || (at.term && at.inside && at.week === at.term.studyWeeks);
+  if (!closing) return '';
+  const list = [];
+  for (const subject of state.subjects || []) {
+    const p = subject.teacherId && opts.roster.get(subject.teacherId);
+    const rule = p && ruleOf(p);
+    if (rule && list.length < 4) list.push((p.short || p.name) + ' — ' + lowRule(rule));
+  }
+  const note = String((preset && preset.ui && preset.ui.quarterNote) || '').trim();
+  return list.length ? fill(L.quarter, { note, list: list.join('; ') }).replace(/ {2,}/g, ' ') : '';
+}
+
 function mannerSegment(L, opts, view, preset) {
   const mode = examMode(view, preset);
   const teacher = opts.roster && !mode.active && lessonOn(view, preset) ? teacherInFrame(view, preset, mode) : null;
@@ -167,7 +188,7 @@ function mannerSegment(L, opts, view, preset) {
     if (lesson && lesson.length + sentence.length >= LESSON_MAX) break;
     lesson = lesson ? `${lesson} ${sentence}` : sentence;
   }
-  const rule = String(p.grading || '').split(/[.;]\s+|\.$/u).map((x) => x.replace(/^судя по (?:методу|предмету),\s*/iu, '').trim()).find((x) => x && !/лор/iu.test(x));
+  const rule = ruleOf(p);
   const grading = rule ? fill(L.mannerGrading, { grading: cutText(rule, GRADING_MAX).replace(/[.\s]+$/u, '').replace(/^./u, (c) => c.toLowerCase()) }) : '';
   return fill(L.manner, { teacher: p.short || p.name, lesson: cutText(lesson, LESSON_MAX), grading });
 }

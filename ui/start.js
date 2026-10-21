@@ -155,7 +155,7 @@ export function startView(input) {
     ...byClass(students.filter((p) => !close.includes(p.id))),
     ...(mentors.length ? [{ id: 'mentors', label: START_TEXT.groupMentors, items: mentors.map((p) => ({ id: p.id, name: p.name, house: '', grade: 0, label: mentorLabel(p) })) }] : []),
   ];
-  const loveGroups = byClass(lovePool);
+  const loveGroups = [{ id: 'all', label: '', items: lovePool.map(person).sort(byName) }].filter((g) => g.items.length);
 
   const blockers = [];
   if (!roster) blockers.push(START_TEXT.noData);
@@ -305,6 +305,8 @@ export function renderStart(host, focus = false) {
   const status = el('div', { class: 'koldo-status' });
   const key = nextId('koldo_start');
   const form = [];
+  const oldNote = el('span', { class: 'koldo-note', text: view.oldSuggest });
+  oldNote.hidden = !view.oldSuggest;
 
   form.push(el('div', { class: 'koldo-field' }, [
     el('span', { text: view.gender === 'm' ? START_TEXT.heroM : START_TEXT.hero }),
@@ -332,7 +334,7 @@ export function renderStart(host, focus = false) {
   form.push(el('div', { class: 'koldo-field' }, [
     el('span', { text: START_TEXT.startKind }),
     radios(`${key}_s`, view.starts, (id) => { draft.heroStart = id; redraw(); }),
-    view.oldSuggest ? el('span', { class: 'koldo-note', text: view.oldSuggest }) : null,
+    oldNote,
   ]));
 
   if (view.heroStart === 'old') {
@@ -371,7 +373,7 @@ export function renderStart(host, focus = false) {
 
   const lovePick = el('select', { class: 'text_pole koldo-input' }, [
     el('option', { value: '', text: START_TEXT.loveNone }),
-    ...view.loveGroups.map((g) => el('optgroup', { label: g.label }, g.items.map((p) => el('option', { value: p.id, text: p.label })))),
+    ...view.loveGroups.flatMap((g) => g.items.map((p) => el('option', { value: p.id, text: p.label }))),
   ]);
   lovePick.value = view.love;
   lovePick.addEventListener('change', () => { draft.love = lovePick.value; redraw(); });
@@ -407,6 +409,8 @@ export function renderStart(host, focus = false) {
     dayNote.textContent = v.dayNote;
     midNote.textContent = v.dayMidNote;
     midNote.hidden = !v.dayMidNote;
+    oldNote.textContent = v.oldSuggest;
+    oldNote.hidden = !v.oldSuggest;
   });
   form.push(el('div', { class: 'koldo-field' }, [
     el('span', { text: START_TEXT.dayWhen }),

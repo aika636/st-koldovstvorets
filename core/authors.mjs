@@ -121,7 +121,7 @@ function ownPerson(c, state) {
     aliases: c.aliases,
     grade: Number(state && state.grade) === 12 ? 12 : Number(state && state.grade) === 11 ? 11 : 0,
     voice: { surface: c.note || c.seed || '', speech: c.manner || NEUTRAL_SPEECH, notices: c.club || '', bias: c.desire || '', tactic: '', limits: '' },
-    tier: tone > 0 ? 'near' : c.known === false ? 'far' : 'mid',
+    tier: tone > 0 || c.known === true ? 'near' : c.known === false ? 'far' : 'mid',
   };
 }
 

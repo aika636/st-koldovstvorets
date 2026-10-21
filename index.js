@@ -333,6 +333,7 @@ async function commit(state, { flush = false } = {}) {
   live.state = state;
   const c = ctx();
   storage.saveTurns(c, live.turns);
+  renderPanels();
   if (flush) return storage.flushState(c, state);
   return storage.saveState(c, state);
 }
@@ -547,8 +548,18 @@ async function syncLorebook({ force = false, immediately = false } = {}) {
     live.lorebook.report = null;
     live.lorebook.error = null;
     live.lorebook.status = null;
+    if (!extOn() && !live.lorebook.suspended) {
+      const op = captureOperation();
+      try {
+        const res = await lorebook.suspendBook(c, { settings, guard: () => isCurrent(op) });
+        if (res.ok && isCurrent(op)) live.lorebook.suspended = true;
+      } catch (err) {
+        console.warn(`[${MODULE}] лорбук не погашен:`, err);
+      }
+    }
     return null;
   }
+  live.lorebook.suspended = false;
 
   const names = loreNames(c);
   const retry = live.lorebook.retryAt && Date.now() >= live.lorebook.retryAt ? '|retry' : '';
@@ -1099,8 +1110,18 @@ ${text}`);
   recordLedger(mark, before, state, { marker: hasOwnMarker(text), exam: run.exam });
   refreshPanel();
   scheduleAuto(mesId, mark, source, text);
-  await syncLorebook();
+  await lazyLore();
   return 'посчитан';
+}
+
+// Лорбук может ждать перевод у модели минутами: ход и разбор его дольше LORE_WAIT_MS не ждут.
+const LORE_WAIT_MS = 1500;
+
+async function lazyLore() {
+  let timer = null;
+  const job = syncLorebook().then(() => refreshPanel()).catch((err) => console.warn(`[${MODULE}] лорбук: ${(err && err.message) || err}`));
+  await Promise.race([job, new Promise((resolve) => { timer = setTimeout(resolve, LORE_WAIT_MS); })]);
+  clearTimeout(timer);
 }
 
 async function traced(event, mesId, run) {
@@ -1328,7 +1349,7 @@ function panelView(mesId) {
     summary: (draft ? draft.summary : entry && entry.summary) || '',
     tokens: panelTokens((draft ? draft.tokens : tokens) || [], lexicon, entry, Boolean(draft)),
     marker: entry ? entry.marker : null,
-    live: Boolean(turn) || uncounted,
+    live: Boolean(turn) || countable(mesId, chat),
     correction: Boolean(entry && entry.mode === 'late'),
     known: Boolean(entry),
     uncounted,
@@ -1337,6 +1358,7 @@ function panelView(mesId) {
     cancellable: live.analysisCtl.has(mark),
     error: live.analysisErrors.get(mark) || '',
     cancelled: live.analysisCancel.get(mark) || '',
+    wait: waitReason(mesId, mark, entry, chat),
     unparsed: unparsedLeft((draft ? draft.unparsed : tokens && entry.unparsed) || [], (draft ? draft.tokens : tokens) || [],
       [...(live.state.teachers || []), ...(live.state.classmates || [])]),
     partial: Boolean(draft && draft.partial),
@@ -1348,6 +1370,14 @@ function panelView(mesId) {
     jumpAsk: heldAsk(turn || uncounted),
     canUndo: Boolean(turn && turn.stamp && live.turns[live.turns.length - 1] === turn && live.undoneAt !== live.turns.length),
   };
+}
+
+function waitReason(mesId, mark, entry, chat) {
+  if (!secretaryAuto() || live.analyzing.has(mark) || mesId !== lastEligible(chat)) return '';
+  if (entry && (Array.isArray(entry.tokens) || entry.draft)) return '';
+  if (live.analysisErrors.has(mark) || live.analysisCancel.has(mark) || !liveTurnOf(mesId, chat)) return '';
+  if (live.generating) return PANEL_TEXT.waitGen;
+  return live.autoTried.has(mark) ? PANEL_TEXT.waitLost : PANEL_TEXT.waitStart;
 }
 
 function heldAsk(on) {
@@ -1481,8 +1511,14 @@ async function analyzeMessage(mesId) {
   live.analysisErrors.delete(mark);
   live.analysisCancel.delete(mark);
   live.analysisNote.delete(mark);
+  const slow = setTimeout(() => {
+    if (!live.analyzing.has(mark) || live.analysisNote.has(mark)) return;
+    live.analysisNote.set(mark, PANEL_TEXT.slow);
+    renderPanels();
+  }, SLOW_MS);
   try {
     settings = storage.apiSettings(c);
+    if (molvaRunning) live.analysisNote.set(mark, PANEL_TEXT.afterMolva);
     renderPanels();
     const entry = entryOf(mark, turn);
     if (turn) turn.before = carryManual(live.state, turn.before);
@@ -1547,6 +1583,7 @@ async function analyzeMessage(mesId) {
     console.error(`[${MODULE}] разбор ответа упал:`, err);
     return fail(`Разбор не удался: ${api.safeReason(err && err.message) || 'сбой расширения'}. Нажмите «Разобрать заново».`);
   } finally {
+    clearTimeout(slow);
     live.analyzing.delete(mark);
     live.analysisCtl.delete(mark);
     live.analysisNote.delete(mark);
@@ -1638,7 +1675,7 @@ async function writeAnalysis(mesId, tokens, summary, { molva = true } = {}) {
     summary: list ? words : '', at: Date.now(),
   });
   setInjects({});
-  await syncLorebook();
+  await lazyLore();
   refreshPanel();
   return { ok: true };
 }
@@ -1654,6 +1691,7 @@ async function saveAnalysis(mesId, opts = {}) {
   const previousAnalysis = { tokens: entry.tokens || null, summary: entry.summary || '' };
   const epoch = live.epoch;
   live.analyzing.add(mark);
+  live.analysisNote.set(mark, PANEL_TEXT.saving);
   try {
     renderPanels();
     if (!latestFor(mesId, chat) && countable(mesId, chat)) await handleMessage(mesId, { source: 'manual' });
@@ -1665,6 +1703,7 @@ async function saveAnalysis(mesId, opts = {}) {
     return result;
   } finally {
     live.analyzing.delete(mark);
+    live.analysisNote.delete(mark);
     renderPanels();
   }
 }
@@ -2128,6 +2167,7 @@ async function handleChatChanged() {
   setInjects({ oneShot: armedOneShot() });
   await syncLorebook();
   refreshPanel();
+  renderPanels();
 }
 
 function carryManual(live, before) {
@@ -2195,6 +2235,7 @@ function secretaryAuto() {
 }
 
 const ANALYSIS_TIMEOUT = 120000;
+const SLOW_MS = 25000;
 const ANALYSIS_ATTEMPTS = 2;
 
 async function autoAnalyze(mesId, mark) {
@@ -2379,6 +2420,8 @@ async function setEnabled(on) {
     writeInjects();
     clearMessagePanels();
     refreshPanel();
+    live.lorebook.suspended = false;
+    await syncLorebook();
   }
   renderPanels();
 }

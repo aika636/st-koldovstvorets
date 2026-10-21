@@ -19,8 +19,8 @@ export const ANALYSIS_KINDS = ['grade', 'completion', 'rel', 'attendance', 'even
 
 export const ANALYSIS_LIMITS = { reply: 6000, user: 5000, reason: 60 };
 
-const systemOf = (gender) => [
-  `You are a school registrar. You get a fragment of a role-play about a ${gender === 'm' ? 'male' : 'female'} final-year student, plus lists of subjects, mentors and students.`,
+const systemOf = (gender, grade) => [
+  `You are a school registrar. You get a fragment of a role-play about a ${gender === 'm' ? 'male' : 'female'} ${Number(grade) === 11 ? '11th-grade' : 'final-year'} student, plus lists of subjects, mentors and students.`,
   `Record only what actually happened in the fragment to ${gender === 'm' ? 'him' : 'her'} and the people around; never invent, omit anything you are unsure of.`,
   'Answer in two blocks: block 1 is one service-marker line, block 2 is «Слышно:» (how loud it was and who saw); then a «Кратко:» line.',
   'Write all free-text values (reasons, descriptions, event names, the summary) in Russian.',
@@ -148,7 +148,7 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
     `  access, one Russian word, per action: на людях — any witness in the room or near (even two or three); наедине — nobody near; подслушали — the two think they are alone but the text has someone hiding, peeping or eavesdropping (then no private for it). Public stays на людях even if the pair was alone afterwards. Secret acts (planted note, theft, blackmail) that only ${heroine} saw are наедине even in a crowd.`,
     '  reach, one Russian word: многие — a crowd, a hall, a full corridor; несколько — a couple of witnesses; неизвестно.',
     '  with: whom the action is aimed at, named in the text by name or unambiguous role (healed a beast — the beast); not someone merely mentioned, nearby or from another line. Never match a title or nickname («староста», «старик») to a listed person by guess: leave empty. Words and deeds belong to who said or did them.',
-    '  One act per event: a same-kind reply by the same pair ("hugged back") is not separate, a reply of another kind is (insulted — slapped). A loud public mishap of a main character alone (fell off a broom, punished, lost points) is an act too (провал, уход or появление).',
+    '  One act per event: a same-kind reply by the same pair ("hugged back") is not separate, a reply of another kind is (insulted — slapped). A loud public mishap of a main character alone (fell off a broom, punished, lost points) is an act too (провал, уход or появление). провал is only a failed attempt, task, test or performance. Trivial bodily noises and reflexes (rumbling stomach, hiccup, sneeze, cough, yawn, blush, tripping over nothing) are not acts: no act, and no провал.',
     '  say: a short verbatim quote or visible detail from the text; none — omit.',
     `  Example: act=@heroine:${g('обняла', 'обнял')} при всех:@card/Имя:близость:на людях:многие:"Только не отпускай"; act=@heroine:${g('сдала', 'сдал')} зачёт с первого раза::достижение:на людях:несколько.`,
     "  Which acts: from the player's line and the reply together; new first (a gesture continued from earlier turns is not new). Do not lose public deeds unrelated to the pair: reading out a letter or news, open defiance, mockery, refusal to obey, a mentor's intervention or punishment (stopped, scolded, took points, summoned) or arrival mid-scene — each its own act (a mentor id fits as who). Usually 1–3, at most four; priority: in front of witnesses, then the pair's, then the rest; merge small gestures of one scene.",
@@ -166,13 +166,13 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
     'Block 2. Слышно: how loud this will be at school and whether it was public. It changes nothing in the ledger; no posts, replies or nicknames. Lines:',
     'Слышно:',
     'loud=0..3',
-    `place=${PLACES.join('|')} (where the fragment is set; skip if unclear)`,
+    `place=${PLACES.filter((p) => p !== 'иное').join('|')} (where the fragment is set; skip if unclear)`,
     'private=marker key numbers',
     'Block 2 rules. loud: 0 quiet (ordinary grade, chat), 1 noticeable, 2 loud (public skipping, quarrel), 3 the whole school (scandal, confession from the stage). private: only what happened without witnesses (closed-door talk, whisper, secret meeting): 1-based ordinal numbers of block 1 keys, comma-separated, e.g. private=2,3; leave out public ones; none — no line.',
     '',
     `Last line: «Кратко:» and one sentence on what happened in the fragment with ${heroine}'s studies and the people around (lessons, grades, mentors, skipping, classmates) — or «к учёбе не относится».`,
   );
-  return { system: systemOf(gender), user: lines.join('\n') };
+  return { system: systemOf(gender, state.grade), user: lines.join('\n') };
 }
 
 const TEXT_TAGS = 'b|i|u|s|em|strong|del|ins|sub|sup|small|big|mark|span|p|br|hr|div|font|center|blockquote|q|code|pre|a|ul|ol|li|details|summary|h[1-6]';
@@ -440,7 +440,7 @@ export function parseAnalysis(raw, lexicon, opts = {}) {
   tokens.push(...privates);
   if (posted || (loud !== null && (loud >= 2 || rejected.length > 0 || tokens.some(isFactToken)))) tokens.push(`loud=${loud === null ? 1 : loud}`);
 
-  if (placeMatch && tokens.some(isFactToken)) tokens.push(`place=${placeMatch[1].toLowerCase()}`);
+  if (placeMatch && placeMatch[1].toLowerCase() !== 'иное' && tokens.some(isFactToken)) tokens.push(`place=${placeMatch[1].toLowerCase()}`);
 
   const m = /кратко\s*[:：]\s*(.+)/i.exec(text);
   const summary = m ? tidySummary(m[1].replace(/<!--[\s\S]*?-->/g, ''), lexicon) : '';
@@ -875,7 +875,7 @@ export function tokenText(token, lexicon, { known = false, brief = false, day = 
     const row = LOUDNESS.find((l) => l.level === loudOf([token]));
     return row ? row.word : String(token);
   }
-  if (isPlaceToken(token)) return `место: ${token.slice(6)}`;
+  if (isPlaceToken(token)) return `место: ${token.slice(6) === 'иное' ? 'вне привычных мест' : token.slice(6)}`;
   if (isPrivateToken(token)) return 'наедине, без свидетелей';
   if (isPrepToken(token)) return prepTokenText(token, lexicon.preps);
   if (isPlayedToken(token)) {

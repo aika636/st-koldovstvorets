@@ -27,6 +27,12 @@ export const PANEL_TEXT = {
   jumpHeld: 'скачок времени ждёт решения',
   jumpAsk: 'Скачок времени {waiting}. Решите здесь или во вкладке «{tab}».',
   notAnalyzed: 'не разобрано',
+  slow: 'Секретарь ждёт ответа модели дольше обычного — запрос мог встать в очередь. Можно отменить и разобрать позже.',
+  afterMolva: 'Секретарь читает ответ… (слухи ещё пишутся, запрос может ждать своей очереди)',
+  saving: 'Записываю разбор…',
+  waitGen: 'Секретарь начнёт, когда закончится генерация.',
+  waitStart: 'Секретарь вот-вот начнёт читать этот ответ.',
+  waitLost: 'Автоматический разбор не дошёл до конца. Нажмите «Разобрать».',
   analyzed: 'разобрано',
   correction: 'поправка',
   summary: 'Кратко',
@@ -312,7 +318,7 @@ function buildPanel(host, mesId, view, look) {
   }, [
     el('span', { class: 'ad-mp-st', title: stateTitle }, [icon(stateKind)]),
     el('span', { class: 'ad-mp-sum', title: [parts.what, parts.when].filter(Boolean).join(' · ') }, [
-      busy ? (view.progress || PANEL_TEXT.analyzing) : (view.error || view.cancelled || parts.what),
+      busy ? (view.progress || PANEL_TEXT.analyzing) : (view.error || view.cancelled || view.wait || parts.what),
     ]),
     el('span', { class: 'ad-mp-chev', 'aria-hidden': 'true' }, [icon('chev')]),
     busy && view.cancellable && host.cancelAnalysis ? el('button', {
