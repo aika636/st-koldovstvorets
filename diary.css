@@ -522,9 +522,9 @@
 .ad-tab[data-tab="settings"] { --ad-tc: var(--ad-tc-settings, var(--ad-tab)); }
 .ad-tab .ad-lab { display: block; max-width: 100%; }
 .ad-diary:not([data-spread="1"]) .ad-tabs { gap: 2px; margin-left: -12px; margin-right: -6px; }
-.ad-diary:not([data-spread="1"]) .ad-tab { flex: 1 1 min-content; min-width: 0; padding-left: 1px; padding-right: 1px; }
+.ad-diary:not([data-spread="1"]) .ad-tab { flex: 1 1 0; min-width: 0; padding-left: 1px; padding-right: 1px; }
 .ad-diary:not([data-spread="1"]) .ad-tabs[data-wrap] { flex-wrap: wrap; }
-.ad-diary:not([data-spread="1"]) .ad-tabs[data-wrap] .ad-tab { flex: 1 1 22%; }
+.ad-diary:not([data-spread="1"]) .ad-tabs[data-wrap] .ad-tab { flex: 1 1 30%; }
 .ad-mpanel { --ad-mp-ink: var(--ad-ink); --ad-mp-soft: var(--ad-ink-soft); --ad-mp-line: var(--ad-rule); --ad-mp-accent: var(--ad-pen); position: relative; margin: 0 0 12px 12px; font-family: var(--ad-f-body); color: var(--ad-ink); background: var(--ad-page); border-radius: var(--ad-r-card); }
 .ad-mpanel .ad-bookmark { top: -5px; left: 14px; width: 12px; height: 14px; background: var(--ad-bookmark-bg, var(--ad-accent)); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
 .ad-mpanel .ad-mp-top { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 3px 5px 3px 8px; }

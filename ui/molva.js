@@ -22,7 +22,7 @@ export function affairsView(state, preset, roster = null) {
   const threads = live.map((t) => ({
     id: t.id,
     topic: t.topic,
-    want: t.want ? fill(X.mobThreadWant, { text: t.want }) : '',
+    want: t.want ? fill(X.mobThreadWant, { text: t.want.replace(/^(.+?) и (.+?) заняты этим вместе$/u, 'За дело взялись $1 и $2') }) : '',
     last: t.last ? fill(X.mobThreadLast, { text: t.last }) : '',
     paused: t.state === 'paused',
     source: (X.mobThreadSource && X.mobThreadSource[t.source]) || '',

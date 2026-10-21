@@ -166,7 +166,7 @@ function lifeTopics(state, preset, list, roster) {
   });
   const warmTopic = (p) => {
     const mine = p.a.interests.find((i) => p.b.interests.some((j) => similar(i, j))) || p.a.interests[0] || p.b.interests[0];
-    return mine ? { topic: clipText(mine, THREAD_TEXT_MAX.topic), ids: [p.a.id, p.b.id], want: `${p.a.name} и ${p.b.name} заняты этим вместе` } : null;
+    return mine ? { topic: clipText(mine, THREAD_TEXT_MAX.topic), ids: [p.a.id, p.b.id], want: `За дело взялись ${p.a.name} и ${p.b.name}` } : null;
   };
   for (let i = 0; i < Math.max(sharp.length, warm.length); i += 1) {
     if (sharp[i]) out.push(sharpTopic(sharp[i]));
@@ -176,7 +176,7 @@ function lifeTopics(state, preset, list, roster) {
   const [a, b] = list;
   const world = worldTopicsOf(state, preset).map((topic) => ({
     topic: clipText(topic, THREAD_TEXT_MAX.topic),
-    ...(a && b ? { ids: [a.id, b.id], want: `${a.name} и ${b.name} заняты этим вместе` } : {}),
+    ...(a && b ? { ids: [a.id, b.id], want: `За дело взялись ${a.name} и ${b.name}` } : {}),
   }));
   return [...out, ...world];
 }
@@ -280,7 +280,7 @@ export function spawnThread(state, preset, opts = {}) {
         const p = pairs.length ? pairs[turn % pairs.length] : { a: people[0], b: people[1] };
         const third = source === 'calendar' ? pairs.find((x) => x.a.id === p.a.id && x.b.id !== p.b.id) : null;
         members = [p.a.id, p.b.id, ...(third ? [third.b.id] : [])];
-        want = `${p.a.name} и ${p.b.name} заняты этим вместе`;
+        want = `За дело взялись ${p.a.name} и ${p.b.name}`;
       }
       const res = startThread(state, { topic: t.topic, members, want, source, day, on: t.on });
       if (res.ok) return res;

@@ -84,7 +84,8 @@ export const DEFAULT_LABELS = {
   duringItem: '{when} — {text}',
   whenAfternoon: 'после обеда',
   whenEvening: 'вечером',
-  people: 'Рядом в сцене (кратко): {list}',
+  people: 'Рядом в сцене: {list}',
+  peopleGlue: '; ',
 
   dayList: '',
   terms: '',
@@ -149,7 +150,7 @@ function peopleSegment(state, preset, L, opts, view) {
   const mode = examMode(view, preset);
   const teacher = mode.active || lessonOn(view, preset) ? teacherInFrame(view, preset, mode) : null;
   const list = sceneDigests(state, opts.roster, { max, teacherId: teacher ? teacher.id : '' });
-  return list.length ? fill(L.people, { list: list.map((d) => d.text).join(' ') }) : '';
+  return list.length ? fill(L.people, { list: list.map((d) => d.text).join(L.peopleGlue) }) : '';
 }
 
 function segmentsOf(state, preset, L) {

@@ -537,7 +537,7 @@ export const EXTRA_UI = {
   mobNote: 'Дела, о которых сейчас говорят в школе: у каждого есть участники и суть. Люди живут своими заботами, героиня им не указ.',
   mobThreadsTitle: 'Дела школы',
   mobThreadsNone: 'Дел пока нет — они заведутся сами, когда молва пойдёт.',
-  mobThreadWant: 'суть: {text}',
+  mobThreadWant: '{text}',
   mobThreadLast: 'последнее: {text}',
   mobThreadPaused: 'отложено',
   mobThreadSource: { calendar: 'из календаря', study: 'из учёбы', life: 'из школьной жизни' },

@@ -756,6 +756,8 @@ export const BACKGROUND_MAX = 2;
 
 export const BACKGROUND_TEXT_MAX = 90;
 
+export const BACKGROUND_LOUD = 2;
+
 export const RUMOR_DAYS = 3;
 
 function freshOn(item, day, days) {
@@ -788,7 +790,7 @@ export function feedBackground(state, opts = {}) {
   const day = opts.day || (state && state.calendar && state.calendar.day) || '';
   const items = feedItems(state)
     .map((x, i) => ({ x, i }))
-    .filter(({ x }) => !x.parent && !x.minor && knownToHeroine(x) && x.status !== 'expired' && !onEvent(x) && freshOn(x, day, BACKGROUND_DAYS));
+    .filter(({ x }) => !x.parent && !x.minor && knownToHeroine(x) && x.status !== 'expired' && !onEvent(x) && (x.loud ?? 1) >= BACKGROUND_LOUD && freshOn(x, day, BACKGROUND_DAYS));
   items.sort((a, b) => (Number(b.x.heroine) - Number(a.x.heroine))
     || ((b.x.loud ?? 1) - (a.x.loud ?? 1))
     || (b.i - a.i));

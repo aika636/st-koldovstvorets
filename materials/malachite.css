@@ -124,6 +124,7 @@
   background-color: var(--ad-tc, #1D6A52); background-image: var(--ad-ml-u7);
 }
 .ad-diary[data-mat="malachite"] .ad-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 3px #FFF4DB; }
+.ad-diary[data-mat="malachite"]:not([data-spread="1"]) .ad-tab { padding: 12px 8px 14px 2px; }
 
 /* Закладка в плашке сообщения. */
 .ad-mat-scope[data-mat="malachite"] .ad-bookmark {
