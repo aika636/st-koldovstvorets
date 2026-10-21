@@ -3,6 +3,7 @@ import { addDays } from './time.mjs';
 const MATCH_WINDOWS = [['09-14', '09-30'], ['10-22', '11-14'], ['11-17', '12-10'], ['03-10', '03-31'], ['04-08', '04-30'], ['05-05', '05-29']];
 
 const PATROL_WINDOWS = [['10-01', '10-12'], ['01-24', '02-14'], ['04-04', '04-25']];
+const STUPA_WINDOWS = [['09-02', '09-30'], ['10-01', '10-31'], ['04-01', '04-30'], ['05-01', '05-31'], ['06-01', '06-30']];
 
 const hash = (s) => {
   let h = 2166136261;
@@ -28,9 +29,11 @@ export function matchOn(day, houses, ok) {
 }
 
 export function saturdayOn(day, ok) {
-  if (PATROL_WINDOWS.some((w, i) => drawDay(day, `b${i}`, w, ok))) {
+  const patrol = (d) => PATROL_WINDOWS.some((w, i) => drawDay(d, `b${i}`, w, ok));
+  if (patrol(day)) {
     return { kind: 'patrol', text: 'Обход границы школы пешком с Ильёй Муромцем: старшие подновляют черту.' };
   }
+  if (STUPA_WINDOWS.some((w, i) => drawDay(day, `s${i}`, w, (d) => (!ok || ok(d)) && !patrol(d)))) return { kind: 'stupa', text: 'Хоттабыч зовёт старших полетать в ступах — по желанию.' };
   if (hash(`a${day}`) % 6 === 0) return { kind: 'alchemy', text: 'Алхимия у Данилы-мастера — факультатив, по желанию.' };
   return null;
 }
