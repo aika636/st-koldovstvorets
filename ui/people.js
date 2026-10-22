@@ -489,7 +489,7 @@ function bondFix(host, p, X) {
     el('summary', { text: X.bondFixTitle }),
     el('label', { class: 'koldo-field' }, [el('span', { text: X.bondFixTag }), select]),
     el('div', { class: 'koldo-field' }, [el('span', { text: X.bondFixShades }), shades]),
-    el('div', { class: 'ad-small ad-soft', text: X.bondFixHint }),
+    el('div', { class: 'ad-small ad-soft', dataset: { for: 'bond-full' }, text: full ? `${X.bondFixFull} ${X.bondFixHint}` : X.bondFixHint }),
     status,
   ]);
 }

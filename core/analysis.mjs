@@ -5,7 +5,7 @@ import { sittableExams, kindOf } from './exams.mjs';
 import { teacherOfSubject } from './state.mjs';
 import { holidaysAhead, holidaysOn } from './holidays.mjs';
 import { addDays } from './time.mjs';
-import { BONDS, SHADES, BOND_GROUPS, bondGroupsFor, bondOf, bondsOff, defaultBond, roleOf, tagLabel, shadeLabel } from './bonds.mjs';
+import { BONDS, SHADES, BOND_GROUPS, bondGroupsFor, bondOf, bondsOff, defaultBond, stepRel, roleOf, tagLabel, shadeLabel } from './bonds.mjs';
 import { dayPlan } from './schedule.mjs';
 import { EVENT_HORIZON } from './parse-marker.mjs';
 import { SCENE_KINDS, sceneText, sceneAbout, personWord, GONE_PERSON, genderOfName } from './scene.mjs';
@@ -64,7 +64,7 @@ function bondRules(state, heroine) {
     ...((state.classmates || []).length ? [bondGroupsFor('student')] : []),
   ].some((l) => l.includes(gr)));
   return [
-    `- rel=person:tag:reason: a person's attitude to ${heroine} (theirs, not mutual) has clearly and lastingly shifted: the tag replaces the current one. rel=person:+shade:reason adds a shade (two at most, the oldest drops); rel=person:-shade:reason only when the text explicitly ends it, silence is not removal. Reason in 2–3 words. Never infer friendship, dislike or romance from one ambiguous episode; in doubt keep the state and write only act. Same state again, skipping, grades and lateness are not rel.`,
+    `- rel=person:tag:reason: a person's attitude to ${heroine} (theirs, not mutual) has clearly and lastingly shifted: the tag replaces the current one. rel=person:+shade:reason adds a shade (two at most, the oldest drops); rel=person:-shade:reason only when the text explicitly ends it, silence is not removal. Reason in 2–3 words. Never infer friendship, dislike or romance from one ambiguous episode; in doubt keep the state and write only act. A tag climbs one step per reply (acquaintance → emerging friendship or fondness → ...), never skipping steps. Flirting, teasing with a romantic undertone, blushing, compliments or a first kiss between people who are only acquaintances is rel=person:+flirt, not a romantic tag; a romantic tag needs explicit, lasting signs. Never write the tag the person already has (others stand at the start state: students «known», mentors «unmarked»). Same state again, skipping, grades and lateness are not rel.`,
     ...groups.map((gr) => `  ${gr}${gr === 'mentor' ? ' (mentors only)' : ''}: ${BONDS.filter((b) => b.group === gr).map((b) => `${b.id} = ${b.hint}`).join(' | ')}`),
     `  shades (anyone): ${SHADES.map((x) => `${x.id} = ${x.hint}`).join(' | ')}`,
   ];
@@ -154,7 +154,7 @@ export function buildAnalysisPrompt(state, preset, input = {}) {
     "  Which acts: from the player's line and the reply together; new first (a gesture continued from earlier turns is not new). Do not lose public deeds unrelated to the pair: reading out a letter or news, open defiance, mockery, refusal to obey, a mentor's intervention or punishment (stopped, scolded, took points, summoned) or arrival mid-scene — each its own act (a mentor id fits as who). Usually 1–3, at most four; priority: in front of witnesses, then the pair's, then the rest; merge small gestures of one scene.",
     '- rumor=about:claim: a rumor spread or retold in the fragment; about = id or @heroine; claim continues «говорят, что <он/она> …»: rumor=sokolova:списала контрольную.',
     `- looks=id:description${bare.length ? ' (only for people in "No recorded appearance")' : ''}: appearance described in the reply. Start with who it is and apparent age, then hair, eyes, face, height, clothes, marks; up to 160 characters, only what is written, lasting traits only (not traces, dirt, blood, bruises, lipstick, pose, expression). Not described — no key; never for ${heroine} or the card character.`,
-    `- deal=who:to:what: a commitment between people (promise, debt, joint project, item to return). An explicit promise counts even if small or casual («принесу булочку», «завтра покажу») when made by a named person, ${heroine} included, to a named person. who = the one who owes or is assigned detention, punishment or a fine; to = whom they owe (detention given to ${heroine}: who=@heroine, to=the one who assigned it). Closed: deal-=who:to:what.`,
+    `- deal=who:to:what: a commitment between people (promise, debt, joint project, item to return). An explicit promise counts even if small or casual («принесу булочку», «завтра покажу») when made by a named person, ${heroine} included, to a named person. who = the one who owes or is assigned detention, punishment or a fine; to = whom they owe (detention given to ${heroine}: who=@heroine, to=the one who assigned it). Closed: deal-=who:to:what — write it in the reply where the one who owes actually did it (brought the promised bun, returned the book, served the detention), with the same who, to and wording as the open one.`,
     "- open=id: the text says or shows outright that a person's secret became known to others (a hidden relationship, true face, what they hid). A hint, suspicion, guess or rumor is not open.",
     `- unmask=id: ${heroine} learned who writes the anonymous «Сорока на хвосте» notes (thrown, nailed to the board, found). A guess without proof is not unmask.`,
     `- fame: only if ${heroine} personally did something in public that made witnesses treat ${g('her', 'him')} better (fame=+:reason) or worse (fame=-:reason): ${g('защитила, победила, блеснула', 'защитил, победил, блеснул')} in class / ${g('сорвалась, опозорилась, нарушила', 'сорвался, опозорился, нарушил')} a known rule. A quarrel or closeness alone, anything in private, a retelling or memory is not fame.`,
@@ -257,6 +257,7 @@ export function parseAnalysis(raw, lexicon, opts = {}) {
   const byNumber = [];
   const counts = {};
   const evOf = new Map();
+  const tagMoved = new Set();
   const hookIds = new Set((Array.isArray(lexicon && lexicon.hooks) ? lexicon.hooks : []).map((h) => h && h.id).filter(Boolean));
   for (const k of markerKeys(text)) {
     if (COMPOSED_KEYS.includes(k.name)) continue;
@@ -296,6 +297,16 @@ export function parseAnalysis(raw, lexicon, opts = {}) {
     let first = null;
     for (const ev of parsed.events) {
       if (ev.kind === 'rel' && lexicon && lexicon.relOff) continue;
+      if (ev.kind === 'rel') {
+        const cur = bondOf({ teachers: arr(lexicon.teachers), classmates: arr(lexicon.classmates) }, ev.teacherId);
+        const step = cur && (ev.tag !== undefined ? tagMoved.has(ev.teacherId) : tagMoved.has(`${ev.teacherId}${ev.op}${ev.shade}`)) ? null : cur && stepRel(cur, ev);
+        if (cur && !step) { rejected.push({ raw: k.raw, reason: 'это состояние уже есть или шаг уже сделан' }); continue; }
+        if (step) {
+          tagMoved.add(step.tag !== undefined ? ev.teacherId : `${ev.teacherId}${step.op}${step.shade}`);
+          for (const f of ['tag', 'shade', 'op']) delete ev[f];
+          Object.assign(ev, step);
+        }
+      }
       const t = tokenOf(ev);
       if (!t) continue;
       evOf.set(t, ev);

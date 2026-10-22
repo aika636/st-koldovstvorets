@@ -10,7 +10,7 @@ import { placeFeat, revertFeat, revertFeatSource } from './feats.mjs';
 export { genderOfName };
 import {
   ensureFeed, addFeedItem, removeFeedItem, markSeen, restoreSeen,
-  openDeal, closeDeal, revertDeal, putReactions, unmarkPlayed, hash, postByRef,
+  openDeal, closeDeal, fulfilDeals, reopenDealsBy, revertDeal, putReactions, unmarkPlayed, hash, postByRef,
 } from './feed.mjs';
 
 export const SCENE_KINDS = ['met', 'clash', 'act', 'rumor', 'new', 'deal', 'feat', 'looks', 'open', 'unmask'];
@@ -30,10 +30,16 @@ export function personWord(id, people, heroine = '', gender = 'f') {
   return (p && p.name) || GONE_PERSON.nom;
 }
 
-export function relPhrase(name, up, degree = '') {
-  const g = genderOfName(name);
+export function relPhrase(name, up, degree = '', gender = null) {
+  const g = gender || genderOfName(name);
   const adj = `${degree ? `${degree} ` : ''}${up ? 'теплее' : 'холоднее'}`;
   return g ? `${name} ${g === 'f' ? 'стала' : 'стал'} ${adj}` : `${name}: ${adj}`;
+}
+
+/** Gender of a person from the roster, else guessed by name. */
+export function personGender(id, people, name = '') {
+  const p = (people || []).find((x) => x && x.id === id);
+  return (p && (p.gender === 'f' || p.gender === 'm') ? p.gender : null) || genderOfName(name || (p && p.name));
 }
 
 export const GONE_PERSON = { nom: 'тот, кого уже нет в списке', dat: 'тому, кого уже нет в списке' };
@@ -92,7 +98,7 @@ export function sceneAbout(ev, people, heroine = '', gender = 'f') {
   if (ev.kind === 'act') return `${who(ev.a)} — ${ev.what}${ev.b ? ` · ${who(ev.b)}` : ''}`;
   if (ev.kind === 'met') {
     const name = who(ev.personId);
-    const g = ev.personId === HEROINE ? gender : genderOfName(name);
+    const g = ev.personId === HEROINE ? gender : personGender(ev.personId, people, name);
     return g === 'f' ? `${name} была в сцене` : g === 'm' ? `${name} был в сцене` : `в сцене — ${name}`;
   }
   if (ev.kind === 'rumor') return `${who(ev.about)} — ${ev.text} (слух)`;
@@ -149,7 +155,7 @@ export function dealText(ev, people, heroine = '', gender = 'f') {
   const b = nom(ev.b);
   if (ev.closed) return `закрыто: ${a} и ${b} — ${ev.what}`;
   const dat = known(ev.b) ? (ev.b === HEROINE && !heroine ? heroWords(gender).heroDat : dativeName(b)) : GONE_PERSON.dat;
-  const g = known(ev.a) ? (ev.a === HEROINE ? gender : genderOfName(a)) : 'm';
+  const g = known(ev.a) ? (ev.a === HEROINE ? gender : personGender(ev.a, people, a)) : 'm';
   if (!dat) return `${a} и ${b}: ${ev.what}`;
   const verb = g === 'f' ? 'должна' : g === 'm' ? 'должен' : 'обещает';
   const line = `${known(ev.a) ? a : `${a},`} ${verb} ${dat}: ${ev.what}`;
@@ -191,6 +197,8 @@ export function actLoud(ev, loud = null) {
   return base === 2 && (ev.type === 'близость' || ev.type === 'конфликт') && loud === 3 ? 3 : base;
 }
 
+const DEED_KINDS = ['помощь', 'достижение', 'близость', 'появление'];
+
 function placeEvent(next, ev, preset, opts) {
   const src = opts.src || '';
   const token = opts.token || '';
@@ -221,6 +229,7 @@ function placeEvent(next, ev, preset, opts) {
       ...(ev.kind === 'act' ? { loud: actLoud(ev, opts.loud ?? null) } : {}),
       ...(act ? { act: { kind: act.type, access: act.access, reach: act.reach, say: act.say || '' } } : {}),
     });
+    if (ev.kind === 'act' && DEED_KINDS.includes(ev.type)) fulfilDeals(next, { a: ev.a, b: ev.b, what: ev.what, src, day: at.day });
     return id ? { kind: 'feed', id } : null;
   }
 
@@ -387,6 +396,7 @@ export function revertSceneSource(state, src, names = [], looks = []) {
     const feed = ensureFeed(next);
     feed.items = feed.items.filter((x) => x.src !== src);
     feed.deals = feed.deals.filter((d) => d.src !== src);
+    reopenDealsBy(next, src);
     unmarkPlayed(next, src);
   }
   for (const l of looks) unsetLooks(next, l.id ? { personId: l.id } : { name: l.name }, l.text);

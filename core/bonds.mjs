@@ -276,6 +276,35 @@ export function restoreBond(state, id, from, to) {
   return out;
 }
 
+// Upward ladders: a secretary tag climbs one rung per turn.
+const LADDERS = [
+  ['unknown', 'known', 'budding', 'friendly', 'friend', 'close'],
+  ['unknown', 'known', 'warm', 'interest', 'love', 'couple'],
+];
+const GENERIC_RUNG = { unknown: 0, known: 1, budding: 2, warm: 2, respect: 2, friendly: 3, interest: 3, friend: 4, love: 4, close: 5, couple: 5 };
+
+/**
+ * Secretary rel event against the current bond, for one turn: the same state again is dropped (null);
+ * a tag may rise only one rung; romance from «known» or lower starts as the +flirt shade.
+ * Returns { tag } | { shade, op } | null. Falls and lateral moves are explicit and pass as is.
+ */
+export function stepRel(cur, ev) {
+  if (ev.tag === undefined) {
+    const has = (cur.shades || []).some((s) => sid(s) === ev.shade);
+    return ev.op === '+' ? (has ? null : { shade: ev.shade, op: '+' }) : (has ? { shade: ev.shade, op: '-' } : null);
+  }
+  if (ev.tag === cur.tag) return null;
+  if (ev.tag === 'known' && cur.tag !== 'unknown') return null;
+  const ladder = LADDERS.find((l) => l.includes(ev.tag));
+  const to = ladder ? ladder.indexOf(ev.tag) : -1;
+  const from = ladder && ladder.includes(cur.tag) ? ladder.indexOf(cur.tag) : GENERIC_RUNG[cur.tag] ?? 1;
+  if (!ladder || to <= from + 1) return { tag: ev.tag };
+  if ((ev.tag === 'interest' || ev.tag === 'love') && from <= 1) {
+    return (cur.shades || []).some((s) => sid(s) === 'flirt') ? null : { shade: 'flirt', op: '+' };
+  }
+  return { tag: ladder[from + 1] };
+}
+
 /** Latest changes of one person, newest first: { day, from, to, reason, ...bondDiff }. */
 export function bondHistory(state, id, limit = 3) {
   const out = [];
