@@ -8,8 +8,6 @@ const FRIEND_TAGS = new Set(BONDS.filter((b) => b.group === 'friend').map((b) =>
 export const LOVERS_DEFAULT = 2;
 export const JEALOUS_MAX = 2;
 
-const NO_MEN = /ненавидит мужчин|не любит мужчин|не терпит мужчин/iu;
-const WOMEN_ONLY = /рядом с девушками|девушкам/iu;
 const COLD = /циник|язвит|колк|холодн|угрюм|заносч|властн|манипул/iu;
 const VAIN = /тщеслав|престиж|вторым|статус|вожак|доминир|не любит проигрывать|первым/iu;
 
@@ -22,14 +20,10 @@ const order = (list, seed, tag) => list
   .sort((a, b) => a.k - b.k)
   .map((x) => x.p);
 
-export function romanceCandidates(roster, state, gender) {
+export function romanceCandidates(roster, state, gender, opts = {}) {
   if (!roster) return [];
   const g = gender === 'm' ? 'm' : 'f';
-  return roster.students.filter((p) => {
-    if (!(p.romance in ROMANCE_RANK)) return false;
-    const note = `${p.romanceNote || ''}`;
-    return g !== 'm' || (!NO_MEN.test(note) && !WOMEN_ONLY.test(note));
-  });
+  return roster.students.filter((p) => (opts.manual || p.romance in ROMANCE_RANK) && (!p.romanceFor || p.romanceFor === g));
 }
 
 function pickLovers(roster, state, gender, count) {
@@ -91,7 +85,7 @@ export function assignMinds(state, roster, opts = {}) {
   if (has) return false;
   const gender = heroGender(state, opts.hero || '');
   const count = Number.isInteger(opts.lovers) ? Math.max(0, Math.min(LOVERS_DEFAULT, opts.lovers)) : LOVERS_DEFAULT;
-  const chosen = count > 0 ? romanceCandidates(roster, state, gender).find((p) => p.id === (state && state.love)) : null;
+  const chosen = count > 0 ? romanceCandidates(roster, state, gender, { manual: true }).find((p) => p.id === (state && state.love)) : null;
   const picked = pickLovers(roster, state, gender, count);
   const lovers = chosen ? [chosen, ...picked.filter((p) => p.id !== chosen.id)].slice(0, count) : picked;
   const taken = new Set(lovers.map((p) => p.id));
@@ -99,7 +93,7 @@ export function assignMinds(state, roster, opts = {}) {
   if (fan) taken.add(fan.id);
   const jealous = jealousies(roster, state, lovers, fan, taken, opts);
   const minds = { ...feed.minds };
-  for (const p of lovers) minds[p.id] = { ...(minds[p.id] || {}), love: p.romance };
+  for (const p of lovers) minds[p.id] = { ...(minds[p.id] || {}), love: p.romance in ROMANCE_RANK ? p.romance : 'careful' };
   if (fan) minds[fan.id] = { ...(minds[fan.id] || {}), fan: true };
   for (const [id, j] of jealous) minds[id] = { ...(minds[id] || {}), jealous: j };
   feed.minds = normalizeMindsSafe(minds);

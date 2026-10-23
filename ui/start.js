@@ -138,7 +138,7 @@ export function startView(input) {
   const close = (draft.close || []).filter((id, i, a) => pool.some((p) => p.id === id) && a.indexOf(id) === i).slice(0, CLOSE_MAX);
   const tension = (pool.some((p) => p.id === draft.tension) || mentors.some((p) => p.id === draft.tension)) && !close.includes(draft.tension) ? draft.tension : '';
   const past = typeof draft.past === 'string' ? draft.past.slice(0, PAST_LIMIT) : '';
-  const lovePool = roster ? romanceCandidates(roster, null, gender) : [];
+  const lovePool = roster ? romanceCandidates(roster, null, gender, { manual: true }) : [];
   const love = lovePool.some((p) => p.id === draft.love) ? draft.love : '';
   const person = (p) => ({
     id: p.id, name: p.name, house: houseName(p.house), grade: p.grade || 0,
