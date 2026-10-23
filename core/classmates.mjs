@@ -429,9 +429,11 @@ export function oldStartErrors(roster, form) {
   const mentors = new Set(roster.teachers.map((p) => p.id));
   const close = Array.isArray(f.close) ? f.close : [];
   const errors = [];
-  if (close.length < 3 || close.length > 5) errors.push('Выберите от трёх до пяти близких.');
+  if (close.length > 5) errors.push('Близких не больше пяти.');
   if (close.some((id) => !pool.has(id))) errors.push('Близкие должны быть из учеников выбранного состава.');
-  if (!f.tension || !(pool.has(f.tension) || mentors.has(f.tension))) errors.push('Выберите, с кем есть напряжение.');
-  else if (close.includes(f.tension)) errors.push('Напряжение не может быть с близким.');
+  if (f.tension) {
+    if (!(pool.has(f.tension) || mentors.has(f.tension))) errors.push('Напряжение должно быть с учеником выбранного состава или наставником.');
+    else if (close.includes(f.tension)) errors.push('Напряжение не может быть с близким.');
+  }
   return errors;
 }

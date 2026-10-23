@@ -392,6 +392,7 @@
   .ad-mpanel .ad-mp-about { color: var(--ad-mp-soft) !important; }
   .ad-mpanel .ad-mp-nick { color: var(--ad-mp-soft) !important; }
   .ad-mpanel .ad-mp-note { color: var(--ad-mp-soft) !important; }
+  .ad-mpanel .ad-mp-help summary { color: var(--ad-mp-soft) !important; }
   .ad-mpanel .ad-mp-unparsed { border-left: 3px solid var(--ad-today) !important; background: var(--ad-now-bg) !important; }
   .ad-mpanel .ad-mp-btn { border: 1px solid var(--ad-mp-line) !important; background: transparent !important; color: var(--ad-mp-ink) !important; }
   .ad-mpanel .ad-mp-btn.ad-main { background: var(--ad-mp-accent) !important; color: var(--ad-page) !important; border-color: var(--ad-mp-accent) !important; }

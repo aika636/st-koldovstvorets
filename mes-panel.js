@@ -17,8 +17,9 @@ export const PANEL_TEXT = {
   failRefusedMany: 'Секретарь два раза подряд отказался разбирать этот ответ или ответил не по форме (попыток: {n}). Нажмите «Разобрать заново» или попробуйте позже.',
   undoAll: 'Снять разбор секретаря',
   undoReply: 'Откатить ход целиком',
-  undoReplyHint: 'Откатить ход целиком: дату, время и всё, что Колдовстворец посчитал по этому ответу. Сам текст остаётся; заметки, роли и настройки не трогаются.',
-  undoAllHint: 'Снять только разбор секретаря по этому ответу (оценки, отношения, слухи). Дата и время хода остаются.',
+  helpTitle: 'Что делают кнопки',
+  undoReplyHint: 'Откатывает дату, время и всё, что Колдовстворец посчитал по этому ответу. Сам текст остаётся; заметки, роли и настройки не трогаются.',
+  undoAllHint: 'Снимает только разбор секретаря по этому ответу (оценки, отношения, слухи). Дата и время хода остаются.',
   draft: 'Черновик — ещё не сохранён',
   save: 'Сохранить',
   discard: 'Не сохранять',
@@ -532,8 +533,14 @@ function buildPanel(host, mesId, view, look) {
   ].filter(Boolean);
   if (buttons.length) {
     footer.append(el('div', { class: 'ad-mp-btns' }, buttons));
-    if (showUndoAll) footer.append(el('p', { class: 'ad-mp-note', text: `${PANEL_TEXT.undoAll}: ${PANEL_TEXT.undoAllHint}` }));
-    if (showUndoReply) footer.append(el('p', { class: 'ad-mp-note', text: `${PANEL_TEXT.undoReply}: ${PANEL_TEXT.undoReplyHint}` }));
+    const help = [
+      showUndoAll ? `${PANEL_TEXT.undoAll}: ${PANEL_TEXT.undoAllHint}` : null,
+      showUndoReply ? `${PANEL_TEXT.undoReply}: ${PANEL_TEXT.undoReplyHint}` : null,
+    ].filter(Boolean);
+    if (help.length) footer.append(el('details', { class: 'ad-mp-help' }, [
+      el('summary', { text: PANEL_TEXT.helpTitle }),
+      ...help.map((text) => el('p', { class: 'ad-mp-note', text })),
+    ]));
   } else footer.hidden = true;
 
   const state = view.draft ? 'ad-draftp' : view.analyzed ? 'ad-done' : 'ad-undone';
