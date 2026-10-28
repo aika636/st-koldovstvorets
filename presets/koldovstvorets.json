@@ -1,0 +1,955 @@
+{
+  "id": "koldovstvorets",
+  "schemaVersion": 1,
+  "lang": "ru",
+  "displayName": "Колдовстворец",
+  "look": {
+    "material": "malachite"
+  },
+  "stopNames": [
+    "рассказчик",
+    "narrator",
+    "совет наставников",
+    "наставники"
+  ],
+  "vocab": {
+    "period": "урок",
+    "periodPlural": "уроки",
+    "term": "четверть",
+    "teacher": "наставник",
+    "teacherPlural": "наставники",
+    "gradebook": "ведомость",
+    "debt": "долг",
+    "debtPlural": "долги",
+    "expelPaths": "a petition to the rector (Хозяйка Медной горы), return after отсидки, or transfer to an ordinary school beyond the Завеса remain; the scene decides which",
+    "examPeriod": "неделя искусов",
+    "expulsion": "исключение из Колдовстворца",
+    "expelled": {
+      "female": "исключена",
+      "male": "исключён"
+    },
+    "warning": "вызов к ректору и строгое слово",
+    "warnInject": {
+      "female": "It has already happened: she was summoned to the rector, and the mentor of the graduating class, standing with Хозяйка горы, said that one more truancy and the council of mentors will take up expulsion or transfer to an ordinary school beyond the Завеса. Play out the consequences in the next reply.",
+      "male": "It has already happened: he was summoned to the rector, and the mentor of the graduating class, standing with Хозяйка горы, said that one more truancy and the council of mentors will take up expulsion or transfer to an ordinary school beyond the Завеса. Play out the consequences in the next reply."
+    },
+    "expelInject": {
+      "female": "It has already happened: the council of mentors has decided, the rector has spoken, she is no longer a pupil of Колдовстворец — expelled or transferred to an ordinary school beyond the Завеса. Play out the consequences in the next reply.",
+      "male": "It has already happened: the council of mentors has decided, the rector has spoken, he is no longer a pupil of Колдовстворец — expelled or transferred to an ordinary school beyond the Завеса. Play out the consequences in the next reply."
+    },
+    "score": "средний балл",
+    "crowdIn": "class",
+    "someone": "кто-то из выпускников"
+  },
+  "week": {
+    "studyDays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "periodsPerDay": 4
+  },
+  "bells": [
+    {
+      "start": "09:00",
+      "end": "09:45"
+    },
+    {
+      "start": "09:55",
+      "end": "10:40"
+    },
+    {
+      "start": "10:55",
+      "end": "11:40"
+    },
+    {
+      "start": "11:50",
+      "end": "12:35"
+    }
+  ],
+  "calendar": {
+    "year": 2000,
+    "yearStart": "09-01",
+    "terms": [
+      {
+        "name": "первая четверть",
+        "start": "09-01",
+        "studyWeeks": 6,
+        "examWeeks": 0
+      },
+      {
+        "name": "вторая четверть",
+        "start": "10-21",
+        "studyWeeks": 9,
+        "examWeeks": 0
+      },
+      {
+        "name": "третья четверть",
+        "start": "01-20",
+        "studyWeeks": 5,
+        "examWeeks": 0
+      },
+      {
+        "name": "четвёртая четверть",
+        "start": "03-05",
+        "studyWeeks": 17,
+        "examWeeks": 1
+      }
+    ],
+    "vacations": [
+      {
+        "name": "покровские каникулы",
+        "from": "10-14",
+        "to": "10-20"
+      },
+      {
+        "name": "святочные каникулы",
+        "from": "12-27",
+        "to": "01-19"
+      },
+      {
+        "name": "масленица",
+        "from": "02-26",
+        "to": "03-04",
+        "easter": -55,
+        "days": 7
+      },
+      {
+        "name": "летний лагерь",
+        "from": "07-08",
+        "to": "08-31"
+      }
+    ]
+  },
+  "holidays": [
+    {
+      "id": "sorting",
+      "name": "Птицы выбирают первоклашек",
+      "from": "09-01",
+      "lead": 2,
+      "about": "в Главном зале для новичков-первоклашек живые птицы — Сирин, Гамаюн, Алконост и Стратим; нужная ласкается к руке малыша и дарит перо, которое носят на мундире год. Старшие приходят смотреть, сами распределения не проходят",
+      "buzz": "малышня гадает, какая птица выберет, старшие делают вид, что им всё равно, и всё равно идут смотреть",
+      "buzzNear": "мундиры отглажены, перья для первоклашек разложены на подносах, в Главном зале накрывают самобранки",
+      "today": "в Главном зале птицы ласкаются к руке первоклашек и дарят перо; старшеклассники смотрят со стороны, распределения у них нет"
+    },
+    {
+      "id": "pokrov",
+      "name": "Покров",
+      "from": "10-14",
+      "lead": 3,
+      "about": "первый снег по поверью, начало покровских каникул; девушки загадывают на жениха, в горницах топят по-зимнему",
+      "buzz": "в горницах шепчутся о гаданиях и просят Горыныча топить пожарче",
+      "buzzNear": "платки достают из сундуков, печи проверяют, девушки прячут гадальные записки под подушки",
+      "today": "Покров: на дворе первый снег, в горницах тепло и гадания, занятий нет"
+    },
+    {
+      "id": "kuzminki",
+      "name": "Кузьминки",
+      "from": "11-14",
+      "lead": 2,
+      "about": "праздник кузнецов и ремесла, день посиделок: Алконост и камнерезы показывают поделки, на кухне пекут пироги",
+      "buzz": "ремесленники готовят поделки на показ, остальные ждут пирогов",
+      "buzzNear": "поделки выставлены на столах, кухня Пацюка и Колобка пахнет пирогами, вечером посиделки в горницах",
+      "today": "Кузьминки: выставка поделок, пироги и посиделки с песнями до отбоя"
+    },
+    {
+      "id": "new-year",
+      "name": "Новый год",
+      "from": "12-31",
+      "to": "01-01",
+      "lead": 5,
+      "about": "ёлка в Главном зале, самобранки ломятся от угощения, подарки раскладывают под ёлкой, по радиоточке бой курантов",
+      "buzz": "в горницах делят подарки и вырезают снежинки, шепчутся о загаданных желаниях",
+      "buzzNear": "ёлку наряжают всей школой, радиоточку настраивают к курантам, самобранки готовят праздничное угощение",
+      "today": "новогодняя ночь: ёлка, радиоточка, куранты и самобранки с угощением"
+    },
+    {
+      "id": "svyatki",
+      "name": "Святки и колядки",
+      "from": "01-07",
+      "to": "01-13",
+      "lead": 3,
+      "about": "колядки по горницам, ряженые в вывернутых шубах, гадания на воске и зеркалах, ходят от стола к столу с песнями",
+      "buzz": "ряженые прячут маски по сундукам, в горницах гадают на воске",
+      "buzzNear": "шубы выворачивают, маски доделывают, колядки репетируют вполголоса, воск топят в мисках",
+      "today": "святки: по горницам колядуют, угощают ряженых пирогами, гадают при свечах"
+    },
+    {
+      "id": "epiphany",
+      "name": "Крещение",
+      "from": "01-19",
+      "lead": 2,
+      "about": "купание в проруби на озере у горы, морозное утро, конец святочных каникул",
+      "buzz": "самые смелые спорят, кто нырнёт первым, остальные несут полотенца",
+      "buzzNear": "прорубь вырубили, полотенца и тулупы сложены на берегу, баня натоплена",
+      "today": "Крещение: прорубь на озере, пар от воды, баня и конец каникул"
+    },
+    {
+      "id": "maslenitsa",
+      "name": "Масленица",
+      "from": "02-26",
+      "lead": 4,
+      "about": "масленичная неделя: блины с утра, горки и качели, добрые кулачные бои, которые ведёт Добрыня, сожжение чучела в конце",
+      "buzz": "в Главном зале пахнет блинами, на дворе мастерят чучело и катаются с горки",
+      "buzzNear": "блины пекут с утра, чучело ставят на дворе, Добрыня делит бойцов на стенки по правилам",
+      "today": "масленица: блины, горки, добрые кулачные бои и сожжение чучела",
+      "easter": -55,
+      "days": 7
+    },
+    {
+      "id": "soroki",
+      "name": "Сороки",
+      "from": "03-22",
+      "lead": 2,
+      "about": "день прилёта птиц, сороки Сорочьей канцелярии разносят вместе с письмами весенние сплетни",
+      "buzz": "сороки трещат громче обычного, в горницах ждут писем из дома",
+      "buzzNear": "форточки открыты, на подоконниках крошки для сорок, все ждут писем",
+      "today": "Сороки: птицы кружат над горой, почта приходит пачками"
+    },
+    {
+      "id": "easter",
+      "name": "Пасха",
+      "from": "04-21",
+      "lead": 5,
+      "about": "крашеные яйца и куличи, колокольный звон в Мраморском, старшие идут в деревню; дата плавающая, здесь приблизительная",
+      "buzz": "яйца красят луковой шелухой, куличи пекут на кухне, старшие просятся в Мраморское",
+      "buzzNear": "яйца раскрашены, куличи освящены, старшие получили разрешение выйти в деревню",
+      "today": "Пасха: христосуются, меняются яйцами, из Мраморского слышен звон",
+      "easter": 0,
+      "days": 1
+    },
+    {
+      "id": "krasnaya-gorka",
+      "name": "Красная горка",
+      "from": "04-28",
+      "lead": 3,
+      "about": "весенний праздник свиданий и сватовства: хороводы на горке, девушки в лучших нарядах; дата плавающая, здесь приблизительная",
+      "buzz": "хороводы репетируют на горке, парни и девушки перешёптываются о парах",
+      "buzzNear": "горку расчищают от талого снега, наряды достают из сундуков, хороводы разучивают",
+      "today": "Красная горка: хороводы на горке, смех, знакомства и разговоры о свадьбах",
+      "easter": 7,
+      "days": 1
+    },
+    {
+      "id": "fair",
+      "name": "Ярмарка в Мраморском",
+      "from": "05-06",
+      "lead": 4,
+      "about": "старшим разрешён выход в деревню: ярмарка, пряники, червонцы и пятаки в кармане, ломбард с палочками",
+      "buzz": "старшие считают деньги и составляют списки покупок, остальные просят привезти пряников",
+      "buzzNear": "списки покупок написаны, кошельки пересчитаны, разрешения на выход подписаны",
+      "today": "ярмарка в Мраморском: пряники, ломбард, торг и маскировка под местных"
+    },
+    {
+      "id": "iskus",
+      "name": "Выпускной искус",
+      "from": "07-02",
+      "to": "07-05",
+      "lead": 8,
+      "about": "выпускной искус 12-го класса в дни перед Купалой: три задания, третье — про поступок, а не про умение; школа затихает, выпускники повторяют и волнуются",
+      "buzz": "выпускники бледные, шепчутся о заданиях и просят совета у Кота Учёного",
+      "buzzNear": "конспекты перечитаны, обереги проверены, в коридорах тихо, наставники хмурятся для вида",
+      "today": "выпускной искус: три задания, третье про поступок, а не про умение; в коридорах тишина"
+    },
+    {
+      "id": "kupala",
+      "name": "Купальская ночь",
+      "from": "07-06",
+      "to": "07-07",
+      "off": true,
+      "lead": 7,
+      "about": "выпускной: костры, венки по воде, поиск цветка папоротника, прыжки через огонь; после ночи часть остаётся в летнем лагере",
+      "buzz": "девушки плетут венки, парни таскают дрова, все гадают о цветке папоротника",
+      "buzzNear": "костры сложены, венки сплетены, мундиры парадные с вышивкой, речи выпускников репетируют",
+      "today": "Купальская ночь: костры, венки, папоротник и выпускной до рассвета"
+    }
+  ],
+  "grades": {
+    "values": [
+      {
+        "value": "5",
+        "points": 5,
+        "pass": true,
+        "label": "отлично"
+      },
+      {
+        "value": "4",
+        "points": 4,
+        "pass": true,
+        "label": "хорошо"
+      },
+      {
+        "value": "3",
+        "points": 3,
+        "pass": true,
+        "label": "удовлетворительно"
+      },
+      {
+        "value": "2",
+        "points": 2,
+        "pass": false,
+        "label": "двойка"
+      },
+      {
+        "value": "1",
+        "points": 1,
+        "rare": true,
+        "pass": false,
+        "label": "кол"
+      },
+      {
+        "value": "зачёт",
+        "points": null,
+        "pass": true,
+        "label": "зачёт"
+      },
+      {
+        "value": "незачёт",
+        "points": null,
+        "pass": false,
+        "label": "незачёт"
+      },
+      {
+        "value": "автомат",
+        "points": 5,
+        "pass": true,
+        "label": {
+          "female": "освобождена от искуса",
+          "male": "освобождён от искуса"
+        }
+      }
+    ],
+    "aliases": {
+      "зачет": "зачёт",
+      "незачет": "незачёт",
+      "pass": "зачёт",
+      "fail": "незачёт",
+      "a": "5",
+      "b": "4",
+      "c": "3",
+      "f": "2"
+    },
+    "passMark": 3,
+    "startScore": 3
+  },
+  "exams": {
+    "kinds": [
+      {
+        "id": "final-trial",
+        "name": "выпускной искус",
+        "scale": "points",
+        "grades": [
+          12
+        ],
+        "standalone": true,
+        "dc": 9
+      },
+      {
+        "id": "apparition",
+        "name": "лицензия на трансгрессию",
+        "scale": "pass",
+        "subjects": [
+          "transgressiya"
+        ],
+        "atWeek": [
+          null,
+          null,
+          null,
+          17
+        ],
+        "weekdays": {
+          "11": 3,
+          "12": 5
+        },
+        "dc": 8
+      }
+    ],
+    "retakes": 2,
+    "announce": {
+      "studyDays": 2
+    },
+    "autoPassScore": 4.6,
+    "dc": {
+      "base": 7,
+      "score": 22,
+      "relation": 6,
+      "reputation": 5,
+      "critMargin": 10,
+      "safeScore": 3.8
+    }
+  },
+  "feed": {
+    "register": "Записки и говорок молодёжи 2000 года в волшебной школе: мобильных и интернета нет, пишут на листках, шлют с сороками, чиркают на стене горницы и спальной доске, слушают радиоточку и кассеты. «Чат» — условность: читается как общая доска горницы, реплики короткие, разговорные, без пафоса; сказочные реалии упоминают к слову, а не в каждой фразе.",
+    "samples": [
+      "что задали на Зелейное?",
+      "ты где вообще, пол-обеда ждали",
+      "перепиши нормально, ничего не разобрать",
+      "А это точно на завтра?",
+      "я не спорю, я спрашиваю",
+      "ЛАДНО, понял",
+      "спасибо, а то я уже паниковал 😭",
+      "Кто со мной на лапту? Одному не хочется.",
+      "сорока принесла, что отсидки отменили"
+    ],
+    "banter": {
+      "slang": [
+        "жесть",
+        "клёво",
+        "облом",
+        "прикол",
+        "отстой",
+        "в натуре",
+        "кайф",
+        "беспредел",
+        "ништяк",
+        "тормоз",
+        "лафа",
+        "полный абзац",
+        "прикинь",
+        "забей",
+        "не парься",
+        "чума",
+        "капец",
+        "ага, щас",
+        "блин горелый",
+        "по приколу",
+        "рулит",
+        "тусня",
+        "в тему",
+        "нормалёк",
+        "зависнуть",
+        "оттопыриться",
+        "на халяву",
+        "лихо одноглазое",
+        "не в кассу",
+        "сорока на хвосте"
+      ],
+      "quarrel": [
+        "передразнить его запиской с тем же текстом про самобранку",
+        "приколоть к доске в горнице его же просьбу о помощи",
+        "припомнить прошлый такой же громкий провал на лапте",
+        "ответить на длинную записку одним словом «ясно»",
+        "оставить наезд без ответа и позвать на ужин",
+        "написать общую записку про любителей чужих пирогов",
+        "попросить повторить обвинение при всей горнице, а не шёпотом",
+        "переслать с сорокой его же правило, которое он сейчас нарушил",
+        "публично спросить, кто назначил его главным",
+        "разобрать отмазку по времени, когда сорока улетала",
+        "на каждое преувеличение отвечать конкретной цифрой",
+        "отказаться дальше давать конспекты после хамства",
+        "предложить назвать обиженного прямо вместо намёков",
+        "поставить условие: убирает слух или разговор окончен",
+        "поздравить с победой в споре с самим собой",
+        "вернуть его любимое «поплачь» в ответ на жалобу"
+      ],
+      "dismiss_mild": [
+        "иди погуляй до Мраморского",
+        "отвали уже",
+        "лесом, товарищ",
+        "гуляй, Вася",
+        "не душни в горнице",
+        "свободен, следующий",
+        "ступай к Горынычу, погрейся",
+        "ну всё, гастроли окончены",
+        "отлипни, я ем",
+        "с этим вопросом — к Коту Учёному",
+        "при всех: меня больше не зови",
+        "не сейчас, я выдохся",
+        "сверни шарманку",
+        "разговор закрыт, спокойной ночи"
+      ],
+      "dismiss_free": [
+        "пошёл нахуй",
+        "отъебись от меня",
+        "съебался отсюда",
+        "пиздуй куда шёл",
+        "иди в жопу со своим наездом",
+        "хуй тебе, а не конспект",
+        "заебал, пластинку смени",
+        "мне похуй, обтекай молча",
+        "блядь, дай спокойно поесть",
+        "нахер с моей доски",
+        "при всех: сверни свою хуйню",
+        "доебись до столба",
+        "съеби красиво, пока прошу",
+        "отстань уже, ёб твою занудность"
+      ],
+      "mom": [
+        "я твою мамку на ярмарку в Мраморское водил, пряник не душнил",
+        "твоя мамка мою кассету переписала, твою скипнула",
+        "с твоей мамкой чай пил, самовар закипает быстрее тебя",
+        "твоей мамке сумку донёс, теперь я семейная легенда",
+        "твою мамку на колядки звал, она без записки согласилась",
+        "твоя мамка мой пирог похвалила, твой отдала Горынычу",
+        "с твоей мамкой на льду были, она разговор так не морозила",
+        "твоей мамке цветы принёс, ты опять предъявы",
+        "твоя мамка мне последний блин оставила, держись",
+        "с твоей мамкой в дурака играли, она правила дочитала",
+        "твою мамку до ворот проводил, ты даже тему не довёл",
+        "твоя мамка мой свитер похвалила, твой отправила в стирку"
+      ],
+      "insults_mild": [
+        "душнила",
+        "клоун",
+        "позор курятника",
+        "обиженка",
+        "понторез",
+        "мамкин решала",
+        "лох ушастый",
+        "король отмазок",
+        "пустозвон",
+        "важный гусь",
+        "эксперт с печки",
+        "герой одной записки",
+        "пассажир разговора",
+        "сплетник на подхвате",
+        "диванный начальник",
+        "балабол"
+      ],
+      "insults_free": [
+        "долбоёб",
+        "пиздобол",
+        "хуесос",
+        "выебонщик",
+        "уёбок",
+        "ебучий нытик",
+        "мудак с претензией",
+        "говнюк",
+        "сраный провокатор",
+        "охуевший халявщик",
+        "засранец",
+        "доебатель"
+      ]
+    },
+    "reactions": [
+      {
+        "emoji": "😂",
+        "tone": "смешно"
+      },
+      {
+        "emoji": "😭",
+        "tone": "жалко"
+      },
+      {
+        "emoji": "👍",
+        "tone": "согласие"
+      },
+      {
+        "emoji": "❤️",
+        "tone": "поддержка"
+      },
+      {
+        "emoji": "👀",
+        "tone": "интерес"
+      },
+      {
+        "emoji": "🤦",
+        "tone": "досада"
+      },
+      {
+        "emoji": "🔥",
+        "tone": "восторг"
+      },
+      {
+        "emoji": "🙄",
+        "tone": "раздражение"
+      }
+    ],
+    "worldTopics": [
+      "что подали самобранки на обед",
+      "чья очередь топить печь и мыть горницу",
+      "лапта: кто летит на каком стволе",
+      "отсидки у завхоза Прокопьича",
+      "банный день и очередь в баню",
+      "кот Баюн запел раньше срока",
+      "кто опять не сдал деньги на ярмарку",
+      "слухи о Гумешевском руднике"
+    ]
+  },
+  "reputation": {
+    "min": 0,
+    "max": 100,
+    "start": 50,
+    "warnAt": 20,
+    "expelAt": 0,
+    "labels": [
+      {
+        "upTo": 0,
+        "label": {
+          "female": "исключена",
+          "male": "исключён"
+        }
+      },
+      {
+        "upTo": 25,
+        "label": "на грани вызова к ректору"
+      },
+      {
+        "upTo": 45,
+        "label": "на заметке у наставника выпускного класса"
+      },
+      {
+        "upTo": 60,
+        "label": "ничем не выделяется"
+      },
+      {
+        "upTo": 80,
+        "label": "на хорошем счету"
+      },
+      {
+        "upTo": 100,
+        "label": "гордость класса"
+      }
+    ],
+    "delta": {
+      "skip": -3,
+      "late": -1,
+      "examFailed": -6,
+      "examPassed": 2,
+      "cheatingCaught": -8,
+      "praise": 3
+    }
+  },
+  "attendance": {
+    "debtAfterSkips": 4,
+    "lateEqualsSkip": 3,
+    "inferHorizonDays": 7,
+    "lateAfterMinutes": 10
+  },
+  "limits": {
+    "maxSubjects": 20,
+    "maxTeachers": 24,
+    "maxNumbersInPrompt": 6,
+    "idleWarnAfter": 10,
+    "journalSize": 200,
+    "minTraits": 1,
+    "maxTraits": 2,
+    "maxIdLength": 24,
+    "maxTimeShift": 30,
+    "maxLorebookEntries": 60,
+    "lorebookCharsPerToken": 3,
+    "prepIntents": 3,
+    "prepExamLead": 5
+  },
+  "phrases": {
+    "exams": {
+      "auto": "Already happened: {subject} — {value}, test waived by {teacher}. Play it as past.",
+      "passed": "Already happened: {subject} — {value} ({teacher}). Play it as past.",
+      "failed": "Already happened: {subject} — {value} ({teacher}). Retake assigned, {left} attempts left. Play it as past.",
+      "exhausted": "Already happened: {subject} — {value} ({teacher}). Retake failed, a debt goes into the diary. Play it as past.",
+      "permissionAuto": "{examPeriod}: {subject} — average grade {score}, a waiver of the test is possible. Do not play out a failure from nowhere.",
+      "permissionNoAuto": "{examPeriod}: {subject} — average grade {score}, no waiver; {teacher} gives the test to the whole class. Do not play out a brilliant pass without a trial.",
+      "permissionRisk": "{examPeriod}: {subject} — average grade {score}, heading for a debt; {teacher} may assign a retake. Do not play out a success, the system decides it.",
+      "divergence": "Расхождение по {subject}: посчитано {computed}, отыграно {said}. Принята версия модели.",
+      "scheduled": "{examPeriod}: назначено {count}.",
+      "missed": "{examPeriod} позади: {subject}, {kind} — не сдано, {debt} идёт в дневник."
+    },
+    "lorebook": {
+      "teacher": {
+        "female": "{name} — {teacher}, ведёт предмет «{subject}». Характер: {traits}. Отношение к ученице: {relation}.",
+        "male": "{name} — {teacher}, ведёт предмет «{subject}». Характер: {traits}. Отношение к ученику: {relation}."
+      },
+      "charter": {
+        "female": "{institution}. Учебный год делится на четыре периода (по-школьному — «{term}»). Единица расписания — «{period}». Итоги каждого периода подводит {examPeriod}: оценки идут в документ «{gradebook}», несданное превращается в {debtPlural}. За прогулы и {debtPlural} следует {warning}, крайняя мера — {expulsion}. Распорядок — от петуха до кота: подъём по петуху, отбой в 23:00, когда поёт кот Баюн. Прогул — проспал, спрятался, ушёл в лес, застрял в больничке; наказание — отсидки (отработки). Мобильных и интернета нет, письма носит сорочья почта. Все ученики — совершеннолетние выпускники (18+). Сейчас об ученице в школе думают так: {reputation}.",
+        "male": "{institution}. Учебный год делится на четыре периода (по-школьному — «{term}»). Единица расписания — «{period}». Итоги каждого периода подводит {examPeriod}: оценки идут в документ «{gradebook}», несданное превращается в {debtPlural}. За прогулы и {debtPlural} следует {warning}, крайняя мера — {expulsion}. Распорядок — от петуха до кота: подъём по петуху, отбой в 23:00, когда поёт кот Баюн. Прогул — проспал, спрятался, ушёл в лес, застрял в больничке; наказание — отсидки (отработки). Мобильных и интернета нет, письма носит сорочья почта. Все ученики — совершеннолетние выпускники (18+). Сейчас об ученике в школе думают так: {reputation}."
+      },
+      "charterEn": "Unsubmitted work becomes debts; truancy and debts lead to a summons to the rector (the Mistress of the Copper Mountain); the ultimate sanction is expulsion. The day runs from rooster to cat: rise at the rooster's crow, lights-out when the cat Bayun sings at 23:00. No phones or internet; post comes by magpie. {heroine}'s current reputation: {reputation}.",
+      "reputationEn": [
+        "expelled",
+        "on the verge of a summons to the rector",
+        "noted by the class mentor",
+        "unremarkable",
+        "in good standing",
+        "the pride of the class"
+      ],
+      "termsEn": {
+        "term": "one of the four school quarters of the year",
+        "examPeriod": "the week of the graduating trial (iskus) before Kupala night",
+        "gradebook": "the pupil's school diary with grades (not a personal diary)",
+        "debt": "unsubmitted or failed schoolwork",
+        "warning": "a summons to the rector for truancy or debts"
+      },
+      "chronicleExam": "{day}. {subject}: {value}. Принимал {teacher}.",
+      "chronicleWarn": {
+        "female": "{day}. {warning}. Об ученице теперь думают так: {reputation}.",
+        "male": "{day}. {warning}. Об ученике теперь думают так: {reputation}."
+      },
+      "chronicleExpel": "{day}. {expulsion}: {expelled}.",
+      "chronicleRelation": {
+        "female": "{day}. Отношение {teacher} к ученице изменилось: было «{from}», стало «{to}».",
+        "male": "{day}. Отношение {teacher} к ученику изменилось: было «{from}», стало «{to}»."
+      },
+      "chronicleMilestone": "{day}. Памятный день: {milestone}.",
+      "place": "{name}. {note}",
+      "npc": "{name}. {note}"
+    }
+  },
+  "labels": {
+    "weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "phases": {
+      "study": "",
+      "weekend": "weekend",
+      "vacation": "vacation",
+      "break": "between quarters",
+      "exams": "",
+      "preExams": "неделя перед искусами"
+    },
+    "day": "{weekday}, week {week} of the quarter",
+    "dayOutside": "{weekday}, {phase}",
+    "dayPhase": "{weekday}, week {week} of the quarter, {phase}",
+    "now": "The timetable is a fixed world fact: the lesson and its teacher below are authoritative, so open the scene with exactly them, even if the previous reply was set in another lesson; deviate only for a plot reason. Lesson now: {subject}{teacher}",
+    "next": "The timetable is a fixed world fact: the lesson and its teacher below are authoritative, so open the scene with exactly them, even if the previous reply was set in another lesson; deviate only for a plot reason. Next lesson: {subject}{teacher}",
+    "today": "The timetable is a fixed world fact: the lesson and its teacher below are authoritative, so open the scene with exactly them, even if the previous reply was set in another lesson; deviate only for a plot reason. Lessons today: {list}",
+    "nowMark": "{subject} (now)",
+    "teacherOf": " ({teacher})",
+    "dayList": "Later: {list}",
+    "terms": "This is a school, not a university. Use these Russian school words: класс (11-й, 12-й), четверть, ученики и старшеклассники, наставники, урок, горница.",
+    "debts": "debts: {list}",
+    "score": "average grade: {value}",
+    "exams": "{examPeriod}: {count} not passed, {days} {daysWord} left",
+    "examsNoDays": "{examPeriod}: {count} not passed",
+    "relation": "{teacher} toward {hero}: {label}",
+    "reputation": "reputation: {label}",
+    "glue": ". ",
+    "end": ".",
+    "listGlue": ", "
+  },
+  "ui": {
+    "week": "{n}-я неделя четверти",
+    "weekBefore": "четверть ещё не началась",
+    "weekBreak": "каникулы между четвертями",
+    "termLine": "{name}",
+    "termNumber": "{n}-я четверть",
+    "phases": {
+      "study": "учебный день",
+      "weekend": "выходной",
+      "vacation": "каникулы",
+      "break": "каникулы",
+      "exams": "неделя искусов",
+      "preExams": "неделя перед искусами"
+    },
+    "silentVacation": "Каникулы — уроков нет.",
+    "silentBreak": "Каникулы — уроков нет.",
+    "silentWeekend": "Выходной — уроков нет.",
+    "silentExams": "Неделя искусов — обычных уроков нет, выпускники сдают искус.",
+    "silentExamsFree": "Учебный год кончился: перед Купалой уроков нет, выпускники сдают искус, остальные свободны.",
+    "silentNight": "Ночь — уроков нет, кот Баюн поёт.",
+    "silentEmpty": "На сегодня расписание пустое.",
+    "silentOver": "Уроки на сегодня кончились.",
+    "nowTitle": "Сейчас",
+    "breakTitle": "Перемена, дальше",
+    "beforeTitle": "Первый урок",
+    "nextCardTitle": "Дальше",
+    "slot": "{ordinal}-й урок",
+    "slotTime": "{ordinal}-й урок, {start}–{end}",
+    "nextSoon": "сегодня, следующим уроком",
+    "nextToday": "сегодня, {start}",
+    "nextDay": "{date}, {start}",
+    "nextDayNoTime": "{date}",
+    "noNext": "Следующего урока в расписании пока нет.",
+    "dayTitle": "Основные уроки",
+    "shiftPeriod": "+1 урок",
+    "skipToEnd": "До конца уроков",
+    "scoreLine": "{scoreName}: {value}",
+    "debtsLine": "{debtPlural}: {count}",
+    "subjectsLine": "предметов: {count}",
+    "examsLine": "не сдано к искусам: {count}",
+    "examsTerm": "искусы: {name}",
+    "quarterNote": "Четвертную отметку сводит в ведомость Лера Листопад: округлённое среднее за четверть.",
+    "debtsTitle": "Долги по предметам",
+    "rowDebt": "Долг по предмету: {subject}",
+    "rowDebtClosed": "Долг по предмету закрыт: {subject}",
+    "rowJump": "Пропущено уроков: {count}",
+    "rowExamMissed": "Не сдано к концу недели искусов: {subject}",
+    "rowReputation": "Репутация: {from} → {to}",
+    "examRuleStoryHint": "исход тот, что случился в сцене; не сыгранное к концу недели искусов — долг",
+    "openExamsTitle": "Несданные испытания",
+    "debtTag": "долг",
+    "passedTag": "сдано",
+    "ongoingTag": "идёт",
+    "summaryTitle": "Итоги",
+    "marginTitle": "На полях",
+    "scoreHint": "Средний балл по всем предметам",
+    "expelledTag": {
+      "female": "исключена",
+      "male": "исключён"
+    },
+    "warnedTag": "вызов к ректору",
+    "reputationTitle": "Репутация в школе",
+    "expelledLine": {
+      "female": "Исключена из школы.",
+      "male": "Исключён из школы."
+    },
+    "warnedLine": "Вызывали к ректору.",
+    "noSubjects": "Предметов нет. Заполните таблицу в настройках.",
+    "noGrades": "оценок пока нет",
+    "noGradesAll": "Оценок ещё нет ни по одному предмету.",
+    "scoreNoneLine": "Средний балл ещё не определён",
+    "notStartedTitle": "Игра не начата",
+    "noStateText": "Выберите класс и факультет и нажмите «Начать игру».",
+    "brokenTitle": "Состояние повреждено",
+    "brokenText": "Расширение не берётся показывать четверть, которая не сходится сама с собой. Проверьте список ниже; таблицу предметов можно поправить вручную в настройках.",
+    "peopleCountLine": "наставников: {count}",
+    "peopleNone": "Наставников нет. Добавьте их в настройках.",
+    "traitsNone": "черты не заданы",
+    "subjectsNone": "предметов не ведёт",
+    "relationTitle": "Отношение",
+    "relationHistoryTitle": "Запомнилось",
+    "relationHistoryCount": "{title}: {n} {word}",
+    "relationNoHistory": "пока ничего не записано",
+    "relationOff": "отношения не отслеживаются",
+    "relationShift": "{from} → {to}",
+    "orphanSubjectsTitle": "Предметы без наставника",
+    "tabToday": "Сегодня",
+    "tabGradebook": "Дневник",
+    "tabPeople": "Люди",
+    "tabAchievements": "Достижения",
+    "tabFeed": "Сороки",
+    "tabSettings": "Настройки",
+    "teachersTitle": "Наставники",
+    "subjectsTitle": "Предметы",
+    "startSection": "Начало игры",
+    "startedButton": "Игра идёт",
+    "presetSection": "Пресет школы",
+    "presetNote": "Слова, шкала оценок и виды контрольных берутся отсюда. Предметы, наставники и оценки от пресета не зависят: они хранятся в самой четверти.",
+    "presetChange": "Сменить пресет",
+    "presetChanged": "Пресет сменён.",
+    "presetSameNote": "Этот пресет уже выбран.",
+    "presetDrift": "Учёба в этом чате собрана пресетом «{stateId}», а сейчас активен «{activeId}».",
+    "transferSection": "Выгрузка и загрузка",
+    "transferNote": "Состояние четверти одним файлом: перенести в другой чат, сохранить до починки, отдать другому человеку. Ключ API в файл не попадает.",
+    "exportButton": "Скачать состояние",
+    "exportOk": "Файл {filename} отдан браузеру.",
+    "importPick": "Загрузить состояние из файла",
+    "importButton": "Выбрать файл",
+    "importOk": "Состояние загружено.",
+    "importConfirmTitle": "Заменить то, что есть?",
+    "importConfirmYes": "Да, заменить",
+    "importConfirmNo": "Отмена",
+    "importCancelled": "Отменено, ничего не тронуто.",
+    "summaryCurrent": "Сейчас в чате",
+    "summaryIncoming": "Приедет из файла",
+    "summaryNothing": "пусто",
+    "summaryLine": "день {day}, предметов {subjects}, оценок {grades}",
+    "summaryNotStarted": "не начат",
+    "importOccupiedStarted": "в этом чате уже идёт четверть ({subjects} предметов, день {day}) — она пропадёт без следа",
+    "importOccupiedEmpty": "в этом чате уже есть состояние школы — оно будет заменено",
+    "presetMismatch": "состояние собрано с пресетом «{from}», сейчас активен «{to}». Предметы, наставники и оценки приедут как есть — они лежат в состоянии; а названия четвертей, шкала оценок и виды контрольных возьмутся из активного пресета, поэтому знакомые вещи могут называться иначе",
+    "lorebookSection": "Книга мира школы",
+    "lorebookToggle": "Вести книгу мира школы",
+    "lorebookNote": "Черты наставников и одноклассников, места и хроника уходят в книгу мира (World Info), где запись подгружается по ключу, а не висит в промпте постоянно. Выключено по умолчанию: чужую книгу мира расширение своими записями не засоряет.",
+    "lorebookBound": "Книга мира «{name}» привязана к этому чату.",
+    "lorebookNoName": "Книга мира ещё не заведена: она появится с первым ответом модели.",
+    "lorebookBookField": "Имя книги мира",
+    "lorebookBookHint": "пусто — по имени чата",
+    "lorebookMeasure": "Записей {entries} из {cap}, примерно {tokens} токенов.",
+    "lorebookOverCap": "Записей больше потолка: книга мира начнёт вытеснять из контекста всё остальное. Уберите лишние средствами таверны.",
+    "lorebookRefresh": "Обновить книгу мира",
+    "lorebookRefreshOk": "Книга мира обновлена.",
+    "lorebookSuggestTitle": "Предложенные записи",
+    "lorebookSuggestNote": "Расширение может только предложить запись про человека или место, а не сочинить её само. В книгу мира она уйдёт по нажатию.",
+    "lorebookAccept": "Добавить",
+    "lorebookAcceptOk": "Запись добавлена в книгу мира.",
+    "lorebookNoSuggest": "Предложений нет.",
+    "lorebookNewTitle": "Предложить запись",
+    "lorebookNewName": "Имя или название",
+    "lorebookNewNote": "Заметка",
+    "lorebookNewNameHint": "Зоя Верещагина",
+    "lorebookNewNoteHint": "одноклассница, ведёт стенгазету, знает все сплетни",
+    "lorebookKindPeople": "человек",
+    "lorebookKindPlaces": "место",
+    "lorebookNewButton": "Предложить",
+    "lorebookNewOk": "Предложено. В книгу мира уйдёт по кнопке «Добавить».",
+    "lorebookOrphansTitle": "Осиротевшие после свайпов",
+    "lorebookOrphansNote": "Записи про то, чего в нынешнем состоянии больше нет. Расширение их не стирает само: своё вы бы потеряли вместе с ними.",
+    "lorebookPrune": "Убрать осиротевшие ({count})",
+    "lorebookPruned": "Убрано записей: {count}.",
+    "lorebookOff": "Книга мира выключена.",
+    "lorebookNoWorldInfo": "Эта сборка таверны не отдаёт книгу мира (World Info) расширениям, поэтому записей не будет. Всё остальное работает.",
+    "lorebookNoChat": "Книга мира привязывается к чату, а чат ещё не сохранён. Она заведётся с первым сообщением.",
+    "lorebookNoState": "Книга мира заведётся, когда начнётся четверть.",
+    "lorebookError": "Книга мира не обновилась: {error}",
+    "cmdPlanTitle": "Уроки дня:",
+    "cmdNoPlan": "Уроков сегодня нет.",
+    "cmdNext": "Дальше: {name} — {when}",
+    "cmdNoSubjects": "Предметов в плане нет.",
+    "cmdAverage": "средний балл {value}",
+    "cmdShiftPeriods": "сдвиг в уроках, можно отрицательный",
+    "cmdTimeHelp": "Ручной ремонт календаря. <code>/koldo-time day=ГГГГ-ММ-ДД</code>, <code>/koldo-time days=1</code>, <code>/koldo-time periods=-2</code>. <code>/koldo-time days=1 count=yes</code> — записать пропущенное посещённым. Без аргументов показывает, где календарь стоит сейчас.",
+    "cmdBothUnits": "/koldo-time: за один раз двигаем либо днями, либо уроками, но не тем и другим.",
+    "cmdStatusHelp": "Сводка «сегодня»: дата, неделя, уроки дня и средний балл — то же, что на вкладке «Сегодня».",
+    "cmdGradesHelp": "Дневник: предметы, оценки, средний балл, долги, репутация словом.",
+    "cmdStatusReturns": "сводка учебного дня",
+    "cmdGradesReturns": "дневник текстом",
+    "cmdStateReturns": "состояние четверти в JSON",
+    "cmdStateHelp": "Состояние четверти как JSON — для карточек и скриптов. Ключи API вырезаны тем же срезом, что и при записи в метаданные чата.",
+    "jumpTitle": "В ответе другая дата",
+    "jumpLine": "В ответе — {date}, в календаре — {from}. Принять новую дату?",
+    "jumpNote": "Так бывает и в отыгрыше (сон, отъезд), и по ошибке модели. Пропущенные за скачок уроки засчитаются как посещённые, если прыжок принять.",
+    "jumpAccept": "Перейти на {date}",
+    "jumpAcceptNoDate": "Перейти на этот день",
+    "jumpWaiting": "ждёт перехода на {date}",
+    "jumpSkipped": "За эти дни: {list}.",
+    "jumpSkipMore": "и ещё {n}",
+    "jumpSkipExam": "{kind} по {subject}",
+    "jumpSkipSession": "{examPeriod}",
+    "jumpDismiss": "Оставить как было",
+    "jumpAccepted": "Время переведено.",
+    "jumpAcceptedMissed": "Пропущено {days} {plural}: {count} {unit} {done}.",
+    "jumpAcceptedNone": "Пропущено {days} {plural}: уроков не было.",
+    "jumpUnits": "урок|урока|уроков",
+    "jumpDone": "засчитано|засчитано|засчитано",
+    "jumpDismissed": "Прыжок отклонён, календарь на месте.",
+    "eraTitle": "В ответе другой год",
+    "eraLine": "В ответе — {year} год, в календаре — {from} год. Перенести календарь?",
+    "eraNote": "Даты в чате поедут на ту же разницу лет, число и месяц останутся. Если год попал в ответ по ошибке оставьте как было.",
+    "eraAccept": "Перенести на {year} год",
+    "eraAccepted": "Календарь перенесён.",
+    "repairCount": "Записать пропущенные уроки посещёнными",
+    "repairCountNote": "По умолчанию ручной сдвиг посещаемость не трогает: ремонт календаря не наказывает за день, которого не играли. С галочкой пропущенные уроки запишутся как посещённые, как при обычной промотке. Прогулом они не станут. Галочка действует и на кнопки «+1», и остаётся, пока открыта панель.",
+    "repairCounted": "Уроков засчитано посещёнными: {count}.",
+    "repairNotCounted": "Посещаемость не записывалась: уроков за сдвиг — {count}.",
+    "cmdCounted": "Записано посещёнными: {count}.",
+    "cmdNotCounted": "Посещаемость не записывалась: уроков за сдвиг — {count}. Нужно записать — добавьте count=yes.",
+    "cmdReputationMoved": "Репутация: {from} → {to}.",
+    "cmdCountArg": "записать пропущенные уроки посещёнными",
+    "jumpToast": "Прошло уроков: {periods}, все засчитаны.",
+    "pauseTitle": "Занятия приостановлены",
+    "pauseOpen": "с {from}, до отмены",
+    "classmatesTitle": "Класс",
+    "feedChat": "Горница",
+    "classmatesNone": "Одноклассников пока нет. Добавьте человека руками.",
+    "mesRelSection": "Отношения",
+    "mesCourseSection": "Люди сцены",
+    "openSurvey": "Открыть «Начало игры»",
+    "goToStart": "Открыть «{section}»",
+    "openSettings": "Открыть настройки",
+    "shiftedTo": "Теперь: {when}.",
+    "cmNameHint": "Аня Векшина",
+    "examsAheadTitle": "Ближайшие искусы",
+    "cmClubHint": "лапта, группа, факультатив алхимии — если есть",
+    "cmProblemHint": "долг по зелейному, боится высоты на летучем деле",
+    "notStartedText": "Школа соберётся из готовых данных: выберите класс и факультет и нажмите «Начать игру»."
+  },
+  "glossary": {
+    "горница": "Комната на четверых в крыле терема своего факультета: только свой класс, спальная доска над печью, которую топит Змей Горыныч.",
+    "самобранки": "Скатерть-самобранка, по одной на стол в Главном зале. Еду она зовёт или умножает, из ничего не создаёт — таков закон волшбы.",
+    "сорочья почта": "Письма и записки носят сороки Сорочьей канцелярии: ни мобильных, ни интернета в Колдовстворце нет.",
+    "отсидки": "Отработки: наказание за прогул, долг или шалость; назначает наставник или завхоз Прокопьич.",
+    "прогул": "Проспал, спрятался, ушёл в лес или застрял в больничке у Бабы-Яги — всё это прогул, а за ним отсидки.",
+    "искус": "Испытание: выпускной искус 12-го класса в дни перед Купалой. Три задания, третье всегда про поступок, а не про умение.",
+    "перо": "Птица на распределении 1 сентября дарит перо своего факультета; его носят на мундире весь первый год.",
+    "Сирин": "Факультет-птица: сапфир, тёмно-синий цвет, слово и хитрость. Декан — Солоха.",
+    "Гамаюн": "Факультет-птица: аметист, фиолетовый цвет, знание. Декан — Василиса Премудрая.",
+    "Алконост": "Факультет-птица: гранат, винный цвет, ремесло и надежда. Декан — Марья-искусница.",
+    "Стратим": "Факультет-птица: малахит, тёмно-зелёный цвет, стойкость и защита слабых. Декан — Илья Муромец.",
+    "лапта": "Местный квиддич: 7 игроков, 3 кольца, летают на вырванных деревьях; матчи факультетов после ужина, тренирует команды Добрыня Никитич.",
+    "мундир": "Китель начала XIX века со стоячим воротником и серебряными пуговицами, серебристая вышивка-оберег по вороту и манжетам; цвет по факультету. Парадная вышивка — привилегия старших.",
+    "Мраморское": "Деревня в 15 км от горы; свободный выход туда только у старших. Полевской и Екатеринбург — тоже только старшим и в маскировке.",
+    "Завесой": "Завеса скрывает волшебный мир от обычных людей.",
+    "Баюн": "Кот Баюн — ночная охрана; в 23:00 он поёт, и все засыпают.",
+    "трансгрессия": "Перемещение волшбой. Лицензионный экзамен сдают только старшие, весной."
+  }
+}
