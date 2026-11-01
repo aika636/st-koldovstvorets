@@ -195,7 +195,7 @@ const SEAL_BIRD = 'M15 33Q16 25 27 24Q32 23 34 18Q35 14 32 11Q43 11 41 21Q47 19 
 const SEAL_ORNAMENT = 'M11 37.5 13.5 40 11 42.5 8.5 40ZM69 37.5 71.5 40 69 42.5 66.5 40ZM40 66 43 69 40 72 37 69ZM25.5 62.6 27.9 65 25.5 67.4 23.1 65ZM54.5 62.6 56.9 65 54.5 67.4 52.1 65Z';
 
 function sealMark(text) {
-  const mark = svgIcon('tick', 'ad-doc-mark');
+  const mark = svgIcon('tick', 'dia-doc-mark');
   if (typeof document.createElementNS !== 'function') return mark;
   const name = String(text || '').trim().toUpperCase();
   const size = name.length > 13 ? Math.max(4.5, (7 * 13) / name.length) : 7;
@@ -222,42 +222,42 @@ function closedSubject(state, preset, subjectId) {
 
 function subjectRow(s, U, X, noGradesAtAll) {
   const tags = [
-    s.debt ? el('span', { class: 'ad-st ad-debt', text: U.debtTag }) : null,
-    s.passed ? el('span', { class: 'ad-st ad-ok', text: U.passedTag }) : null,
-    s.going ? el('span', { class: 'ad-st ad-going', text: U.ongoingTag, title: X.ongoingHint }) : null,
+    s.debt ? el('span', { class: 'dia-st dia-debt', text: U.debtTag }) : null,
+    s.passed ? el('span', { class: 'dia-st dia-ok', text: U.passedTag }) : null,
+    s.going ? el('span', { class: 'dia-st dia-going', text: U.ongoingTag, title: X.ongoingHint }) : null,
   ];
   const marks = s.marks.length
-    ? el('span', { class: 'ad-marks' }, s.marks.map((m) => el('span', {
-      class: 'ad-mark', dataset: m.bad ? { bad: '1' } : {}, text: m.value,
+    ? el('span', { class: 'dia-marks' }, s.marks.map((m) => el('span', {
+      class: 'dia-mark', dataset: m.bad ? { bad: '1' } : {}, text: m.value,
     })))
-    : (noGradesAtAll ? null : el('span', { class: 'ad-none', text: U.noGrades }));
+    : (noGradesAtAll ? null : el('span', { class: 'dia-none', text: U.noGrades }));
   const rel = s.relation;
   const extra = [
-    s.quarters.length ? el('span', { class: 'ad-gr-q', text: fill(X.quarterLine, { marks: s.quarters.map((q) => `${q.number} — ${q.mark}`).join(', ') }), title: [X.quarterNote, s.rule].filter(Boolean).join(' ') }) : null,
-    s.attendanceText ? el('span', { class: 'ad-gr-att', text: s.attendanceText }) : null,
-    s.reason ? el('span', { class: 'ad-gr-reason', text: s.reason }) : null,
-    s.debtReason ? el('span', { class: 'ad-gr-reason', text: s.debtReason }) : null,
+    s.quarters.length ? el('span', { class: 'dia-gr-q', text: fill(X.quarterLine, { marks: s.quarters.map((q) => `${q.number} — ${q.mark}`).join(', ') }), title: [X.quarterNote, s.rule].filter(Boolean).join(' ') }) : null,
+    s.attendanceText ? el('span', { class: 'dia-gr-att', text: s.attendanceText }) : null,
+    s.reason ? el('span', { class: 'dia-gr-reason', text: s.reason }) : null,
+    s.debtReason ? el('span', { class: 'dia-gr-reason', text: s.debtReason }) : null,
   ].filter(Boolean);
-  return el('div', { class: s.debt ? 'ad-gr-row ad-gr-debt' : 'ad-gr-row', dataset: { subject: s.id } }, [
-    el('div', { class: 'ad-gr-subj', text: s.name }),
+  return el('div', { class: s.debt ? 'dia-gr-row dia-gr-debt' : 'dia-gr-row', dataset: { subject: s.id } }, [
+    el('div', { class: 'dia-gr-subj', text: s.name }),
     el('div', {
-      class: 'ad-gr-avg',
+      class: 'dia-gr-avg',
       text: s.marks.length && s.average != null ? s.averageText : '',
       title: s.marks.length && s.average != null ? fill(U.cmdAverage, { value: s.averageText }) : null,
     }),
-    el('div', { class: 'ad-gr-marks' }, [marks, ...tags]),
-    el('div', { class: 'ad-gr-teacher' }, [
-      el('span', { class: 'ad-t', text: s.teacher || '—', title: s.rule || null }),
-      rel ? el('span', { class: 'ad-r', text: rel }) : null,
+    el('div', { class: 'dia-gr-marks' }, [marks, ...tags]),
+    el('div', { class: 'dia-gr-teacher' }, [
+      el('span', { class: 'dia-t', text: s.teacher || '—', title: s.rule || null }),
+      rel ? el('span', { class: 'dia-r', text: rel }) : null,
     ]),
-    extra.length ? el('div', { class: 'ad-gr-extra' }, extra) : null,
+    extra.length ? el('div', { class: 'dia-gr-extra' }, extra) : null,
   ]);
 }
 
 function warnBox(title, items, { info = false, sub = '', cls = '' } = {}) {
-  return el('div', { class: `ad-box-warn${info ? ' ad-info' : ''}${cls ? ` ${cls}` : ''}` }, [
-    el('div', { class: 'ad-bw-h', text: title }),
-    sub ? el('div', { class: 'ad-small ad-soft', text: sub }) : null,
+  return el('div', { class: `dia-box-warn${info ? ' dia-info' : ''}${cls ? ` ${cls}` : ''}` }, [
+    el('div', { class: 'dia-bw-h', text: title }),
+    sub ? el('div', { class: 'dia-small dia-soft', text: sub }) : null,
     el('ul', {}, items.map((t) => el('li', { text: t }))),
   ]);
 }
@@ -276,21 +276,21 @@ export function renderGradebook(host, view, preset) {
   const rows = view.subjects.filter((s) => !folded.has(s.id));
 
   const body = [];
-  if (!view.subjects.length) body.push(el('div', { class: 'ad-silent', text: U.noSubjects }));
+  if (!view.subjects.length) body.push(el('div', { class: 'dia-silent', text: U.noSubjects }));
   else {
-    if (noGradesAtAll) body.push(el('div', { class: 'ad-silent', text: U.noGradesAll }));
-    body.push(el('div', { class: 'ad-gr' }, [
-      el('div', { class: 'ad-gr-head', 'aria-hidden': 'true' }, [el('span', { text: 'Предмет' }), el('span', { text: 'Отметка' })]),
+    if (noGradesAtAll) body.push(el('div', { class: 'dia-silent', text: U.noGradesAll }));
+    body.push(el('div', { class: 'dia-gr' }, [
+      el('div', { class: 'dia-gr-head', 'aria-hidden': 'true' }, [el('span', { text: 'Предмет' }), el('span', { text: 'Отметка' })]),
       ...rows.map((s) => subjectRow(s, U, X, noGradesAtAll)),
-      ...(view.trials || []).map((t) => el('div', { class: 'ad-gr-row ad-gr-trial', dataset: { trial: t.id } }, [
-        el('div', { class: 'ad-gr-subj', text: t.name }),
-        el('div', { class: 'ad-gr-avg' }),
-        el('div', { class: 'ad-gr-marks' }, [t.mark ? el('span', { class: 'ad-mark', dataset: t.bad ? { bad: '1' } : {}, text: t.mark }) : el('span', { class: 'ad-none', text: '—' })]),
+      ...(view.trials || []).map((t) => el('div', { class: 'dia-gr-row dia-gr-trial', dataset: { trial: t.id } }, [
+        el('div', { class: 'dia-gr-subj', text: t.name }),
+        el('div', { class: 'dia-gr-avg' }),
+        el('div', { class: 'dia-gr-marks' }, [t.mark ? el('span', { class: 'dia-mark', dataset: t.bad ? { bad: '1' } : {}, text: t.mark }) : el('span', { class: 'dia-none', text: '—' })]),
       ])),
     ]));
     if (folded.size) {
       body.push(el('div', {
-        class: 'ad-silent ad-gr-rest',
+        class: 'dia-silent dia-gr-rest',
         text: fill(X.noGradesRest, { names: bareList.map((s) => s.name).join(', ') }),
       }));
     }
@@ -298,11 +298,11 @@ export function renderGradebook(host, view, preset) {
 
   const alarm0 = view.expelled ? U.expelledTag : view.warned ? U.warnedTag : '';
   const alarm = alarm0 && !String(view.reputation || '').toLowerCase().includes(String(alarm0).toLowerCase()) ? alarm0 : '';
-  const doc = el('div', { class: 'ad-doc', dataset: view.subjects.some((s) => s.grades.length) ? { graded: '1' } : {} }, [
-    el('i', { class: 'ad-attach', dataset: { for: 'doc', pos: 'l' } }),
-    el('i', { class: 'ad-attach', dataset: { for: 'doc', pos: 'r' } }),
-    el('div', { class: 'ad-doc-head' }, [
-      el('div', {}, [el('div', { class: 'ad-doc-title', text: U.tabGradebook })]),
+  const doc = el('div', { class: 'dia-doc', dataset: view.subjects.some((s) => s.grades.length) ? { graded: '1' } : {} }, [
+    el('i', { class: 'dia-attach', dataset: { for: 'doc', pos: 'l' } }),
+    el('i', { class: 'dia-attach', dataset: { for: 'doc', pos: 'r' } }),
+    el('div', { class: 'dia-doc-head' }, [
+      el('div', {}, [el('div', { class: 'dia-doc-title', text: U.tabGradebook })]),
       sealMark(view.seal),
     ]),
     ...body,
@@ -310,23 +310,23 @@ export function renderGradebook(host, view, preset) {
 
   const going = view.subjects.some((x) => x.going);
   const note = going ? X.ongoingHint : '';
-  const totals = el('div', { class: 'ad-gr-totals' }, [
-    el('div', { class: 'ad-gr-th', text: [U.summaryTitle, view.termText].filter(Boolean).join(' · ') }),
-    el('div', { class: 'ad-doc-sum' }, [
+  const totals = el('div', { class: 'dia-gr-totals' }, [
+    el('div', { class: 'dia-gr-th', text: [U.summaryTitle, view.termText].filter(Boolean).join(' · ') }),
+    el('div', { class: 'dia-doc-sum' }, [
       el('div', {
-        class: Number.isFinite(view.overall) ? 'ad-big' : 'ad-big ad-big-none',
+        class: Number.isFinite(view.overall) ? 'dia-big' : 'dia-big dia-big-none',
         title: Number.isFinite(view.overall) ? U.scoreHint : null,
         text: Number.isFinite(view.overall) ? view.overallText : '—',
       }),
-      el('div', { class: 'ad-lab', title: Number.isFinite(view.overall) ? U.scoreHint : null, text: Number.isFinite(view.overall) ? view.scoreName : U.scoreNoneLine }),
-      el('div', { class: 'ad-rep' }, [
+      el('div', { class: 'dia-lab', title: Number.isFinite(view.overall) ? U.scoreHint : null, text: Number.isFinite(view.overall) ? view.scoreName : U.scoreNoneLine }),
+      el('div', { class: 'dia-rep' }, [
         `${U.reputationTitle}: ${view.reputation}`,
         alarm ? ' ' : null,
-        alarm ? el('span', { class: 'ad-alarm', text: alarm }) : null,
+        alarm ? el('span', { class: 'dia-alarm', text: alarm }) : null,
       ]),
     ]),
-    view.legend ? el('div', { class: 'ad-gr-legend' }, [el('b', { text: view.legendTitle }), el('div', { text: `${view.legend}.` })]) : null,
-    note ? el('div', { class: 'ad-margin-note' }, [el('small', { text: U.marginTitle }), note]) : null,
+    view.legend ? el('div', { class: 'dia-gr-legend' }, [el('b', { text: view.legendTitle }), el('div', { text: `${view.legend}.` })]) : null,
+    note ? el('div', { class: 'dia-margin-note' }, [el('small', { text: U.marginTitle }), note]) : null,
   ]);
 
   const boxes = [totals];
@@ -342,7 +342,7 @@ export function renderGradebook(host, view, preset) {
   }
 
   const art = artImg('study-kit', 'study');
-  const common = { marginDate: view.marginDate, lcls: 'ad-illustrated' };
+  const common = { marginDate: view.marginDate, lcls: 'dia-illustrated' };
   if (spread) return { ...common, l: [art, doc], r: boxes };
   return { ...common, l: [art, doc, ...boxes], r: null, blankRight: true };
 }

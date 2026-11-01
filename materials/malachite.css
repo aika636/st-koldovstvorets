@@ -1,4 +1,4 @@
-.ad-diary[data-mat="malachite"], .ad-mat-scope[data-mat="malachite"] {
+.dia-diary[data-mat="malachite"], .dia-mat-scope[data-mat="malachite"] {
   --ad-cover: #123F35; --ad-cover-edge: #0A2A23;
   --ad-page: #F4E7CA; --ad-grid: transparent; --ad-margin: #B66B3E;
   --ad-ink: #2C3028; --ad-ink-soft: #565345;
@@ -75,7 +75,7 @@
 }
 
 /* Бумага чистая; малахит, дерево и медь живут по краю, в углах и на закладках. */
-.ad-diary[data-mat="malachite"] .ad-page {
+.dia-diary[data-mat="malachite"] .dia-page {
   --ad-ml-scene: none; --ad-ml-scene-size: auto;
   --ad-ml-fern: none;
   --ad-ml-strip: var(--ad-ml-u1); --ad-ml-strip-pos: left top;
@@ -88,7 +88,7 @@
   background-position: center top 16px, var(--ad-ml-liz-pos), var(--ad-ml-corner-pos), right 22px bottom 28px, var(--ad-ml-strip-pos), 0 0;
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y, repeat;
 }
-.ad-diary[data-mat="malachite"] .ad-page[data-side="right"] {
+.dia-diary[data-mat="malachite"] .dia-page[data-side="right"] {
   --ad-ml-fern: var(--ad-ml-u5);
   --ad-ml-strip: var(--ad-ml-u1r); --ad-ml-strip-pos: right top;
   --ad-ml-corner: var(--ad-ml-u2r); --ad-ml-corner-pos: right 20px top 10px;
@@ -96,85 +96,85 @@
   padding-inline: 24px 46px;
 }
 @container koldo-panel (min-width: 760px) {
-  .ad-diary[data-mat="malachite"] .ad-page {
+  .dia-diary[data-mat="malachite"] .dia-page {
     --ad-ml-strip-w: 22px; --ad-ml-corner-s: 72px; --ad-ml-liz-w: 62px; --ad-ml-liz-h: 44px; --ad-ml-fern-w: 30px; --ad-ml-fern-h: 145px;
     --ad-ml-corner-pos: left 26px top 10px; --ad-ml-liz-pos: right 18px top 16px;
     padding-block-start: 62px;
   }
-  .ad-diary[data-mat="malachite"] .ad-page[data-side="right"] {
+  .dia-diary[data-mat="malachite"] .dia-page[data-side="right"] {
     --ad-ml-corner-pos: right 26px top 10px; --ad-ml-liz-pos: left 22px top 16px;
     padding-inline: 34px 60px;
   }
 }
 
-.ad-diary[data-mat="malachite"] .ad-marker { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #246854; }
-.ad-diary[data-mat="malachite"] .ad-marker[data-kind="today"] { background: #B66B3E; }
+.dia-diary[data-mat="malachite"] .dia-marker { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #246854; }
+.dia-diary[data-mat="malachite"] .dia-marker[data-kind="today"] { background: #B66B3E; }
 
 /* Закладки-самоцветы в медной оправе. */
-.ad-diary[data-mat="malachite"] .ad-tab {
+.dia-diary[data-mat="malachite"] .dia-tab {
   position: relative; border: 0; border-radius: 0; padding: 12px 12px 14px 8px; margin-top: 6px;
   clip-path: polygon(0 0, 88.3% 0, 99% 50%, 88.3% 100%, 0 100%);
   color: #FFF4DB; font-weight: 700; text-shadow: none;
   background-color: var(--ad-tc, #1D6A52); background-image: var(--ad-ml-u7); background-size: 100% 100%; background-repeat: no-repeat;
   box-shadow: none;
 }
-.ad-diary[data-mat="malachite"] .ad-tab:hover { filter: brightness(1.12); }
-.ad-diary[data-mat="malachite"] .ad-tab[aria-current="page"] {
+.dia-diary[data-mat="malachite"] .dia-tab:hover { filter: brightness(1.12); }
+.dia-diary[data-mat="malachite"] .dia-tab[aria-current="page"] {
   color: #FFFFFF; filter: brightness(1.22); box-shadow: inset 0 -4px 0 #FFD686;
   background-color: var(--ad-tc, #1D6A52); background-image: var(--ad-ml-u7);
 }
-.ad-diary[data-mat="malachite"] .ad-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 3px #FFF4DB; }
-.ad-diary[data-mat="malachite"]:not([data-spread="1"]) .ad-tab { padding: 12px 8px 14px 2px; }
+.dia-diary[data-mat="malachite"] .dia-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 3px #FFF4DB; }
+.dia-diary[data-mat="malachite"]:not([data-spread="1"]) .dia-tab { padding: 12px 8px 14px 2px; }
 
 /* Закладка в плашке сообщения. */
-.ad-mat-scope[data-mat="malachite"] .ad-bookmark {
+.dia-mat-scope[data-mat="malachite"] .dia-bookmark {
   display: block; top: -6px; left: 14px; width: 14px; height: 18px;
   background: linear-gradient(#B66B3E 0 3px, #246854 3px);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
 }
-.ad-mat-scope[data-mat="malachite"] { border-left: 5px solid #246854; }
+.dia-mat-scope[data-mat="malachite"] { border-left: 5px solid #246854; }
 
 /* Медные заклёпки вместо скрепок. */
-.ad-diary[data-mat="malachite"] .ad-attach[data-for] {
+.dia-diary[data-mat="malachite"] .dia-attach[data-for] {
   display: block; width: 11px; height: 11px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #F0C089, #B66B3E 55%, #814323); box-shadow: 0 1px 1px rgba(56, 44, 35, .5);
 }
-.ad-diary[data-mat="malachite"] .ad-attach[data-for="doc"] { top: 5px; }
-.ad-diary[data-mat="malachite"] .ad-attach[data-for="doc"][data-pos="l"] { left: 7px; }
-.ad-diary[data-mat="malachite"] .ad-attach[data-for="doc"][data-pos="r"] { right: 7px; }
-.ad-diary[data-mat="malachite"] .ad-attach[data-for="sticker"] { top: -5px; left: 50%; margin-left: -5px; }
-.ad-diary[data-mat="malachite"] .ad-attach[data-for="photo"] { top: -5px; left: -5px; }
+.dia-diary[data-mat="malachite"] .dia-attach[data-for="doc"] { top: 5px; }
+.dia-diary[data-mat="malachite"] .dia-attach[data-for="doc"][data-pos="l"] { left: 7px; }
+.dia-diary[data-mat="malachite"] .dia-attach[data-for="doc"][data-pos="r"] { right: 7px; }
+.dia-diary[data-mat="malachite"] .dia-attach[data-for="sticker"] { top: -5px; left: 50%; margin-left: -5px; }
+.dia-diary[data-mat="malachite"] .dia-attach[data-for="photo"] { top: -5px; left: -5px; }
 
 /* Каменный цветок вместо значка достижения. */
-.ad-diary[data-mat="malachite"] .ad-award .ad-sign {
+.dia-diary[data-mat="malachite"] .dia-award .dia-sign {
   width: 36px; height: 36px; margin: -6px -6px -6px -6px;
   background: var(--ad-ml-u6) center / contain no-repeat;
 }
-.ad-diary[data-mat="malachite"] .ad-award .ad-sign::before,
-.ad-diary[data-mat="malachite"] .ad-award .ad-sign::after,
-.ad-diary[data-mat="malachite"] .ad-award .ad-sign > i { display: none; }
+.dia-diary[data-mat="malachite"] .dia-award .dia-sign::before,
+.dia-diary[data-mat="malachite"] .dia-award .dia-sign::after,
+.dia-diary[data-mat="malachite"] .dia-award .dia-sign > i { display: none; }
 
-.ad-diary[data-mat="malachite"] .ad-hand { font-weight: 400; }
-.ad-diary[data-mat="malachite"] input::placeholder, .ad-diary[data-mat="malachite"] textarea::placeholder { color: color-mix(in srgb, var(--ad-ink) 68%, transparent) !important; }
+.dia-diary[data-mat="malachite"] .dia-hand { font-weight: 400; }
+.dia-diary[data-mat="malachite"] input::placeholder, .dia-diary[data-mat="malachite"] textarea::placeholder { color: color-mix(in srgb, var(--ad-ink) 68%, transparent) !important; }
 
 @media (forced-colors: active) {
-  .ad-diary[data-mat="malachite"] .ad-page { background-image: none !important; }
+  .dia-diary[data-mat="malachite"] .dia-page { background-image: none !important; }
 }
 
 /* Иллюстрации: «Сегодня» — замок слоем фона левой страницы, ящерка в правом углу (на телефоне — в потоке после записей). */
-.ad-diary[data-mat="malachite"] [data-tab="today"] > .ad-page[data-side="left"] {
+.dia-diary[data-mat="malachite"] [data-tab="today"] > .dia-page[data-side="left"] {
   --ad-ml-scene: var(--ad-art-castle, none);
   --ad-ml-scene-size: min(300px, calc(100% - 44px)) auto;
   --ad-ml-liz: none;
   padding-block-start: 226px;
 }
 @container koldo-panel (min-width: 760px) {
-  .ad-diary[data-mat="malachite"] [data-tab="today"] > .ad-page[data-side="left"] {
+  .dia-diary[data-mat="malachite"] [data-tab="today"] > .dia-page[data-side="left"] {
     --ad-ml-scene-size: min(340px, calc(100% - 44px)) auto;
     padding-block-start: 250px;
   }
 }
-.ad-diary[data-mat="malachite"] [data-tab="today"] > .ad-page[data-side="right"] {
+.dia-diary[data-mat="malachite"] [data-tab="today"] > .dia-page[data-side="right"] {
   --ad-ml-corner: none;
   --ad-ml-liz: var(--ad-art-lizard, none);
   --ad-ml-liz-w: 76px;
@@ -182,12 +182,12 @@
   --ad-ml-liz-pos: right 24px top 12px;
   padding-block-start: 100px;
 }
-.ad-diary[data-mat="malachite"] .ad-lizard-margin {
+.dia-diary[data-mat="malachite"] .dia-lizard-margin {
   display: flex;
   justify-content: flex-end;
   padding: 0 4px 2px;
 }
-.ad-diary[data-mat="malachite"] .ad-lizard-margin img {
+.dia-diary[data-mat="malachite"] .dia-lizard-margin img {
   display: block;
   width: 64px;
   height: 64px;
@@ -196,21 +196,21 @@
 }
 
 /* Остальные вкладки: картинка в потоке над заголовком, фоновая сцена гаснет. */
-.ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated[data-side] {
+.dia-diary[data-mat="malachite"] [data-tab] > .dia-page.dia-illustrated[data-side] {
   --ad-ml-scene: none;
   padding-block-start: 48px;
 }
-.ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated[data-side],
-.ad-diary[data-mat="malachite"] [data-tab] > .ad-page.ad-illustrated ~ .ad-page { --ad-ml-liz: none; }
-.ad-diary[data-mat="malachite"] [data-tab="settings"][data-tab] > .ad-page[data-side],
-.ad-diary[data-mat="malachite"] [data-tab="debug"][data-tab] > .ad-page[data-side] {
+.dia-diary[data-mat="malachite"] [data-tab] > .dia-page.dia-illustrated[data-side],
+.dia-diary[data-mat="malachite"] [data-tab] > .dia-page.dia-illustrated ~ .dia-page { --ad-ml-liz: none; }
+.dia-diary[data-mat="malachite"] [data-tab="settings"][data-tab] > .dia-page[data-side],
+.dia-diary[data-mat="malachite"] [data-tab="debug"][data-tab] > .dia-page[data-side] {
   --ad-ml-liz: var(--ad-art-lizard, none);
   --ad-ml-liz-w: 76px;
   --ad-ml-liz-h: 76px;
   --ad-ml-liz-pos: right 24px top 12px;
 }
-.ad-diary[data-mat="malachite"] [data-tab="debug"][data-tab] > .ad-page[data-side] { padding-block-start: 96px; }
-.ad-diary[data-mat="malachite"] .ad-art {
+.dia-diary[data-mat="malachite"] [data-tab="debug"][data-tab] > .dia-page[data-side] { padding-block-start: 96px; }
+.dia-diary[data-mat="malachite"] .dia-art {
   display: block;
   width: min(100%, var(--ad-art-width, 280px));
   height: var(--ad-art-height, 175px);
@@ -219,10 +219,10 @@
   pointer-events: none;
   user-select: none;
 }
-.ad-diary[data-mat="malachite"] .ad-art[data-art="start"],
-.ad-diary[data-mat="malachite"] .ad-art[data-art="people"] { --ad-art-width: 300px; --ad-art-height: 200px; }
-.ad-diary[data-mat="malachite"] .ad-art[data-art="study"],
-.ad-diary[data-mat="malachite"] .ad-art[data-art="magpie"] { --ad-art-width: 280px; --ad-art-height: 187px; }
-.ad-diary[data-mat="malachite"] .ad-art[data-art="holiday"] { --ad-art-width: 190px; --ad-art-height: 127px; margin-bottom: 4px; }
-.ad-diary[data-mat="malachite"] .ad-art[data-art="achievement"] { --ad-art-width: 185px; --ad-art-height: 185px; }
-.ad-diary[data-mat="malachite"] .ad-art[data-art="settings"] { --ad-art-width: 88px; --ad-art-height: 88px; margin-bottom: 8px; }
+.dia-diary[data-mat="malachite"] .dia-art[data-art="start"],
+.dia-diary[data-mat="malachite"] .dia-art[data-art="people"] { --ad-art-width: 300px; --ad-art-height: 200px; }
+.dia-diary[data-mat="malachite"] .dia-art[data-art="study"],
+.dia-diary[data-mat="malachite"] .dia-art[data-art="magpie"] { --ad-art-width: 280px; --ad-art-height: 187px; }
+.dia-diary[data-mat="malachite"] .dia-art[data-art="holiday"] { --ad-art-width: 190px; --ad-art-height: 127px; margin-bottom: 4px; }
+.dia-diary[data-mat="malachite"] .dia-art[data-art="achievement"] { --ad-art-width: 185px; --ad-art-height: 185px; }
+.dia-diary[data-mat="malachite"] .dia-art[data-art="settings"] { --ad-art-width: 88px; --ad-art-height: 88px; margin-bottom: 8px; }

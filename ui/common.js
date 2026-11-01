@@ -874,7 +874,7 @@ export function el(tag, attrs, children) {
 /** Декоративная иллюстрация из assets/diary: не читается, не ловит клики. */
 export function artImg(name, mod) {
   return el('img', {
-    class: 'ad-art',
+    class: 'dia-art',
     dataset: { art: mod },
     src: new URL(`../assets/diary/${name}.webp`, import.meta.url).href,
     alt: '',
@@ -1004,7 +1004,7 @@ export function avatarNode(av, opts = {}) {
     });
   }
   const node = el('span', {
-    class: `koldo-ava koldo-ava-${size} koldo-ava-person ad-av`,
+    class: `koldo-ava koldo-ava-${size} koldo-ava-person dia-av`,
     style: `background-color: ${av.color}; background-color: var(--ad-av-bg, ${av.color})`,
     title: opts.title || av.name || null,
     role: opts.onclick ? 'button' : null,
@@ -1092,7 +1092,7 @@ export function setSectionScope(scope) {
 
 /** Пустое состояние вкладки: страница с иллюстрацией вкладки (art — [файл, модификатор]). */
 export function emptyPage(host, view, art) {
-  return { l: [art ? artImg(art[0], art[1]) : null, renderEmpty(host, view)], blankRight: true, lcls: art ? 'ad-illustrated' : '' };
+  return { l: [art ? artImg(art[0], art[1]) : null, renderEmpty(host, view)], blankRight: true, lcls: art ? 'dia-illustrated' : '' };
 }
 
 /** Иллюстрация вкладки по её id (на «Сегодня» вместо неё замок фоном). */

@@ -166,7 +166,7 @@ export function renderSettings(host) {
     accordion('look', LOOK_TEXT.section, lookSummary(settings, preset), look),
     accordion('data', X.setData, '', data),
   ];
-  return { l: [artImg('casket-keys', 'settings'), el('div', { class: 'ad-acc-list' }, accordions)], cls: 'ad-plain ad-full', lcls: 'ad-illustrated', single: true };
+  return { l: [artImg('casket-keys', 'settings'), el('div', { class: 'dia-acc-list' }, accordions)], cls: 'dia-plain dia-full', lcls: 'dia-illustrated', single: true };
 }
 
 function feedEveryText(f, X) {
@@ -177,16 +177,16 @@ function feedEveryText(f, X) {
 
 function accordion(id, title, cur, body) {
   return memoDetails(`set:${id}`, {
-    cls: 'ad-acc',
-    summary: [el('h3', { text: title }), el('span', { class: 'ad-cur', text: cur }), svgIcon('chev', 'ad-chev')],
-    body: el('div', { class: 'ad-acc-body' }, body),
+    cls: 'dia-acc',
+    summary: [el('h3', { text: title }), el('span', { class: 'dia-cur', text: cur }), svgIcon('chev', 'dia-chev')],
+    body: el('div', { class: 'dia-acc-body' }, body),
   });
 }
 
 function bare(block, titled = false) {
   const parts = [...block.children].slice(1);
   const title = block.children[0] ? block.children[0].textContent : '';
-  return el('div', { class: 'ad-set-sub' }, [titled ? el('h4', { text: title }) : null, ...parts]);
+  return el('div', { class: 'dia-set-sub' }, [titled ? el('h4', { text: title }) : null, ...parts]);
 }
 
 export function hostExtra(host) {
